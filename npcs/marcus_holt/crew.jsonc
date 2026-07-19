@@ -85,7 +85,7 @@
   // "knowledge_sources": [],
   // "embedder": {},
   // "output_log_file": "crew.log",
-   "stream": false,
+   "stream": true,
   // "tracing": false,
   // "security_config": {},
 

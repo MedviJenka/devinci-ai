@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeVinci | Developer Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Geist:wght@500;600;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#0e0e0f",
+                        "inverse-primary": "#6d33d7",
+                        "on-secondary": "#303033",
+                        "primary-fixed-dim": "#d0bcff",
+                        "on-primary-fixed-variant": "#5516be",
+                        "surface-container-high": "#2a2a2b",
+                        "surface-container-highest": "#353436",
+                        "on-secondary-fixed": "#1b1b1e",
+                        "tertiary-fixed": "#ffdcbb",
+                        "secondary": "#c8c5ca",
+                        "surface-dim": "#131314",
+                        "surface": "#131314",
+                        "on-tertiary-fixed": "#2c1700",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "on-surface-variant": "#cbc3d7",
+                        "tertiary-container": "#ca801e",
+                        "outline": "#958ea0",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffb869",
+                        "surface-bright": "#3a393a",
+                        "on-secondary-fixed-variant": "#47464a",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-container": "#b6b4b8",
+                        "surface-container-low": "#1c1b1c",
+                        "on-surface": "#e5e2e3",
+                        "surface-variant": "#353436",
+                        "outline-variant": "#494454",
+                        "on-tertiary-container": "#3f2300",
+                        "on-primary-fixed": "#23005c",
+                        "primary-fixed": "#e9ddff",
+                        "on-background": "#e5e2e3",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "error": "#ffb4ab",
+                        "surface-container": "#201f20",
+                        "surface-tint": "#d0bcff",
+                        "on-tertiary": "#482900",
+                        "on-primary": "#3c0091",
+                        "background": "#131314",
+                        "secondary-fixed-dim": "#c8c5ca",
+                        "secondary-container": "#47464a",
+                        "inverse-surface": "#e5e2e3",
+                        "on-primary-container": "#340080",
+                        "primary": "#d0bcff",
+                        "inverse-on-surface": "#313031",
+                        "primary-container": "#a078ff",
+                        "secondary-fixed": "#e4e1e6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Geist"],
+                        "label-caps": ["JetBrains Mono"],
+                        "code-md": ["JetBrains Mono"],
+                        "headline-lg": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "code-md": ["13px", {"lineHeight": "20px", "fontWeight": "450"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0A0A0B;
+            color: #e5e2e3;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #131314;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #27272A;
+            border-radius: 2px;
+        }
+        .glass-panel {
+            background: #121214;
+            border: 1px solid #27272A;
+        }
+        .electric-glow {
+            box-shadow: 0 0 20px -5px rgba(208, 188, 255, 0.15);
+        }
+        .focus-border-glow:focus-within {
+            border-color: #d0bcff;
+            box-shadow: 0 0 0 1px #d0bcff;
+        }
+    </style>
+</head>
+<body class="font-body-md overflow-hidden">
+<!-- Side Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-outline-variant bg-surface-container-low flex flex-col py-6 z-50">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight leading-none">DeVinci</h1>
+<p class="font-label-caps text-[9px] text-primary tracking-[0.2em] uppercase mt-1">AI Orchestrator</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<!-- Dashboard Active -->
+<a class="flex items-center gap-3 px-4 py-3 text-primary border-l-2 border-primary bg-primary/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-caps text-label-caps">NPCs</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-label-caps text-label-caps">Storylines</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">vpn_key</span>
+<span class="font-label-caps text-label-caps">API Keys</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-caps text-label-caps">Usage & Billing</span>
+</a>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full py-3 bg-primary text-on-primary font-label-caps text-label-caps rounded flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Project
+            </button>
+</div>
+</aside>
+<!-- Top Navigation Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-280px)] h-16 border-b border-outline-variant bg-surface-container flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-6">
+<div class="relative focus-border-glow bg-surface-container-lowest border border-outline-variant rounded px-3 py-1.5 flex items-center gap-2 w-80">
+<span class="material-symbols-outlined text-outline text-[18px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md w-full placeholder:text-outline/50" placeholder="Search entities..." type="text"/>
+<span class="text-[10px] bg-surface-container-highest px-1.5 py-0.5 rounded text-outline font-code-md">⌘K</span>
+</div>
+<div class="flex gap-4 items-center">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-label-caps text-label-caps" href="#">Dev</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors font-label-caps text-label-caps" href="#">Staging</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors font-label-caps text-label-caps" href="#">Prod</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full border border-primary/20 p-0.5">
+<img class="h-full w-full rounded-full object-cover" data-alt="A professional headshot of a software developer in a dimly lit high-tech environment. The lighting is cold with subtle violet key lights, reflecting off sleek surfaces. The user wears modern, minimalist attire. The overall mood is focused, sophisticated, and aligns with a premium dark-mode SaaS interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOBjDs5tTLY1RTqNZZF1JPqAnNGfMGGgTzFjIn23U8mmrqikIO1J-xURJs1UwysvUc-_BnK6b7usaqVT5z8yQuBmlVswSOLSec75xTd5ieFH7wE-fnc7hb5VWj5EJh1Uy7B41rzpy8e4N_kSXvSMTlyFz1iVGm2AfCpFT9YHCtZWD7VYlG7JSCjr-Av1Wd6XUi8aTHHWknb54fqqPNjAJaMnzEpOZcsD-b2c2DAd7uByStIliQhrUS7g"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="ml-[280px] mt-16 p-gutter h-[calc(100vh-64px)] overflow-y-auto custom-scrollbar bg-background">
+<!-- Welcome Section -->
+<div class="mb-8">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">System Overview</h2>
+<p class="text-on-surface-variant font-body-md mt-1">Status: Operational • Region: us-east-1 • Project: Obsidian-Protocol</p>
+</div>
+<!-- Top Stat Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-8">
+<!-- Active NPCs -->
+<div class="glass-panel p-6 relative overflow-hidden group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-widest">Active NPCs</span>
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">smart_toy</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-[48px] text-on-surface leading-none">24</span>
+<span class="text-tertiary font-code-md text-[12px]">+3 this week</span>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
+</div>
+<!-- Storylines -->
+<div class="glass-panel p-6 relative overflow-hidden group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-widest">Storylines</span>
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">auto_stories</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-[48px] text-on-surface leading-none">12</span>
+<span class="text-on-surface-variant font-code-md text-[12px]">4 Drafts</span>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
+</div>
+<!-- Monthly API Calls -->
+<div class="glass-panel p-6 relative overflow-hidden group col-span-1">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-widest">Monthly API Calls</span>
+<span class="material-symbols-outlined text-primary">analytics</span>
+</div>
+<div class="flex items-baseline gap-2 mb-4">
+<span class="font-headline-lg text-[40px] text-on-surface leading-none">142k</span>
+<span class="text-primary font-code-md text-[12px]">↑ 12% growth</span>
+</div>
+<div class="h-16 w-full relative">
+<!-- Simple SVG Sparkline visualization -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 40">
+<path d="M0,35 Q10,32 20,25 T40,28 T60,15 T80,10 T100,5" fill="none" stroke="#d0bcff" stroke-width="2"></path>
+<path d="M0,35 Q10,32 20,25 T40,28 T60,15 T80,10 T100,5 L100,40 L0,40 Z" fill="url(#violet-gradient)" opacity="0.1"></path>
+<defs>
+<lineargradient id="violet-gradient" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#d0bcff;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#d0bcff;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="mb-8">
+<h3 class="font-label-caps text-label-caps text-outline uppercase tracking-[0.2em] mb-4">Quick Actions</h3>
+<div class="flex gap-4">
+<button class="px-6 py-4 border border-outline-variant hover:border-primary/50 hover:bg-surface-container-high transition-all flex items-center gap-3 rounded group">
+<div class="p-2 bg-surface-container-highest rounded text-primary">
+<span class="material-symbols-outlined">person_add</span>
+</div>
+<div class="text-left">
+<p class="font-label-caps text-label-caps text-on-surface">Create NPC</p>
+<p class="text-[10px] text-outline">Configure new intelligence profile</p>
+</div>
+</button>
+<button class="px-6 py-4 border border-outline-variant hover:border-primary/50 hover:bg-surface-container-high transition-all flex items-center gap-3 rounded group">
+<div class="p-2 bg-surface-container-highest rounded text-primary">
+<span class="material-symbols-outlined">library_add</span>
+</div>
+<div class="text-left">
+<p class="font-label-caps text-label-caps text-on-surface">Create Storyline</p>
+<p class="text-[10px] text-outline">Design narrative branching paths</p>
+</div>
+</button>
+<button class="px-6 py-4 border border-outline-variant hover:border-primary/50 hover:bg-surface-container-high transition-all flex items-center gap-3 rounded group">
+<div class="p-2 bg-surface-container-highest rounded text-primary">
+<span class="material-symbols-outlined">terminal</span>
+</div>
+<div class="text-left">
+<p class="font-label-caps text-label-caps text-on-surface">Dev Console</p>
+<p class="text-[10px] text-outline">Run system diagnostics</p>
+</div>
+</button>
+</div>
+</div>
+<!-- Recent Activity Table -->
+<div class="glass-panel overflow-hidden">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Recent API Activity</h3>
+<div class="flex gap-2">
+<span class="flex items-center gap-1.5 px-2 py-1 bg-surface-container-highest rounded font-code-md text-[11px] text-outline">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Live Stream
+                    </span>
+<button class="text-[12px] text-primary hover:underline font-label-caps">View Logs</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-outline font-label-caps text-[11px] uppercase tracking-wider">
+<th class="px-6 py-3 font-semibold">Endpoint</th>
+<th class="px-6 py-3 font-semibold">Entity</th>
+<th class="px-6 py-3 font-semibold">Status</th>
+<th class="px-6 py-3 font-semibold text-right">Timestamp</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">
+<span class="text-primary">POST</span> /v1/npc/interact
+                            </td>
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface-variant">
+                                npc_8329
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+<span class="text-green-500 font-code-md text-[12px]">200 OK</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right font-code-md text-code-md text-outline">
+                                12:44:02.122
+                            </td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">
+<span class="text-primary">GET</span> /v1/story/fetch
+                            </td>
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface-variant">
+                                story_f921
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+<span class="text-green-500 font-code-md text-[12px]">200 OK</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right font-code-md text-code-md text-outline">
+                                12:43:58.891
+                            </td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">
+<span class="text-primary">PATCH</span> /v1/npc/state
+                            </td>
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface-variant">
+                                npc_7210
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+<span class="text-error font-code-md text-[12px]">404 Error</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right font-code-md text-code-md text-outline">
+                                12:43:45.002
+                            </td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">
+<span class="text-primary">POST</span> /v1/npc/interact
+                            </td>
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface-variant">
+                                npc_8329
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+<span class="text-green-500 font-code-md text-[12px]">200 OK</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right font-code-md text-code-md text-outline">
+                                12:43:30.415
+                            </td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">
+<span class="text-primary">POST</span> /v1/orchestration/sync
+                            </td>
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface-variant">
+                                story_x112
+                            </td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+<span class="text-green-500 font-code-md text-[12px]">200 OK</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right font-code-md text-code-md text-outline">
+                                12:42:12.909
+                            </td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Atmospheric footer element -->
+<div class="mt-12 opacity-30 pointer-events-none select-none overflow-hidden relative h-40 flex items-center justify-center">
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10"></div>
+<div class="flex gap-4 font-code-md text-[80px] font-black text-outline/10 whitespace-nowrap">
+                ORCHESTRATING INTELLIGENCE • DEVINCI V2.4 • NARRATIVE CORE
+            </div>
+</div>
+</main>
+<!-- Micro-interaction Scripts -->
+<script>
+        // Simple console log to confirm load
+        console.log("DeVinci SaaS Interface Initialized.");
+
+        // Keyboard shortcut visual feedback
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.querySelector('input').focus();
+            }
+        });
+    </script>
+</body></html>

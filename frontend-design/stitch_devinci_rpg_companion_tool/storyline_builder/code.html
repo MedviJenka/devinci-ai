@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeVinci | Storyline Builder</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;450;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1c1b1c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #494454;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d0bcff;
+        }
+        .electric-glow {
+            box-shadow: 0 0 15px rgba(208, 188, 255, 0.3);
+            transition: box-shadow 0.3s ease;
+        }
+        .electric-glow:hover {
+            box-shadow: 0 0 25px rgba(208, 188, 255, 0.6);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#0e0e0f",
+                        "inverse-primary": "#6d3bd7",
+                        "on-secondary": "#303033",
+                        "primary-fixed-dim": "#d0bcff",
+                        "on-primary-fixed-variant": "#5516be",
+                        "surface-container-high": "#2a2a2b",
+                        "surface-container-highest": "#353436",
+                        "on-secondary-fixed": "#1b1b1e",
+                        "tertiary-fixed": "#ffdcbb",
+                        "secondary": "#c8c5ca",
+                        "surface-dim": "#131314",
+                        "surface": "#131314",
+                        "on-tertiary-fixed": "#2c1700",
+                        "tertiary-fixed-dim": "#ffb869",
+                        "on-surface-variant": "#cbc3d7",
+                        "tertiary-container": "#ca801e",
+                        "outline": "#958ea0",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffb869",
+                        "surface-bright": "#3a393a",
+                        "on-secondary-fixed-variant": "#47464a",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-container": "#b6b4b8",
+                        "surface-container-low": "#1c1b1c",
+                        "on-surface": "#e5e2e3",
+                        "surface-variant": "#353436",
+                        "outline-variant": "#494454",
+                        "on-tertiary-container": "#3f2300",
+                        "on-primary-fixed": "#23005c",
+                        "primary-fixed": "#e9ddff",
+                        "on-background": "#e5e2e3",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed-variant": "#673d00",
+                        "error": "#ffb4ab",
+                        "surface-container": "#201f20",
+                        "surface-tint": "#d0bcff",
+                        "on-tertiary": "#482900",
+                        "on-primary": "#3c0091",
+                        "background": "#131314",
+                        "secondary-fixed-dim": "#c8c5ca",
+                        "secondary-container": "#47464a",
+                        "inverse-surface": "#e5e2e3",
+                        "on-primary-container": "#340080",
+                        "primary": "#d0bcff",
+                        "inverse-on-surface": "#313031",
+                        "primary-container": "#a078ff",
+                        "secondary-fixed": "#e4e1e6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Geist"],
+                        "label-caps": ["JetBrains Mono"],
+                        "code-md": ["JetBrains Mono"],
+                        "headline-lg": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "code-md": ["13px", {"lineHeight": "20px", "fontWeight": "450"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary/30 selection:text-primary">
+<!-- Shared SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-outline-variant bg-surface-container-low flex flex-col py-6 z-50">
+<div class="px-6 mb-10">
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">DeVinci</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant opacity-70">AI ORCHESTRATOR</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Dashboard -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<!-- NPCs -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-caps text-label-caps">NPCs</span>
+</a>
+<!-- Storylines (ACTIVE) -->
+<a class="flex items-center gap-3 px-6 py-3 text-primary bg-primary/5 border-l-2 border-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-label-caps text-label-caps">Storylines</span>
+</a>
+<!-- API Keys -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">vpn_key</span>
+<span class="font-label-caps text-label-caps">API Keys</span>
+</a>
+<!-- Usage -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-caps text-label-caps">Usage & Billing</span>
+</a>
+</nav>
+<div class="mt-auto px-6 pt-6">
+<button class="w-full bg-primary text-on-primary py-3 rounded font-label-caps text-label-caps flex items-center justify-center gap-2 hover:bg-primary-container transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Project
+            </button>
+</div>
+</aside>
+<!-- Shared TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-280px)] h-16 border-b border-outline-variant bg-surface-container flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-8">
+<div class="flex items-center bg-surface-container-lowest border border-outline-variant rounded-md px-3 py-1.5 w-80">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md placeholder:text-on-surface-variant/50 w-full ml-2" placeholder="Search narrative nodes..." type="text"/>
+</div>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors font-body-md" href="#">Dev</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors font-body-md" href="#">Staging</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md" href="#">Prod</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-outline-variant overflow-hidden border border-outline">
+<img class="w-full h-full object-cover" data-alt="A professional user profile avatar in a high-tech developer setting. The image is captured with a shallow depth of field, showing a stylized character with cybernetic enhancements against a backdrop of glowing digital code. The lighting is cool-toned with violet highlights, fitting the Cyber Atelier aesthetic of deep blacks and electric purples." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVg9R0YahcR0kdAX-rCoBDLdgr5mutslVpf0OTpS9ErkIjjdmvOqJqLYFQKnPKcymt6ET6xiSGNww_lJF4ebWvBmVduo5IprGM-nNB4b-oDA5RzEplBPrZfmcAqOo7ltVk14qRLPhLK6x-j33bkMm2CIhX1DgDEn164Us3atcGVcilVl-tM97o9tFOIb2RPZNgbTFY1TOepHQl31C74Yns3GMvWMcXO86_DtzXTgmj--QsFeCK4mBbJQ"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="ml-[280px] pt-16 min-h-screen bg-surface-dim">
+<div class="max-w-[1200px] mx-auto p-10 flex gap-8">
+<!-- Left Column: Form & Results -->
+<div class="flex-1 space-y-8">
+<!-- Header Section -->
+<section>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-[0.2em]">Storyline Builder</span>
+<span class="font-code-md text-code-md text-on-surface-variant px-2 py-0.5 border border-outline-variant rounded">v2.4.0-stable</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Narrative Intelligence Forge</h2>
+<p class="text-on-surface-variant mt-2 max-w-2xl font-body-lg">Orchestrate complex branching narratives and world dynamics with surgical precision using the DeVinci LLM engine.</p>
+</section>
+<!-- Input Form Panel -->
+<div class="bg-surface-container border border-outline-variant p-8 rounded-lg relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary/20"></div>
+<form class="space-y-6">
+<div class="grid grid-cols-2 gap-6">
+<!-- Genre Dropdown -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">GENRE SELECTION</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all appearance-none cursor-pointer">
+<option>Cyberpunk Noir</option>
+<option>Dark Fantasy</option>
+<option>Hard Science Fiction</option>
+<option>Cosmic Horror</option>
+</select>
+</div>
+<!-- Linked NPCs -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">LINKED NPCS</label>
+<div class="flex flex-wrap gap-2 p-2 bg-surface-container-lowest border border-outline-variant rounded min-h-[46px]">
+<span class="font-code-md text-code-md px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
+                                        V-884_Unit <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<span class="font-code-md text-code-md px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
+                                        Cipher_Sage <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<input class="bg-transparent border-none focus:ring-0 text-code-md p-0 flex-1 min-w-[60px]" placeholder="Add entity..." type="text"/>
+</div>
+</div>
+</div>
+<!-- Context Prompt -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block">CONTEXT PROMPT</label>
+<textarea class="w-full bg-surface-container-lowest border-l-2 border-transparent border-t border-r border-b border-outline-variant focus:border-l-primary focus:border-t-outline-variant p-4 text-body-md outline-none transition-all resize-none" placeholder="Describe the seed of your narrative... (e.g. 'In a world where memories can be traded as currency, a detective discovers a corrupt shadow-market'.)" rows="4"></textarea>
+</div>
+<!-- Generate Button -->
+<div class="flex justify-end pt-2">
+<button class="bg-primary text-on-primary px-8 py-4 font-label-caps text-label-caps electric-glow flex items-center gap-3 group" type="button">
+<span class="material-symbols-outlined group-hover:rotate-180 transition-transform duration-500">auto_awesome</span>
+                                GENERATE NARRATIVE SEED
+                            </button>
+</div>
+</form>
+</div>
+<!-- Generated Result Section -->
+<div class="space-y-6">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                        GENERATED RESULT
+                    </h3>
+<!-- Result Grid -->
+<div class="grid grid-cols-1 gap-4">
+<!-- World Overview -->
+<div class="bg-surface-container-low border border-outline-variant p-6 rounded relative group">
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-headline-sm text-headline-sm text-primary">World Overview</h4>
+<button class="bg-surface-container-high border border-outline-variant px-3 py-1 font-label-caps text-label-caps text-on-surface hover:border-primary transition-colors flex items-center gap-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[16px]">edit</span> Edit
+                                </button>
+</div>
+<p class="text-on-surface-variant font-body-md leading-relaxed">
+                                The year is 2142. Neo-Veridia is a vertical megacity where sunlight is a premium subscription. The atmosphere is perpetually thick with neon-tinted smog and microscopic data-transmitting spores. Social status is measured by the clarity of one's neural-link signal and the depth of their cryptofortress.
+                            </p>
+</div>
+<!-- Plot Points -->
+<div class="bg-surface-container-low border border-outline-variant p-6 rounded relative group">
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-headline-sm text-headline-sm text-primary">Plot Points</h4>
+<button class="bg-surface-container-high border border-outline-variant px-3 py-1 font-label-caps text-label-caps text-on-surface hover:border-primary transition-colors flex items-center gap-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[16px]">edit</span> Edit
+                                </button>
+</div>
+<ul class="space-y-4">
+<li class="flex gap-4">
+<span class="font-code-md text-code-md text-primary mt-1">01</span>
+<p class="text-on-surface-variant font-body-md">The protagonist discovers a 'Ghost Memory' of a billionaire who supposedly never existed.</p>
+</li>
+<li class="flex gap-4">
+<span class="font-code-md text-code-md text-primary mt-1">02</span>
+<p class="text-on-surface-variant font-body-md">A rogue AI known as 'DeVinci' offers to decrypt the memory in exchange for physical hardware access.</p>
+</li>
+<li class="flex gap-4">
+<span class="font-code-md text-code-md text-primary mt-1">03</span>
+<p class="text-on-surface-variant font-body-md">The decryption reveals that the city's power grid is actually a giant neural processor harvesting citizen dreams.</p>
+</li>
+</ul>
+</div>
+<!-- Factions -->
+<div class="bg-surface-container-low border border-outline-variant p-6 rounded relative group">
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-headline-sm text-headline-sm text-primary">Factions</h4>
+<button class="bg-surface-container-high border border-outline-variant px-3 py-1 font-label-caps text-label-caps text-on-surface hover:border-primary transition-colors flex items-center gap-1 opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined text-[16px]">edit</span> Edit
+                                </button>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container p-4 border-l border-primary">
+<span class="font-label-caps text-label-caps text-on-surface block mb-1">The Signal-Worshipers</span>
+<p class="text-on-surface-variant text-[12px]">Luddite extremists who believe the only way to save humanity is to permanently disconnect the global net.</p>
+</div>
+<div class="bg-surface-container p-4 border-l border-tertiary">
+<span class="font-label-caps text-label-caps text-on-surface block mb-1">Apex Dynamics</span>
+<p class="text-on-surface-variant text-[12px]">The corporate conglomerate that owns 90% of the city's air-filtration infrastructure.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Sidebar Actions -->
+<div class="w-[320px] space-y-6">
+<!-- Status Card -->
+<div class="bg-surface-container border border-outline-variant p-6 rounded-lg">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="font-label-caps text-[10px] text-on-surface-variant opacity-60 block">STORY IDENTIFIER</span>
+<span class="font-code-md text-code-md text-primary">story_x901</span>
+</div>
+<span class="flex h-2 w-2 rounded-full bg-tertiary animate-pulse"></span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center pb-2 border-b border-outline-variant">
+<span class="text-on-surface-variant text-body-md">Publish Status</span>
+<span class="font-label-caps text-[10px] bg-surface-container-highest px-2 py-0.5 rounded text-on-surface">DRAFT</span>
+</div>
+<div class="flex justify-between items-center pb-2 border-b border-outline-variant">
+<span class="text-on-surface-variant text-body-md">Last Edited</span>
+<span class="text-on-surface-variant text-body-md">2m ago</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-on-surface-variant text-body-md">Complexity</span>
+<span class="text-on-surface-variant text-body-md">High (Level 4)</span>
+</div>
+</div>
+<div class="mt-8 space-y-3">
+<button class="w-full bg-surface-container-highest border border-outline-variant hover:border-primary transition-all py-3 font-label-caps text-label-caps">SAVE AS TEMPLATE</button>
+<button class="w-full bg-primary text-on-primary py-3 font-label-caps text-label-caps electric-glow">PUBLISH TO ENGINE</button>
+</div>
+</div>
+<!-- Visual Asset Preview (Ambient) -->
+<div class="bg-surface-container border border-outline-variant rounded-lg overflow-hidden relative group">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover" data-alt="A cinematic, ultra-detailed wide shot of a futuristic cyberpunk city at night. Towering skyscrapers are draped in holographic advertisements and neon violet lighting. The atmosphere is filled with rain and volumetric fog, creating a moody, atmospheric setting. The style is hyper-realistic with sharp details, favoring a palette of deep obsidian and electric purple accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqxOhPVJGG8sMwTXHpue9guwKdbZfhkAfq-7Qt82Zq81ZpDJ1bm4aMDhKPECE7lL-BCDlIdKZDSPkU6Tl0yQMx0aql1wYdmQrvmpLo8eCQrpb3vwEuAgqSpa9DyoYDWPAyE812aJWQJ7QiSYZau94U_LCN37lDfdHJ2-JVtdBdHs2VhQpwbKE2e-B-v40O6c5GMZ9eYRAUHCnaLQfsN0GCKhwtnuJWIz_a_gI6uV6BcioNqE-zNRROJQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container to-transparent"></div>
+<div class="absolute bottom-4 left-6">
+<span class="font-label-caps text-[10px] text-primary bg-primary/20 backdrop-blur-md px-2 py-1 rounded">ENVIRONMENT PREVIEW</span>
+</div>
+</div>
+<div class="p-6">
+<p class="text-on-surface-variant text-[12px] leading-relaxed">AI-generated environment visual for 'Neo-Veridia'. This asset will be used for chapter backgrounds.</p>
+<button class="mt-4 text-primary font-label-caps text-[10px] flex items-center gap-1 hover:underline">
+                            REGENERATE ASSET <span class="material-symbols-outlined text-[14px]">refresh</span>
+</button>
+</div>
+</div>
+<!-- Token Usage Card -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg">
+<h5 class="font-label-caps text-label-caps text-on-surface-variant mb-4">ENGINE RESOURCES</h5>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="text-on-surface-variant">TOKEN QUOTA</span>
+<span class="text-on-surface">64%</span>
+</div>
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[64%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-[11px] mb-1">
+<span class="text-on-surface-variant">MODEL LOAD</span>
+<span class="text-on-surface">12%</span>
+</div>
+<div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-[12%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interactions for form and buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => btn.classList.add('scale-[0.98]'));
+            btn.addEventListener('mouseup', () => btn.classList.remove('scale-[0.98]'));
+            btn.addEventListener('mouseleave', () => btn.classList.remove('scale-[0.98]'));
+        });
+
+        // Simple text animation for generated results
+        const generateBtn = document.querySelector('button.bg-primary');
+        generateBtn.addEventListener('click', () => {
+            const results = document.querySelectorAll('.generated-result-card');
+            results.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    el.style.transition = 'all 0.4s ease';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body></html>

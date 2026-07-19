@@ -1,3 +1,6 @@
+#include:
+#  - frontend/Dockerfile
+
 services:
   npc_service:
     container_name: npc_service

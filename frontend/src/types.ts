@@ -1,0 +1,34 @@
+export interface NpcSummary {
+  slug: string;
+  role: string;
+  goal: string;
+  llm: string;
+}
+
+export interface NpcDetail extends NpcSummary {
+  backstory: string;
+  persona_notes: string;
+}
+
+export interface NpcCreateRequest {
+  name: string;
+  goal?: string;
+  backstory?: string;
+  llm?: string;
+  persona_notes?: string;
+}
+
+export interface NpcUpdateRequest {
+  goal?: string;
+  backstory?: string;
+  llm?: string;
+  persona_notes?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'player' | 'npc';
+  text: string;
+  mood?: string;
+  pending?: boolean;
+}
