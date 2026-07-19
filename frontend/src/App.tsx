@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { createNpc, deleteNpc, getNpc, listNpcs, updateNpc } from './api';
 import { supabase } from './supabaseClient';
-import Sidebar from './components/Sidebar';
+import Sidebar, { Screen } from './components/Sidebar';
 import Library from './components/Library';
+import Dashboard from './components/Dashboard';
+import Storylines from './components/Storylines';
+import ApiKeys from './components/ApiKeys';
 import CreateNpcModal from './components/CreateNpcModal';
 import PersonaEditor from './components/PersonaEditor';
 import Chat from './components/Chat';
@@ -15,11 +18,17 @@ type Tab = 'persona' | 'chat';
 function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [screen, setScreen] = useState<Screen>('npcs');
   const [npcs, setNpcs] = useState<NpcSummary[]>([]);
   const [selected, setSelected] = useState<NpcDetail | null>(null);
   const [tab, setTab] = useState<Tab>('chat');
   const [showCreate, setShowCreate] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const navigate = (next: Screen) => {
+    setScreen(next);
+    setSelected(null);
+  };
 
   const refreshList = async () => {
     setNpcs(await listNpcs());
@@ -58,6 +67,7 @@ function App() {
     try {
       setSelected(await getNpc(slug));
       setTab(initialTab);
+      setScreen('npcs');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load NPC.');
     }
@@ -88,6 +98,8 @@ function App() {
   return (
     <div className="flex h-screen overflow-hidden bg-background font-body-md text-on-surface">
       <Sidebar
+        activeScreen={screen}
+        onNavigate={navigate}
         onCreate={() => setShowCreate(true)}
         userEmail={session.user.email}
         onSignOut={() => supabase.auth.signOut()}
@@ -100,7 +112,15 @@ function App() {
           </div>
         )}
 
-        {!selected && (
+        {screen === 'dashboard' && (
+          <Dashboard npcs={npcs} onOpenChat={(slug) => openNpc(slug, 'chat')} onCreate={() => setShowCreate(true)} />
+        )}
+
+        {screen === 'storylines' && <Storylines npcs={npcs} />}
+
+        {screen === 'api-keys' && <ApiKeys />}
+
+        {screen === 'npcs' && !selected && (
           <Library
             npcs={npcs}
             onOpenChat={(slug) => openNpc(slug, 'chat')}
@@ -110,7 +130,7 @@ function App() {
           />
         )}
 
-        {selected && (
+        {screen === 'npcs' && selected && (
           <>
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-outline-variant bg-surface-container px-gutter">
               <div className="flex items-center gap-4">

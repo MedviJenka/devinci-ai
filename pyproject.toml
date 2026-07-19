@@ -10,5 +10,6 @@ dependencies = [
     "logfire",
     "pydantic-settings",
     "python-dotenv",
+    "supabase>=2.31.0",
     "uvicorn",
 ]

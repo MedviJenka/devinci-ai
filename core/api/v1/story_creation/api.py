@@ -1,6 +1,6 @@
 from fastapi import APIRouter, FastAPI
 from contextlib import asynccontextmanager
-from api.v1.story_creation.schemas import StoryCreationSchema
+from core.api.v1.story_creation.schemas import StoryCreationSchema
 from core.log import Logger
 from typing import AsyncGenerator
 from core.settings import Config

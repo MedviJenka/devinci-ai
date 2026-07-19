@@ -112,7 +112,7 @@ export default function SignIn({ onSignedIn }: Props) {
             </span>
           </div>
           <h1 className="font-headline-md text-headline-md font-bold leading-none tracking-tight text-on-surface">
-            DeVinci
+            Devinci
           </h1>
           <p className="font-label-caps text-[9px] uppercase tracking-[0.2em] text-primary">NPC Studio</p>
         </div>
@@ -121,7 +121,7 @@ export default function SignIn({ onSignedIn }: Props) {
           type="button"
           onClick={signInWithGoogle}
           disabled={googleLoading}
-          className="flex w-full items-center justify-center gap-3 rounded border border-outline-variant bg-surface-container-lowest py-3 font-label-caps text-label-caps text-on-surface transition-colors hover:bg-surface-container-high disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-3 rounded border border-outline-variant bg-transparent py-3 font-label-caps text-label-caps text-on-surface transition-colors hover:bg-surface-container-high disabled:opacity-50"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
             <path

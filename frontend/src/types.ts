@@ -32,3 +32,19 @@ export interface ChatMessage {
   mood?: string;
   pending?: boolean;
 }
+
+export interface Storyline {
+  id: string;
+  title: string;
+  npcSlug: string;
+  prompt: string;
+  createdAt: string;
+}
+
+export interface ApiKeyEntry {
+  id: string;
+  name: string;
+  key: string;
+  createdAt: string;
+  revealed: boolean;
+}
