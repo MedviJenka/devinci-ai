@@ -1,11 +1,10 @@
 import uvicorn
 from core.log import Logger
-from core.settings import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager
-from npc_routes import router as npc_router
+from core.api.v1.npcs.api import router as npc_router
 
 
 log = Logger(name="api-service")
@@ -27,7 +26,7 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-app.include_router(npc_router, prefix=f'/api/{Config.API_VERSION}/npcs')
+app.include_router(npc_router)
 
 
 if __name__ == '__main__':

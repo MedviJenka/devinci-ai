@@ -1,6 +1,7 @@
 import importlib
 from typing import AsyncGenerator
 from core.log import Logger
+from core.settings import Config
 from core.stream import _sse
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -20,7 +21,7 @@ from npcs.manager import (
 
 log = Logger(name="npc-service")
 
-router = APIRouter()
+router = APIRouter(prefix=f'/api/{Config.API_VERSION}/npcs')
 
 
 @router.get('/')
