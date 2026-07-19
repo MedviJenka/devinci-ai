@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     LOG_LEVEL:             str = Field(default='INFO')
     VERBOSE:               str = Field(default=True)
     LOGFIRE_TOKEN:         str = Field(...)
-    GHCR_TOKEN:            str = Field(...)
+    # GHCR_TOKEN:            str = Field(...)
     OPENAI_API_KEY:        str = Field(...)
     OPENAI_MODEL:          str = Field(...)
 

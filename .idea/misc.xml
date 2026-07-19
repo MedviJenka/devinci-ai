@@ -7,5 +7,5 @@
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
 }</component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (unity_npc)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="uv (interactive-npc)" project-jdk-type="Python SDK" />
 </project>

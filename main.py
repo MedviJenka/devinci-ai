@@ -2,7 +2,7 @@ import uvicorn
 from log import Logger
 from settings import Config
 from stream import _sse
-from npc.src.npc.crew import Npc
+from assets.src.npc.crew import Npc
 from fastapi import FastAPI, Query
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager

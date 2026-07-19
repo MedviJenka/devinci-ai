@@ -5,7 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "crewai[anthropic]>=1.14.6",
+    "crewai",
+    "crewai[anthropic]",
     "fastapi>=0.136.3",
     "litellm>=1.88.0",
     "logfire>=4.6.0",

@@ -11,7 +11,7 @@ services:
       - "5555:5555"
     volumes:
       - memory:/app/.crewai/memory
-      - ./npc/src/npc/knowledge:/app/knowledge
+      - ./.assets/src/.assets/knowledge:/app/knowledge
     networks:
       - app
     restart: unless-stopped
