@@ -3,11 +3,11 @@ from pathlib import Path
 from crewai.project import load_crew
 
 
-async def main(prompt: str) -> str:
+async def main(prompt: str) -> dict:
     crew, _ = load_crew(Path(__file__).with_name('crew.jsonc'))
     response = await crew.kickoff_async(inputs={'prompt': prompt})
-    return response.raw
+    return response.pydantic.model_dump()
 
 
 if __name__ == '__main__':
-    print(asyncio.run(main('where did you born?')))
+    print(asyncio.run(main('what did i say to you a minute ago?')))

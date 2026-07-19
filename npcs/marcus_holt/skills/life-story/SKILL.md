@@ -1,6 +1,6 @@
 ---
 name: life-story
-description: sad assets
+description: sad npcs
 ---
 
 **STRICT RULES**

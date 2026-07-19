@@ -4,7 +4,6 @@
   "goal": "interactive npc",
   "backstory": "hard life story",
   "llm": "openai/gpt-5.5",
-  "tools": ["FileWriterTool"],
   "settings": {
     "verbose": true,
      "memory": true,

@@ -2,11 +2,11 @@ import uvicorn
 from log import Logger
 from settings import Config
 from stream import _sse
-from assets.src.npc.crew import Npc
 from fastapi import FastAPI, Query
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager
 from fastapi.responses import StreamingResponse
+from npcs.marcus_holt.npc import main
 
 
 log = Logger(name="api-service")
@@ -22,12 +22,12 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
 app = FastAPI(lifespan=lifespan)
 
 
-@app.get(f'/api/{Config.API_VERSION}/npc/name')
+@app.get(f'/api/{Config.API_VERSION}/npc')
 async def talk_stream(query: str = Query(default=..., description='player query')) -> StreamingResponse:
     
     async def generate() -> AsyncGenerator:
         try:
-            streaming = await Npc().crew().kickoff_async(inputs={'query': query})
+            streaming = await main(prompt=query)
 
             chunks: list[str] = []
 
