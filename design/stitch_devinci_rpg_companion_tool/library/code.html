@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeVinci | NPC &amp; Storyline Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;600&amp;family=Geist:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#0e0e0f",
+                    "inverse-primary": "#6d3bd7",
+                    "on-secondary": "#303033",
+                    "primary-fixed-dim": "#d0bcff",
+                    "on-primary-fixed-variant": "#5516be",
+                    "surface-container-high": "#2a2a2b",
+                    "surface-container-highest": "#353436",
+                    "on-secondary-fixed": "#1b1b1e",
+                    "tertiary-fixed": "#ffdcbb",
+                    "secondary": "#c8c5ca",
+                    "surface-dim": "#131314",
+                    "surface": "#131314",
+                    "on-tertiary-fixed": "#2c1700",
+                    "tertiary-fixed-dim": "#ffb869",
+                    "on-surface-variant": "#cbc3d7",
+                    "tertiary-container": "#ca801e",
+                    "outline": "#958ea0",
+                    "error-container": "#93000a",
+                    "tertiary": "#ffb869",
+                    "surface-bright": "#3a393a",
+                    "on-secondary-fixed-variant": "#47464a",
+                    "on-error-container": "#ffdad6",
+                    "on-error": "#690005",
+                    "on-tertiary-fixed-variant": "#673d00",
+                    "error": "#ffb4ab",
+                    "surface-container": "#201f20",
+                    "surface-tint": "#d0bcff",
+                    "on-tertiary": "#482900",
+                    "on-primary": "#3c0091",
+                    "background": "#131314",
+                    "secondary-fixed-dim": "#c8c5ca",
+                    "secondary-container": "#47464a",
+                    "inverse-surface": "#e5e2e3",
+                    "on-primary-container": "#340080",
+                    "primary": "#d0bcff",
+                    "inverse-on-surface": "#313031",
+                    "primary-container": "#a078ff",
+                    "secondary-fixed": "#e4e1e6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "unit": "4px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "32px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Geist"],
+                    "label-caps": ["JetBrains Mono"],
+                    "code-md": ["JetBrains Mono"],
+                    "headline-lg": ["Geist"],
+                    "headline-md": ["Geist"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "code-md": ["13px", {"lineHeight": "20px", "fontWeight": "450"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0A0A0B;
+            color: #e5e2e3;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #d0bcff;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .tech-grid-bg {
+            background-image: 
+                linear-gradient(to right, #27272A 1px, transparent 1px),
+                linear-gradient(to bottom, #27272A 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle, black, transparent 80%);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-hidden">
+<!-- SideNavBar (Predicted Component) -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-outline-variant bg-surface-container-low flex flex-col py-6">
+<div class="px-6 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-on-primary font-black">D</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">DeVinci</h1>
+<p class="text-[10px] font-label-caps uppercase text-on-surface-variant tracking-widest">AI Orchestrator</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-caps uppercase">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary border-l-2 border-primary bg-primary/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-label-caps uppercase">NPCs</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span class="font-label-caps uppercase">Storylines</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="font-label-caps uppercase">API Keys</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-caps uppercase">Usage &amp; Billing</span>
+</a>
+</nav>
+<div class="px-4 mt-auto">
+<button class="w-full bg-primary text-on-primary py-3 rounded font-label-caps uppercase font-bold hover:bg-primary/90 transition-all">
+                New Project
+            </button>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="ml-[280px] h-screen flex flex-col">
+<!-- TopNavBar (Predicted Component) -->
+<header class="h-16 border-b border-outline-variant bg-surface-container flex justify-between items-center px-gutter shrink-0">
+<div class="flex items-center gap-6">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-container-low border border-outline-variant text-body-md rounded-lg pl-10 pr-4 py-1.5 w-full focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Search NPC library..." type="text"/>
+</div>
+<nav class="flex gap-4">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors text-sm" href="#">Dev</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors text-sm" href="#">Staging</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 text-sm" href="#">Prod</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close-up professional portrait of a tech professional in a dark studio setting, illuminated by subtle purple neon rim lighting, representing the high-end digital artisan aesthetic of the DeVinci platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATc4x9S9I_k5-_g0PZ-hN_XZF-rxacfcf8y_YYcfdJpXzUnDrtQ8NOkZHjMNE1hGJPTEFTW2f_JJ3QmgDAd8HtRhqxBHctOTOvGe1PpzZ_sJE1tggn4wHibWEljkW0iD1ra8fPiTQxDlpm-h40om-jRZcFFhM33BdBthdePh4iIQ6_gyQX1Fikfp_ZC-GU89vMgjWk9-yql3BLN680vDLaUn1hMHFHWdcTYI-84DrbTJ7AciZaGDcvoA"/>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 p-gutter overflow-y-auto bg-surface-container-lowest">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Entity Library</h2>
+<p class="text-on-surface-variant mt-1">Manage your narrative intelligence components across all environments.</p>
+</div>
+<div class="flex bg-surface-container-high p-1 rounded-lg">
+<button class="px-6 py-2 rounded font-label-caps uppercase bg-surface-container-highest text-primary shadow-sm">NPCs</button>
+<button class="px-6 py-2 rounded font-label-caps uppercase text-on-surface-variant hover:text-on-surface">Storylines</button>
+</div>
+</div>
+<!-- Library Table Container -->
+<div class="bg-surface-container border border-outline-variant rounded-xl overflow-hidden shadow-2xl">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-container-high/50">
+<th class="px-6 py-4 font-label-caps text-on-surface-variant uppercase tracking-wider">Name</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant uppercase tracking-wider">ID</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant uppercase tracking-wider">Status</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant uppercase tracking-wider">Last Called</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant uppercase tracking-wider">Call Count</th>
+<th class="px-6 py-4 font-label-caps text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- NPC Row 1 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-container-highest rounded border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="smart_toy">smart_toy</span>
+</div>
+<span class="font-medium text-on-surface">Eldrin the Archivist</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-code-md text-code-md text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded">npc_7812_beta</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="text-xs font-label-caps uppercase text-primary">Published</span>
+</div>
+</td>
+<td class="px-6 py-4 text-on-surface-variant text-sm">2 mins ago</td>
+<td class="px-6 py-4 text-on-surface-variant font-code-md">1.2M</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-tertiary hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="analytics">analytics</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="delete">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- NPC Row 2 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-container-highest rounded border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="smart_toy">smart_toy</span>
+</div>
+<span class="font-medium text-on-surface">Kaelen Shadowstep</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-code-md text-code-md text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded">npc_0041_alpha</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+<span class="text-xs font-label-caps uppercase text-on-surface-variant">Draft</span>
+</div>
+</td>
+<td class="px-6 py-4 text-on-surface-variant text-sm">Never</td>
+<td class="px-6 py-4 text-on-surface-variant font-code-md">0</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-tertiary hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="analytics">analytics</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="delete">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- NPC Row 3 -->
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-surface-container-highest rounded border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="smart_toy">smart_toy</span>
+</div>
+<span class="font-medium text-on-surface">Unit 7C-Guardian</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-code-md text-code-md text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded">npc_guardian_core</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span class="text-xs font-label-caps uppercase text-tertiary">Archived</span>
+</div>
+</td>
+<td class="px-6 py-4 text-on-surface-variant text-sm">12 days ago</td>
+<td class="px-6 py-4 text-on-surface-variant font-code-md">45.8K</td>
+<td class="px-6 py-4 text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-tertiary hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="analytics">analytics</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-surface-container-highest rounded transition-all">
+<span class="material-symbols-outlined text-lg" data-icon="delete">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State (Conditional Mockup) -->
+<div class="hidden py-32 flex flex-col items-center justify-center text-center relative overflow-hidden" id="empty-state">
+<div class="tech-grid-bg absolute inset-0 opacity-20"></div>
+<div class="relative z-10">
+<div class="w-20 h-20 bg-surface-container-high rounded-full border border-primary/20 flex items-center justify-center mb-6 shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
+<span class="material-symbols-outlined text-4xl text-primary/60" data-icon="forge">borg</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">The Archive is Silent</h3>
+<p class="text-on-surface-variant max-w-md mx-auto mb-8">No entities were found matching your current parameters. Ready to forge your first narrative intelligence?</p>
+<button class="bg-primary text-on-primary px-8 py-3 rounded-lg font-label-caps uppercase font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/10">
+                            Create First NPC
+                        </button>
+</div>
+</div>
+<!-- Pagination / Footer -->
+<div class="px-6 py-4 border-t border-outline-variant bg-surface-container-high/30 flex justify-between items-center">
+<span class="text-xs font-label-caps text-on-surface-variant uppercase">Showing 3 of 142 NPCs</span>
+<div class="flex gap-2">
+<button class="p-1.5 border border-outline-variant rounded hover:bg-surface-container-highest text-on-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="p-1.5 border border-outline-variant rounded hover:bg-surface-container-highest text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Secondary Bento Panels -->
+<div class="bento-grid mt-8">
+<div class="col-span-8 bg-surface-container border border-outline-variant rounded-xl p-6 relative overflow-hidden">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Real-time Call Metrics</h4>
+<p class="text-sm text-on-surface-variant">Active NPC interaction volume across shards</p>
+</div>
+<span class="material-symbols-outlined text-primary/40">monitoring</span>
+</div>
+<!-- Mock Graph Area -->
+<div class="h-48 w-full flex items-end gap-1 px-2">
+<div class="w-full bg-primary/20 h-[30%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[45%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[20%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[60%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[85%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[40%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[55%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[70%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[35%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[90%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[50%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+<div class="w-full bg-primary/20 h-[65%] rounded-t-sm transition-all hover:bg-primary/40"></div>
+</div>
+</div>
+<div class="col-span-4 bg-surface-container border border-outline-variant rounded-xl p-6 flex flex-col justify-between">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-2">Narrative Forge</h4>
+<p class="text-sm text-on-surface-variant">Connect your NPCs to multi-path storylines to create dynamic world states.</p>
+</div>
+<div class="mt-4 flex flex-col gap-2">
+<div class="p-3 bg-surface-container-low rounded border border-outline-variant flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary" data-icon="auto_stories">auto_stories</span>
+<span class="text-xs font-label-caps uppercase text-on-surface">The Whispering Sands</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded border border-outline-variant flex items-center gap-3 opacity-60">
+<span class="material-symbols-outlined text-tertiary" data-icon="auto_stories">auto_stories</span>
+<span class="text-xs font-label-caps uppercase text-on-surface">Cybernetic Uprising</span>
+</div>
+</div>
+<button class="mt-6 text-primary font-label-caps uppercase text-xs flex items-center gap-2 hover:gap-3 transition-all">
+                        Go to Storylines <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple search interaction toggle to simulate empty state
+        const searchInput = document.querySelector('input');
+        const tableBody = document.querySelector('tbody');
+        const emptyState = document.getElementById('empty-state');
+        const tableHead = document.querySelector('thead');
+
+        searchInput.addEventListener('input', (e) => {
+            if (e.target.value.toLowerCase() === 'empty') {
+                tableBody.classList.add('hidden');
+                tableHead.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                tableBody.classList.remove('hidden');
+                tableHead.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+            }
+        });
+
+        // Dynamic highlight for nav - logic usually server side or framework handled
+        // Manually applying to 'NPCs' as per primary intent
+    </script>
+</body></html>

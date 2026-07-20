@@ -16,6 +16,25 @@ services:
       - app
     restart: unless-stopped
 
+  frontend:
+    container_name: frontend
+    env_file:
+      - ../.env
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: frontend
+      args:
+        REACT_APP_SUPABASE_URL: ${SUPABASE_URL}
+        REACT_APP_SUPABASE_ANON_KEY: ${SUPABASE_PUBLISHABLE_API_KEY}
+    ports:
+      - "3000:80"
+    networks:
+      - app
+    restart: unless-stopped
+    depends_on:
+      - npc_service
+
 
 networks:
   app:
