@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeVinci - API Keys &amp; Integration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;600&amp;family=Geist:wght@500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .code-glow {
+            box-shadow: inset 0 0 20px rgba(160, 120, 255, 0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1c1b1c;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #494454;
+            border-radius: 10px;
+        }
+        .violet-syntax { color: #d0bcff; }
+        .string-syntax { color: #ffb869; }
+        .comment-syntax { color: #958ea0; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#0e0e0f",
+                      "inverse-primary": "#6d3bd7",
+                      "on-secondary": "#303033",
+                      "primary-fixed-dim": "#d0bcff",
+                      "on-primary-fixed-variant": "#5516be",
+                      "surface-container-high": "#2a2a2b",
+                      "surface-container-highest": "#353436",
+                      "on-secondary-fixed": "#1b1b1e",
+                      "tertiary-fixed": "#ffdcbb",
+                      "secondary": "#c8c5ca",
+                      "surface-dim": "#131314",
+                      "surface": "#131314",
+                      "on-tertiary-fixed": "#2c1700",
+                      "tertiary-fixed-dim": "#ffb869",
+                      "on-surface-variant": "#cbc3d7",
+                      "tertiary-container": "#ca801e",
+                      "outline": "#958ea0",
+                      "error-container": "#93000a",
+                      "tertiary": "#ffb869",
+                      "surface-bright": "#3a393a",
+                      "on-secondary-fixed-variant": "#47464a",
+                      "on-error-container": "#ffdad6",
+                      "on-error": "#690005",
+                      "on-tertiary-fixed-variant": "#673d00",
+                      "error": "#ffb4ab",
+                      "surface-container-low": "#1c1b1c",
+                      "on-surface": "#e5e2e3",
+                      "surface-variant": "#353436",
+                      "outline-variant": "#494454",
+                      "on-tertiary-container": "#3f2300",
+                      "on-primary-fixed": "#23005c",
+                      "primary-fixed": "#e9ddff",
+                      "on-background": "#e5e2e3",
+                      "on-tertiary": "#482900",
+                      "on-primary": "#3c0091",
+                      "background": "#131314",
+                      "secondary-fixed-dim": "#c8c5ca",
+                      "secondary-container": "#47464a",
+                      "inverse-surface": "#e5e2e3",
+                      "on-primary-container": "#340080",
+                      "primary": "#d0bcff",
+                      "inverse-on-surface": "#313031",
+                      "primary-container": "#a078ff",
+                      "secondary-fixed": "#e4e1e6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "unit": "4px",
+                      "margin-mobile": "16px",
+                      "margin-desktop": "32px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "headline-sm": ["Geist"],
+                      "label-caps": ["JetBrains Mono"],
+                      "code-md": ["JetBrains Mono"],
+                      "headline-lg": ["Geist"],
+                      "headline-md": ["Geist"],
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "code-md": ["13px", {"lineHeight": "20px", "fontWeight": "450"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-outline-variant bg-surface-container-low flex flex-col py-6">
+<div class="px-6 mb-8 flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">DeVinci</span>
+<span class="font-label-caps text-label-caps text-primary tracking-widest mt-1">AI ORCHESTRATOR</span>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-label-caps text-label-caps">NPCs</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-label-caps text-label-caps">Storylines</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary border-l-2 border-primary bg-primary/5" href="#">
+<span class="material-symbols-outlined">vpn_key</span>
+<span class="font-label-caps text-label-caps">API Keys</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-caps text-label-caps">Usage &amp; Billing</span>
+</a>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full bg-primary py-3 font-label-caps text-label-caps text-on-primary-container font-bold transition-all hover:opacity-90 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Project
+            </button>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="ml-[280px] flex-1 flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 right-0 w-[calc(100%-280px)] h-16 border-b border-outline-variant bg-surface-container flex justify-between items-center px-gutter z-50">
+<div class="flex items-center gap-8">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="bg-surface-container-lowest border border-outline-variant rounded-lg px-10 py-1.5 font-body-md focus:ring-1 focus:ring-primary focus:outline-none w-64 transition-all" placeholder="Search keys or logs..." type="text"/>
+</div>
+<div class="flex gap-6">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors" href="#">Dev</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors" href="#">Staging</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1" href="#">Prod</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 bg-surface-container-highest flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional close-up headshot of a software engineer with a neutral expression, high-end studio lighting emphasizing sharp facial features, set against a dark, minimalist tech-office background with soft violet bokeh. The aesthetic is clean, cinematic, and embodies professional developer authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsaovBmReW0K-LH5iqQNqyv_KYH-r0jFUhDTcsv_ygYmSXrhxYnaF3whTf2PlnVpjhmOU5dISlXBw7aJJYYkvGSkutqzFz4w11SiyPM7B6XQapXPWxbhxHwXwe4vSn8uQxeAQWQvOB1ZIcX3X2IkT-DOeywCvB7Kh53sm_pmyWX9HHPhmnyrkDfc9WmdYorxQ4zm-aUt4CzKIFKW2dw0HKKueg1B8hxl36fQgHa-AgOAOy9Ag4UBKHiA"/>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="mt-16 flex-1 flex overflow-hidden">
+<!-- Center Panel: API Keys & Guide -->
+<div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<!-- Section: API Keys Table -->
+<section class="mb-10">
+<div class="flex justify-between items-end mb-6">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-1">API Keys</h1>
+<p class="text-on-surface-variant">Manage secure credentials for DeVinci Orchestrator access.</p>
+</div>
+<button class="border border-outline-variant rounded-lg px-4 py-2 font-label-caps text-label-caps hover:bg-surface-container-highest transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Generate Key
+                        </button>
+</div>
+<div class="bg-surface-container-low border border-outline-variant rounded-lg overflow-hidden">
+<table class="w-full text-left font-body-md">
+<thead>
+<tr class="border-b border-outline-variant bg-surface-container-lowest">
+<th class="px-6 py-3 font-label-caps text-label-caps text-outline uppercase tracking-wider">Key Name</th>
+<th class="px-6 py-3 font-label-caps text-label-caps text-outline uppercase tracking-wider">Key String</th>
+<th class="px-6 py-3 font-label-caps text-label-caps text-outline uppercase tracking-wider">Created</th>
+<th class="px-6 py-3 font-label-caps text-label-caps text-outline uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md">Production_Orchestrator_Main</td>
+<td class="px-6 py-4 font-code-md text-code-md">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span>dv_prod_••••••••••••••••3a9f</span>
+<button class="hover:text-primary transition-colors flex items-center" title="Reveal">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="hover:text-primary transition-colors flex items-center" title="Copy">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">Oct 12, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="text-error font-label-caps text-[10px] uppercase font-bold px-3 py-1 border border-error/30 rounded-lg hover:bg-error/10 transition-all">Revoke</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md">NPC_Dynamic_Generator_Test</td>
+<td class="px-6 py-4 font-code-md text-code-md">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span>dv_test_••••••••••••••••7c2b</span>
+<button class="hover:text-primary transition-colors flex items-center" title="Reveal">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+<button class="hover:text-primary transition-colors flex items-center" title="Copy">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">Jan 04, 2024</td>
+<td class="px-6 py-4 text-right">
+<button class="text-error font-label-caps text-[10px] uppercase font-bold px-3 py-1 border border-error/30 rounded-lg hover:bg-error/10 transition-all">Revoke</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section: Implementation Guide -->
+<section>
+<div class="mb-6">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-1">Implementation Guide</h2>
+<p class="text-on-surface-variant">Start integrating DeVinci NPC endpoints into your stack.</p>
+</div>
+<div class="border border-outline-variant bg-surface-container-low rounded-lg overflow-hidden">
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant bg-surface-container-lowest">
+<button class="px-6 py-3 font-label-caps text-label-caps border-b-2 border-primary text-primary transition-all bg-primary/5" id="tab-curl" onclick="switchTab('curl')">cURL</button>
+<button class="px-6 py-3 font-label-caps text-label-caps border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all" id="tab-node" onclick="switchTab('node')">Node.js</button>
+<button class="px-6 py-3 font-label-caps text-label-caps border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all" id="tab-python" onclick="switchTab('python')">Python</button>
+<button class="px-6 py-3 font-label-caps text-label-caps border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all" id="tab-csharp" onclick="switchTab('csharp')">C# (Unity)</button>
+<button class="px-6 py-3 font-label-caps text-label-caps border-b-2 border-transparent text-on-surface-variant hover:text-on-surface transition-all" id="tab-cpp" onclick="switchTab('cpp')">C++ (Unreal)</button>
+</div>
+<!-- Code Content -->
+<div class="p-6 font-code-md text-code-md relative code-glow">
+<button class="absolute top-4 right-4 p-2 rounded-lg bg-surface-container-highest/50 hover:bg-surface-container-highest transition-colors text-outline">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+<!-- CURL Snippet -->
+<div class="block" id="code-curl">
+<pre class="leading-relaxed"><span class="violet-syntax">curl</span> -X POST https://api.devinci.ai/v1/npc/generate \
+  -H <span class="string-syntax">"Authorization: Bearer YOUR_API_KEY"</span> \
+  -H <span class="string-syntax">"Content-Type: application/json"</span> \
+  -d <span class="string-syntax">'{
+    "template_id": "cyberpunk_merchant_01",
+    "context": "Neon District market encounter",
+    "personality_weight": 0.85
+  }'</span></pre>
+</div>
+<!-- Node Snippet (Hidden) -->
+<div class="hidden" id="code-node">
+<pre class="leading-relaxed"><span class="violet-syntax">const</span> axios = require(<span class="string-syntax">'axios'</span>);
+
+<span class="violet-syntax">async function</span> generateNPC() {
+  <span class="violet-syntax">const</span> response = <span class="violet-syntax">await</span> axios.post(<span class="string-syntax">'https://api.devinci.ai/v1/npc/generate'</span>, {
+    template_id: <span class="string-syntax">'cyberpunk_merchant_01'</span>,
+    context: <span class="string-syntax">'Neon District market encounter'</span>,
+    personality_weight: <span class="string-syntax">0.85</span>
+  }, {
+    headers: { <span class="string-syntax">'Authorization'</span>: <span class="string-syntax">'Bearer YOUR_API_KEY'</span> }
+  });
+  console.log(response.data);
+}</pre>
+</div>
+<!-- Python Snippet (Hidden) -->
+<div class="hidden" id="code-python">
+<pre class="leading-relaxed"><span class="violet-syntax">import</span> requests
+
+url = <span class="string-syntax">"https://api.devinci.ai/v1/npc/generate"</span>
+headers = {<span class="string-syntax">"Authorization"</span>: <span class="string-syntax">"Bearer YOUR_API_KEY"</span>}
+payload = {
+    <span class="string-syntax">"template_id"</span>: <span class="string-syntax">"cyberpunk_merchant_01"</span>,
+    <span class="string-syntax">"context"</span>: <span class="string-syntax">"Neon District market encounter"</span>,
+    <span class="string-syntax">"personality_weight"</span>: <span class="string-syntax">0.85</span>
+}
+
+response = requests.post(url, json=payload, headers=headers)
+<span class="violet-syntax">print</span>(response.json())</pre>
+</div>
+<!-- C# / Unity Snippet (Hidden) -->
+<div class="hidden" id="code-csharp">
+<pre class="leading-relaxed"><span class="comment-syntax">// Attach to a MonoBehaviour and start as a coroutine</span>
+<span class="violet-syntax">using</span> System.Collections;
+<span class="violet-syntax">using</span> System.Text;
+<span class="violet-syntax">using</span> UnityEngine;
+<span class="violet-syntax">using</span> UnityEngine.Networking;
+
+<span class="violet-syntax">public class</span> DevinciClient : MonoBehaviour
+{
+    <span class="violet-syntax">private const string</span> ApiKey = <span class="string-syntax">"YOUR_API_KEY"</span>;
+
+    <span class="violet-syntax">public</span> IEnumerator GenerateNPC()
+    {
+        <span class="violet-syntax">string</span> json = <span class="string-syntax">"{\"template_id\":\"cyberpunk_merchant_01\",\"context\":\"Neon District market encounter\",\"personality_weight\":0.85}"</span>;
+
+        <span class="violet-syntax">var</span> request = <span class="violet-syntax">new</span> UnityWebRequest(<span class="string-syntax">"https://api.devinci.ai/v1/npc/generate"</span>, <span class="string-syntax">"POST"</span>);
+        request.uploadHandler = <span class="violet-syntax">new</span> UploadHandlerRaw(Encoding.UTF8.GetBytes(json));
+        request.downloadHandler = <span class="violet-syntax">new</span> DownloadHandlerBuffer();
+        request.SetRequestHeader(<span class="string-syntax">"Content-Type"</span>, <span class="string-syntax">"application/json"</span>);
+        request.SetRequestHeader(<span class="string-syntax">"Authorization"</span>, <span class="string-syntax">$"Bearer {ApiKey}"</span>);
+
+        <span class="violet-syntax">yield return</span> request.SendWebRequest();
+
+        <span class="violet-syntax">if</span> (request.result == UnityWebRequest.Result.Success)
+            Debug.Log(request.downloadHandler.text);
+        <span class="violet-syntax">else</span>
+            Debug.LogError(request.error);
+    }
+}</pre>
+</div>
+<!-- C++ / Unreal Engine Snippet (Hidden) -->
+<div class="hidden" id="code-cpp">
+<pre class="leading-relaxed"><span class="comment-syntax">// Requires the "HTTP" module in YourProject.Build.cs</span>
+<span class="violet-syntax">#include</span> <span class="string-syntax">"HttpModule.h"</span>
+<span class="violet-syntax">#include</span> <span class="string-syntax">"Interfaces/IHttpResponse.h"</span>
+
+<span class="violet-syntax">void</span> UDevinciClient::GenerateNPC()
+{
+    FHttpModule* Http = &amp;FHttpModule::Get();
+    TSharedRef&lt;IHttpRequest, ESPMode::ThreadSafe&gt; Request = Http-&gt;CreateRequest();
+
+    Request-&gt;SetURL(TEXT(<span class="string-syntax">"https://api.devinci.ai/v1/npc/generate"</span>));
+    Request-&gt;SetVerb(TEXT(<span class="string-syntax">"POST"</span>));
+    Request-&gt;SetHeader(TEXT(<span class="string-syntax">"Content-Type"</span>), TEXT(<span class="string-syntax">"application/json"</span>));
+    Request-&gt;SetHeader(TEXT(<span class="string-syntax">"Authorization"</span>), TEXT(<span class="string-syntax">"Bearer YOUR_API_KEY"</span>));
+
+    FString Payload = TEXT(<span class="string-syntax">"{\"template_id\":\"cyberpunk_merchant_01\",\"context\":\"Neon District market encounter\",\"personality_weight\":0.85}"</span>);
+    Request-&gt;SetContentAsString(Payload);
+
+    Request-&gt;OnProcessRequestComplete().BindLambda(
+        [](FHttpRequestPtr Req, FHttpResponsePtr Response, <span class="violet-syntax">bool</span> bSuccess)
+        {
+            <span class="violet-syntax">if</span> (bSuccess &amp;&amp; Response.IsValid())
+                UE_LOG(LogTemp, Log, TEXT(<span class="string-syntax">"%s"</span>), *Response-&gt;GetContentAsString());
+        });
+
+    Request-&gt;ProcessRequest();
+}</pre>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Sidebar: Request/Response Panel -->
+<aside class="w-[380px] border-l border-outline-variant bg-surface-container-low flex flex-col">
+<div class="p-6 border-b border-outline-variant bg-surface-container">
+<h3 class="font-label-caps text-label-caps text-on-surface uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">terminal</span>
+                        Live Preview
+                    </h3>
+</div>
+<div class="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-8">
+<!-- Request Object -->
+<div>
+<div class="flex justify-between items-center mb-3">
+<span class="font-label-caps text-[10px] text-outline uppercase tracking-widest">Request Headers</span>
+<span class="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20">POST</span>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant/30 rounded-lg">
+<pre class="font-code-md text-[12px] leading-relaxed">{
+  <span class="string-syntax">"Content-Type"</span>: <span class="string-syntax">"application/json"</span>,
+  <span class="string-syntax">"X-Devinci-Version"</span>: <span class="string-syntax">"2024-01"</span>,
+  <span class="string-syntax">"X-Trace-ID"</span>: <span class="string-syntax">"trace_4k9x2m"</span>
+}</pre>
+</div>
+</div>
+<!-- Response Object -->
+<div>
+<div class="flex justify-between items-center mb-3">
+<span class="font-label-caps text-[10px] text-outline uppercase tracking-widest">Response Body</span>
+<span class="text-[10px] px-1.5 py-0.5 bg-tertiary-container/10 text-tertiary border border-tertiary-container/20">200 OK</span>
+</div>
+<div class="bg-surface-container-lowest p-4 border border-outline-variant/30 rounded-lg code-glow">
+<pre class="font-code-md text-[12px] leading-relaxed">{
+  <span class="string-syntax">"npc_id"</span>: <span class="string-syntax">"npc_8273"</span>,
+  <span class="string-syntax">"status"</span>: <span class="string-syntax">"active"</span>,
+  <span class="string-syntax">"data"</span>: {
+    <span class="string-syntax">"name"</span>: <span class="string-syntax">"Vane Kaelo"</span>,
+    <span class="string-syntax">"traits"</span>: [<span class="string-syntax">"stoic"</span>, <span class="string-syntax">"cunning"</span>],
+    <span class="string-syntax">"seed"</span>: <span class="string-syntax">492019483</span>
+  },
+  <span class="string-syntax">"latency"</span>: <span class="string-syntax">"142ms"</span>
+}</pre>
+</div>
+</div>
+<!-- Atmospheric Element -->
+<div class="relative h-48 border border-outline-variant bg-surface-container-lowest overflow-hidden rounded-lg">
+
+<div class="absolute inset-0 p-4 flex flex-col justify-end">
+<div class="flex items-center gap-2 mb-2">
+<div class="w-1.5 h-1.5 bg-primary animate-pulse rounded-full"></div>
+<span class="font-label-caps text-[10px] text-primary">SYNCING ORCHESTRATOR</span>
+</div>
+<p class="font-code-md text-[11px] text-on-surface-variant leading-tight">System metrics operational. API Gateway 100% available in us-east-1.</p>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<script>
+        function switchTab(lang) {
+            // Hide all code blocks
+            const langs = ['curl', 'node', 'python', 'csharp', 'cpp'];
+            langs.forEach(l => document.getElementById('code-' + l).classList.add('hidden'));
+
+            // Show selected
+            document.getElementById('code-' + lang).classList.remove('hidden');
+
+            // Reset tab styles
+            const tabs = ['curl', 'node', 'python', 'csharp', 'cpp'];
+            tabs.forEach(t => {
+                const el = document.getElementById('tab-' + t);
+                el.classList.remove('border-primary', 'text-primary', 'bg-primary/5');
+                el.classList.add('border-transparent', 'text-on-surface-variant');
+            });
+
+            // Highlight selected tab
+            const activeTab = document.getElementById('tab-' + lang);
+            activeTab.classList.add('border-primary', 'text-primary', 'bg-primary/5');
+            activeTab.classList.remove('border-transparent', 'text-on-surface-variant');
+        }
+
+        // Initialize Copy/Reveal interactions
+        document.querySelectorAll('[title="Copy"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const icon = btn.querySelector('.material-symbols-outlined');
+                icon.innerText = 'check';
+                icon.classList.add('text-primary');
+                setTimeout(() => {
+                    icon.innerText = 'content_copy';
+                    icon.classList.remove('text-primary');
+                }, 2000);
+            });
+        });
+    </script>
+</body></html>

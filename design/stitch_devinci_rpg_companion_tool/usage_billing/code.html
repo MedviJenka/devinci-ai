@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DeVinci | Usage &amp; Billing</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Geist:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .electric-glow {
+            text-shadow: 0 0 15px rgba(208, 188, 255, 0.4);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0e0e0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a2b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #353436;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#0e0e0f",
+                    "inverse-primary": "#6d3bd7",
+                    "on-secondary": "#303033",
+                    "primary-fixed-dim": "#d0bcff",
+                    "on-primary-fixed-variant": "#5516be",
+                    "surface-container-high": "#2a2a2b",
+                    "surface-container-highest": "#353436",
+                    "on-secondary-fixed": "#1b1b1e",
+                    "tertiary-fixed": "#ffdcbb",
+                    "secondary": "#c8c5ca",
+                    "surface-dim": "#131314",
+                    "surface": "#131314",
+                    "on-tertiary-fixed": "#2c1700",
+                    "tertiary-fixed-dim": "#ffb869",
+                    "on-surface-variant": "#cbc3d7",
+                    "tertiary-container": "#ca801e",
+                    "outline": "#958ea0",
+                    "error-container": "#93000a",
+                    "tertiary": "#ffb869",
+                    "surface-bright": "#3a393a",
+                    "on-secondary-fixed-variant": "#47464a",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary-container": "#b6b4b8",
+                    "surface-container-low": "#1c1b1c",
+                    "on-surface": "#e5e2e3",
+                    "surface-variant": "#353436",
+                    "outline-variant": "#494454",
+                    "on-tertiary-container": "#3f2300",
+                    "on-primary-fixed": "#23005c",
+                    "primary-fixed": "#e9ddff",
+                    "on-background": "#e5e2e3",
+                    "on-error": "#690005",
+                    "on-tertiary-fixed-variant": "#673d00",
+                    "error": "#ffb4ab",
+                    "surface-container": "#201f20",
+                    "surface-tint": "#d0bcff",
+                    "on-tertiary": "#482900",
+                    "on-primary": "#3c0091",
+                    "background": "#131314",
+                    "secondary-fixed-dim": "#c8c5ca",
+                    "secondary-container": "#47464a",
+                    "inverse-surface": "#e5e2e3",
+                    "on-primary-container": "#340080",
+                    "primary": "#d0bcff",
+                    "inverse-on-surface": "#313031",
+                    "primary-container": "#a078ff",
+                    "secondary-fixed": "#e4e1e6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "unit": "4px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "32px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Geist"],
+                    "label-caps": ["JetBrains Mono"],
+                    "code-md": ["JetBrains Mono"],
+                    "headline-lg": ["Geist"],
+                    "headline-md": ["Geist"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "code-md": ["13px", {"lineHeight": "20px", "fontWeight": "450"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary/30 selection:text-primary">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[280px] border-r border-outline-variant bg-surface-container-low flex flex-col py-6 z-50">
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[20px]" data-icon="token">token</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight leading-none">DeVinci</h1>
+<p class="font-label-caps text-label-caps text-outline uppercase mt-1">AI Orchestrator</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors font-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors font-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span>NPCs</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors font-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>Storylines</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors font-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span>API Keys</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-primary border-l-2 border-primary bg-primary/5 font-body-md" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span>Usage &amp; Billing</span>
+</a>
+</nav>
+<div class="px-6 mt-auto">
+<button class="w-full py-3 bg-primary text-on-primary font-bold rounded-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+<span>New Project</span>
+</button>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-280px)] h-16 border-b border-outline-variant bg-surface-container flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-8">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]" data-icon="search">search</span>
+<input class="bg-surface-container-lowest border border-outline-variant rounded-sm pl-10 pr-4 py-1.5 text-body-md focus:ring-1 focus:ring-primary outline-none w-64 transition-all focus:w-80" placeholder="Search usage data..." type="text"/>
+</div>
+<nav class="flex items-center gap-6">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-medium" href="#">Dev</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-medium" href="#">Staging</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1" href="#">Prod</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant ml-2 cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="Close-up professional portrait of a tech entrepreneur in a dark-lit minimalist studio setting. The lighting is low-key with a sharp, Electric Violet rim light accentuating the silhouette. The style is modern, cinematic, and sleek, aligning with a high-end AI developer environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl-3ma3TiC3qwMNDVHykHl3Fbj7RNu3JDj7EtHm7bbaKx7SVVkF9j1c8ooz650wY8qf_S_4UdtdnXMlkso-E0MDbovrtmnK2Vi4MpMMYJ1exD8sGsUtRfLOmOn6wo35iI6mTEIdbMWXg3Npjuwv0JDvSPf-2EqCE_WuMbQDaE2IIzdz0LHksC2YGYh26A5vRIyaz0y4XAXwejRuxqwrSZD0qSG5rvZ7sAUs_SflZ5ounxJ38MUCHR5pA"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[280px] pt-16 min-h-screen bg-background">
+<div class="p-gutter max-w-container-max mx-auto space-y-gutter">
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Usage &amp; Billing</h2>
+<p class="text-on-surface-variant mt-1">Manage your narrative compute resources and financial history.</p>
+</div>
+<div class="flex gap-3">
+<div class="bg-surface-container border border-outline-variant px-4 py-2 flex items-center gap-2 rounded-sm cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-caps text-label-caps">OCT 1 - OCT 31, 2023</span>
+</div>
+<button class="bg-surface-container border border-outline-variant px-4 py-2 flex items-center gap-2 rounded-sm hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+<span class="font-label-caps text-label-caps">EXPORT DATA</span>
+</button>
+</div>
+</div>
+<!-- Big Chart Section -->
+<section class="bg-surface-container-low border border-outline-variant p-6 relative overflow-hidden">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-1">API Call Volume</h3>
+<p class="text-on-surface-variant font-body-md">Aggregated requests across all production clusters</p>
+</div>
+<div class="text-right">
+<div class="text-primary font-headline-md text-headline-md font-bold electric-glow">1,429,082</div>
+<div class="text-on-surface-variant font-label-caps text-label-caps mt-1">TOTAL REQUESTS THIS PERIOD</div>
+</div>
+</div>
+<!-- Chart Visualization Placeholder -->
+<div class="h-[320px] w-full relative">
+
+<div class="absolute inset-0 flex items-end justify-between px-2 pb-8 pointer-events-none">
+<!-- Simulated Chart Grid -->
+<div class="absolute inset-0 border-b border-l border-outline-variant/30"></div>
+<div class="w-full h-full flex flex-col justify-between py-4">
+<div class="w-full border-t border-outline-variant/10"></div>
+<div class="w-full border-t border-outline-variant/10"></div>
+<div class="w-full border-t border-outline-variant/10"></div>
+<div class="w-full border-t border-outline-variant/10"></div>
+</div>
+</div>
+<!-- Custom SVG Area Chart path for visual richness -->
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 1000 300">
+<defs>
+<lineargradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#d0bcff" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#d0bcff" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0 250 Q 100 180, 200 220 T 400 150 T 600 190 T 800 80 T 1000 120 V 300 H 0 Z" fill="url(#chartGradient)"></path>
+<path class="drop-shadow-[0_0_8px_rgba(208,188,255,0.6)]" d="M0 250 Q 100 180, 200 220 T 400 150 T 600 190 T 800 80 T 1000 120" fill="none" stroke="#d0bcff" stroke-width="2"></path>
+</svg>
+</div>
+<div class="flex justify-between mt-4 px-2">
+<span class="font-label-caps text-label-caps text-outline">OCT 01</span>
+<span class="font-label-caps text-label-caps text-outline">OCT 08</span>
+<span class="font-label-caps text-label-caps text-outline">OCT 15</span>
+<span class="font-label-caps text-label-caps text-outline">OCT 22</span>
+<span class="font-label-caps text-label-caps text-outline">OCT 31</span>
+</div>
+</section>
+<!-- Key Metrics Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Current Plan -->
+<div class="bg-surface-container-low border border-outline-variant p-6 hover:border-primary/50 transition-colors group">
+<div class="flex justify-between items-start mb-6">
+<div class="p-2 bg-surface-container-high rounded-sm">
+<span class="material-symbols-outlined text-primary" data-icon="verified">verified</span>
+</div>
+<span class="font-label-caps text-label-caps bg-primary/10 text-primary px-2 py-0.5 rounded-sm">ACTIVE</span>
+</div>
+<div class="space-y-1">
+<p class="text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">Current Plan</p>
+<h4 class="font-headline-md text-headline-md text-primary font-bold">Pro Tier</h4>
+</div>
+<p class="text-on-surface-variant mt-4 text-body-md leading-relaxed">Advanced narrative modeling, unlimited collaborators, and priority processing.</p>
+<button class="mt-6 w-full py-2 border border-outline-variant text-label-caps font-bold hover:bg-surface-container-high transition-colors">UPGRADE PLAN</button>
+</div>
+<!-- Rate Limits -->
+<div class="bg-surface-container-low border border-outline-variant p-6 hover:border-primary/50 transition-colors group">
+<div class="flex justify-between items-start mb-6">
+<div class="p-2 bg-surface-container-high rounded-sm">
+<span class="material-symbols-outlined text-primary" data-icon="speed">speed</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline">THROTTLING: OFF</span>
+</div>
+<div class="space-y-1">
+<p class="text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">Rate Limits</p>
+<h4 class="font-headline-md text-headline-md text-primary font-bold">1,000 <span class="text-on-surface font-medium text-body-lg">req/min</span></h4>
+</div>
+<div class="mt-6 h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[42%]"></div>
+</div>
+<div class="flex justify-between mt-2">
+<p class="text-label-caps text-outline uppercase">Peak Usage Today</p>
+<p class="text-label-caps text-primary">42%</p>
+</div>
+</div>
+<!-- Projected Monthly Cost -->
+<div class="bg-surface-container-low border border-outline-variant p-6 hover:border-primary/50 transition-colors group">
+<div class="flex justify-between items-start mb-6">
+<div class="p-2 bg-surface-container-high rounded-sm">
+<span class="material-symbols-outlined text-primary" data-icon="trending_up">trending_up</span>
+</div>
+<div class="flex gap-1">
+<div class="w-1 h-1 bg-primary rounded-full"></div>
+<div class="w-1 h-1 bg-primary rounded-full opacity-50"></div>
+<div class="w-1 h-1 bg-primary rounded-full opacity-20"></div>
+</div>
+</div>
+<div class="space-y-1">
+<p class="text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">Projected Monthly Cost</p>
+<h4 class="font-headline-md text-headline-md text-primary font-bold">$1,248.50</h4>
+</div>
+<p class="text-on-surface-variant mt-4 text-body-md">Based on your current consumption trajectory of 46k calls per day.</p>
+<div class="mt-6 flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-[16px]" data-icon="info">info</span>
+<span class="text-label-caps">Next billing date: Nov 01, 2023</span>
+</div>
+</div>
+</div>
+<!-- Billing History -->
+<section class="bg-surface-container-low border border-outline-variant">
+<div class="p-6 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm">Billing History</h3>
+<div class="flex gap-4 items-center">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-primary rounded-full"></span>
+<span class="text-label-caps text-on-surface">PAID</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-tertiary rounded-full"></span>
+<span class="text-label-caps text-on-surface">PENDING</span>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container font-label-caps text-label-caps text-outline">
+<tr>
+<th class="px-6 py-4 font-semibold uppercase">Invoice ID</th>
+<th class="px-6 py-4 font-semibold uppercase">Date</th>
+<th class="px-6 py-4 font-semibold uppercase">Amount</th>
+<th class="px-6 py-4 font-semibold uppercase">Status</th>
+<th class="px-6 py-4 font-semibold uppercase text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">INV-2023-009</td>
+<td class="px-6 py-4 text-on-surface-variant">Sep 30, 2023</td>
+<td class="px-6 py-4 font-bold text-primary">$1,102.44</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tight">Paid</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 ml-auto">
+<span class="material-symbols-outlined text-[18px]" data-icon="file_download">file_download</span>
+<span class="font-label-caps text-label-caps">PDF</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">INV-2023-008</td>
+<td class="px-6 py-4 text-on-surface-variant">Aug 31, 2023</td>
+<td class="px-6 py-4 font-bold text-primary">$984.10</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tight">Paid</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 ml-auto">
+<span class="material-symbols-outlined text-[18px]" data-icon="file_download">file_download</span>
+<span class="font-label-caps text-label-caps">PDF</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">INV-2023-007</td>
+<td class="px-6 py-4 text-on-surface-variant">Jul 31, 2023</td>
+<td class="px-6 py-4 font-bold text-primary">$1,050.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tight">Paid</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 ml-auto">
+<span class="material-symbols-outlined text-[18px]" data-icon="file_download">file_download</span>
+<span class="font-label-caps text-label-caps">PDF</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-high transition-colors group">
+<td class="px-6 py-4 font-code-md text-code-md text-on-surface">INV-2023-006</td>
+<td class="px-6 py-4 text-on-surface-variant">Jun 30, 2023</td>
+<td class="px-6 py-4 font-bold text-primary">$892.30</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tight">Paid</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 ml-auto">
+<span class="material-symbols-outlined text-[18px]" data-icon="file_download">file_download</span>
+<span class="font-label-caps text-label-caps">PDF</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container flex justify-center">
+<button class="text-label-caps text-primary hover:underline font-bold">VIEW ALL INVOICES</button>
+</div>
+</section>
+</div>
+</main>
+<!-- Subtle atmospheric micro-interactions -->
+<script>
+        document.addEventListener('mousemove', (e) => {
+            const glow = document.querySelector('.electric-glow');
+            if (glow) {
+                const rect = glow.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                // Subtle interaction could go here
+            }
+        });
+
+        // Simulating some UI response
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.98)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body></html>

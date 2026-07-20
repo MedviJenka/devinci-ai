@@ -1,0 +1,128 @@
+import { useEffect, useRef, useState } from 'react';
+import { streamTalk } from '../api';
+import { ChatMessage } from '../types';
+
+interface Props {
+  slug: string;
+}
+
+export default function Chat({ slug }: Props) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [pending, setPending] = useState(false);
+  const closeRef = useRef<(() => void) | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    closeRef.current?.();
+    setMessages([]);
+    setPending(false);
+  }, [slug]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, pending]);
+
+  useEffect(() => () => closeRef.current?.(), []);
+
+  const send = () => {
+    const text = input.trim();
+    if (!text || pending) return;
+    setInput('');
+    setMessages((m) => [...m, { id: crypto.randomUUID(), role: 'player', text }]);
+    setPending(true);
+
+    closeRef.current = streamTalk(slug, text, {
+      onDone: (rawText, mood) => {
+        let responseText = rawText;
+        try {
+          responseText = JSON.parse(rawText).response ?? rawText;
+        } catch {
+          // backend didn't return valid JSON, fall back to raw text
+        }
+        setMessages((m) => [...m, { id: crypto.randomUUID(), role: 'npc', text: responseText, mood }]);
+        setPending(false);
+      },
+      onError: (message) => {
+        setMessages((m) => [...m, { id: crypto.randomUUID(), role: 'npc', text: message }]);
+        setPending(false);
+      },
+    });
+  };
+
+  return (
+    <div className="flex h-full flex-col bg-surface-container-lowest">
+      <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar p-6">
+        {messages.length === 0 && !pending && (
+          <div className="flex justify-center">
+            <span className="rounded-full border border-outline-variant/20 bg-surface-container-high px-3 py-1 font-code-md text-[11px] uppercase tracking-widest text-outline-variant">
+              NPC Sequence Initiated
+            </span>
+          </div>
+        )}
+        {messages.map((m) =>
+          m.role === 'player' ? (
+            <div key={m.id} className="ml-auto flex max-w-[85%] flex-row-reverse gap-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-secondary/30 bg-secondary/20">
+                <span className="material-symbols-outlined text-lg text-secondary">person</span>
+              </div>
+              <div className="space-y-2 text-right">
+                <div className="rounded-xl rounded-tr-none bg-primary p-4 text-on-primary">
+                  <p className="font-body-md leading-relaxed">{m.text}</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div key={m.id} className="flex max-w-[85%] gap-4">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20">
+                <span className="material-symbols-outlined text-lg text-primary">smart_toy</span>
+              </div>
+              <div className="space-y-2">
+                <div className="rounded-xl rounded-tl-none border border-outline-variant/30 bg-surface-container-high p-4 shadow-[0_0_40px_-10px_rgba(208,188,255,0.1)]">
+                  {m.mood && (
+                    <span className="mb-1 block font-label-caps text-[10px] uppercase tracking-wide text-primary">
+                      {m.mood}
+                    </span>
+                  )}
+                  <p className="font-body-md italic leading-relaxed text-on-surface">{m.text}</p>
+                </div>
+              </div>
+            </div>
+          ),
+        )}
+        {pending && (
+          <div className="flex max-w-[85%] gap-4">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20">
+              <span className="material-symbols-outlined text-lg text-primary">smart_toy</span>
+            </div>
+            <div className="flex items-center gap-1 rounded-xl rounded-tl-none border border-outline-variant/30 bg-surface-container-high p-4">
+              <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/40" />
+              <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/40" style={{ animationDelay: '0.2s' }} />
+              <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/40" style={{ animationDelay: '0.4s' }} />
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      <div className="border-t border-outline-variant bg-surface-container/30 p-6 backdrop-blur-md">
+        <div className="relative">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && send()}
+            placeholder="Say something..."
+            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-4 pr-12 font-body-md text-on-surface outline-none transition-colors focus:border-primary"
+          />
+          <button
+            onClick={send}
+            disabled={pending || !input.trim()}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary transition-transform hover:scale-110 disabled:opacity-30"
+          >
+            <span className="material-symbols-outlined">send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,12 +1,10 @@
 import uvicorn
-from log import Logger
-from settings import Config
-from stream import _sse
-from fastapi import FastAPI, Query
+from core.log import Logger
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager
-from fastapi.responses import StreamingResponse
-from npcs.marcus_holt.npc import main
+from core.api.v1.npcs.api import router as npc_router
 
 
 log = Logger(name="api-service")
@@ -21,48 +19,14 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['http://localhost:3000'],
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
-@app.get(f'/api/{Config.API_VERSION}/npc')
-async def talk_stream(query: str = Query(default=..., description='player query')) -> StreamingResponse:
-    
-    async def generate() -> AsyncGenerator:
-        try:
-            streaming = await main(prompt=query)
-
-            chunks: list[str] = []
-
-            async for chunk in streaming:
-                chunks.append(chunk.content)
-
-            final_text = streaming.result.raw
-            full = ''.join(chunks)
-            start = full.find(final_text)
-
-            if start >= 0:
-                offset = 0
-                for text in chunks:
-                    end = offset + len(text)
-                    if end > start:
-                        trimmed = text[max(0, start - offset):]
-                        if trimmed:
-                            yield _sse({'type': 'chunk', 'text': trimmed})
-                    offset = end
-            else:
-                yield _sse({'type': 'chunk', 'text': final_text})
-
-            yield _sse({'type': 'done', 'text': final_text})
-        except Exception as exc:
-            log.fire.error(f'stream failed: {exc}')
-            yield _sse({'type': 'error', 'message': 'Failed to generate response.'})
-
-    return StreamingResponse(
-        generate(),
-        media_type='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'X-Accel-Buffering': 'no',
-        },
-    )
+app.include_router(npc_router)
 
 
 if __name__ == '__main__':

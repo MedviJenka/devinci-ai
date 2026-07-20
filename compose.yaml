@@ -16,6 +16,20 @@ services:
       - app
     restart: unless-stopped
 
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: frontend
+    ports:
+      - "3000:80"
+    networks:
+      - app
+    restart: unless-stopped
+    depends_on:
+      - npc_service
+
 
 networks:
   app:
