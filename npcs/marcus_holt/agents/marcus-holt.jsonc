@@ -1,6 +1,6 @@
 {
   "role": "marcus-holt",
-  "skills": ["C:/Users/medvi/OneDrive/Desktop/interactive-npc/npcs/marcus_holt/skills"],
+  "skills": ["./skills"],
   "goal": "interactive npc",
   "backstory": "hard life story",
   "llm": "openai/gpt-5.5",

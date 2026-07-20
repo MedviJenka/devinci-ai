@@ -13,10 +13,11 @@
   // Background story that shapes the agent's personality and approach
   "backstory": "creative",
 
-  // crewai resolves relative "skills" paths against the process cwd, not the
-  // project directory, so a relative path breaks when the server isn't
-  // launched from inside this directory. Use an absolute path instead.
-  "skills": ["C:/Users/medvi/OneDrive/Desktop/interactive-npc/core/ai/story/skills"],
+  // crewai resolves relative "skills" paths against the process cwd instead
+  // of the project directory (crewAIInc/crewAI#6585); core/ai/crewai_compat.py
+  // patches this so the relative path below resolves correctly regardless of
+  // where the process is launched from.
+  "skills": ["./skills"],
 
   // LLM model in provider/model format
   // Examples: "openai/gpt-4o", "anthropic/claude-sonnet-4-6", "ollama/llama3.3"

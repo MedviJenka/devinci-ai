@@ -25,6 +25,7 @@ class NpcResponseSchema(BaseModel):
 
 _NPC_PY = '''import asyncio
 from pathlib import Path
+import core.ai.crewai_compat  # noqa: F401
 from crewai.project import load_crew
 from crewai.types.streaming import CrewStreamingOutput
 
@@ -258,12 +259,13 @@ def delete_npc(slug: str) -> None:
 
 
 def _write_agent_jsonc(npc_dir: Path, agent_name: str, goal: str, backstory: str, llm: str) -> None:
-    # crewai resolves relative "skills" paths against the process cwd, not the
-    # project directory, so a relative path breaks when the server isn't
-    # launched from inside npc_dir. Use an absolute path instead.
+    # crewai resolves relative "skills" paths against the process cwd instead
+    # of the project directory (crewAIInc/crewAI#6585); core/ai/crewai_compat.py
+    # patches this so the relative path below resolves correctly regardless of
+    # where the process is launched from.
     agent = {
         'role': agent_name,
-        'skills': [str((npc_dir / 'skills').resolve())],
+        'skills': ['./skills'],
         'goal': goal,
         'backstory': backstory,
         'llm': llm,

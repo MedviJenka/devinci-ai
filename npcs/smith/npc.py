@@ -1,5 +1,6 @@
 import asyncio
 from pathlib import Path
+import core.ai.crewai_compat  # noqa: F401
 from crewai.project import load_crew
 from crewai.types.streaming import CrewStreamingOutput
 
