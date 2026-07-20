@@ -187,7 +187,7 @@ export default function ApiKeys() {
           </button>
         </div>
       ) : (
-        <div className="mb-10 overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
+        <div className="mb-10 overflow-hidden rounded-lg border border-outline-variant bg-surface-container">
           <table className="w-full text-left font-body-md">
             <thead>
               <tr className="border-b border-outline-variant bg-surface-container-lowest">
@@ -261,7 +261,7 @@ export default function ApiKeys() {
           <h2 className="font-headline-md text-headline-md text-on-surface">Implementation Guide</h2>
           <p className="text-on-surface-variant">Start integrating Devinci NPC endpoints into your stack.</p>
         </div>
-        <div className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container-low">
+        <div className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container">
           <div className="flex flex-wrap border-b border-outline-variant bg-surface-container-lowest">
             {LANGS.map((lang) => (
               <button

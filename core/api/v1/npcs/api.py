@@ -1,9 +1,10 @@
-import importlib
+import importlib.util
 from typing import AsyncGenerator
+from core.auth import get_current_user_id
 from core.log import Logger
 from core.settings import Config
 from core.stream import _sse
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from npcs.manager import (
     NpcAlreadyExistsError,
@@ -14,6 +15,7 @@ from npcs.manager import (
     NpcUpdateRequest,
     create_npc,
     delete_npc,
+    ensure_cached,
     get_npc,
     list_npcs,
     update_npc,
@@ -25,14 +27,14 @@ router = APIRouter(prefix=f'/api/{Config.API_VERSION}/npcs')
 
 
 @router.get('/')
-async def list_npcs_route() -> list[NpcSummary]:
-    return list_npcs()
+async def list_npcs_route(user_id: str = Depends(get_current_user_id)) -> list[NpcSummary]:
+    return list_npcs(user_id)
 
 
 @router.post('/', status_code=201)
-async def create_npc_route(req: NpcCreateRequest) -> NpcDetail:
+async def create_npc_route(req: NpcCreateRequest, user_id: str = Depends(get_current_user_id)) -> NpcDetail:
     try:
-        return create_npc(req)
+        return create_npc(user_id, req)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except NpcAlreadyExistsError as exc:
@@ -40,37 +42,47 @@ async def create_npc_route(req: NpcCreateRequest) -> NpcDetail:
 
 
 @router.get('/{slug}')
-async def get_npc_route(slug: str) -> NpcDetail:
+async def get_npc_route(slug: str, user_id: str = Depends(get_current_user_id)) -> NpcDetail:
     try:
-        return get_npc(slug)
+        return get_npc(user_id, slug)
     except NpcNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
 
 
 @router.put('/{slug}')
-async def update_npc_route(slug: str, req: NpcUpdateRequest) -> NpcDetail:
+async def update_npc_route(
+    slug: str, req: NpcUpdateRequest, user_id: str = Depends(get_current_user_id),
+) -> NpcDetail:
     try:
-        return update_npc(slug, req)
+        return update_npc(user_id, slug, req)
     except NpcNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
 
 
 @router.delete('/{slug}', status_code=204)
-async def delete_npc_route(slug: str) -> None:
+async def delete_npc_route(slug: str, user_id: str = Depends(get_current_user_id)) -> None:
     try:
-        delete_npc(slug)
+        delete_npc(user_id, slug)
     except NpcNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
 
 
 @router.get('/{slug}/talk')
-async def talk_stream(slug: str, query: str = Query(default=..., description='player query')) -> StreamingResponse:
+async def talk_stream(
+    slug: str,
+    query: str = Query(default=..., description='player query'),
+    user_id: str = Depends(get_current_user_id),
+) -> StreamingResponse:
     try:
-        get_npc(slug)
+        get_npc(user_id, slug)
+        cache_dir = ensure_cached(user_id, slug)
     except NpcNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
 
-    npc_module = importlib.import_module(f'npcs.{slug}.npc')
+    module_name = f'_npc_{user_id}_{slug}'.replace('-', '_')
+    spec = importlib.util.spec_from_file_location(module_name, cache_dir / 'npc.py')
+    npc_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(npc_module)
 
     async def generate() -> AsyncGenerator:
         try:

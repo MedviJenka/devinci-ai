@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { NpcSummary } from '../types';
 
 interface Props {
@@ -11,6 +11,20 @@ interface Props {
 
 export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onCreate }: Props) {
   const [query, setQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== '/') return;
+      const target = e.target as HTMLElement | null;
+      const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if (isTyping) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -30,11 +44,17 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
             search
           </span>
           <input
+            ref={searchRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search NPC library..."
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-1.5 pl-10 pr-4 text-body-md text-on-surface outline-none transition-all focus:ring-1 focus:ring-primary"
+            className="w-full rounded-lg border border-outline-variant bg-surface-container py-1.5 pl-10 pr-10 text-body-md text-on-surface outline-none transition-all focus:ring-1 focus:ring-primary"
           />
+          {!query && (
+            <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-code-md text-[10px] text-on-surface-variant">
+              /
+            </kbd>
+          )}
         </div>
       </div>
 

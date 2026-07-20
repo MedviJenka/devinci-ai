@@ -1,10 +1,20 @@
 import { NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
+import { supabase } from './supabaseClient';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5555/api/v1/npcs';
 
+async function authToken(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = await authToken();
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...init,
   });
   if (!res.ok) {
@@ -34,26 +44,36 @@ export interface TalkHandlers {
 }
 
 export function streamTalk(slug: string, query: string, handlers: TalkHandlers): () => void {
-  const url = `${API_BASE}/${encodeURIComponent(slug)}/talk?query=${encodeURIComponent(query)}`;
-  const source = new EventSource(url);
+  let source: EventSource | null = null;
+  let closed = false;
 
-  source.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === 'chunk') {
-      handlers.onChunk?.(data.text);
-    } else if (data.type === 'done') {
-      handlers.onDone(data.text, data.mood);
-      source.close();
-    } else if (data.type === 'error') {
-      handlers.onError(data.message);
-      source.close();
-    }
+  // EventSource can't set custom headers, so the token travels as a query param instead.
+  authToken().then((token) => {
+    if (closed) return;
+    const params = new URLSearchParams({ query, ...(token ? { token } : {}) });
+    source = new EventSource(`${API_BASE}/${encodeURIComponent(slug)}/talk?${params.toString()}`);
+
+    source.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'chunk') {
+        handlers.onChunk?.(data.text);
+      } else if (data.type === 'done') {
+        handlers.onDone(data.text, data.mood);
+        source?.close();
+      } else if (data.type === 'error') {
+        handlers.onError(data.message);
+        source?.close();
+      }
+    };
+
+    source.onerror = () => {
+      handlers.onError('Connection lost.');
+      source?.close();
+    };
+  });
+
+  return () => {
+    closed = true;
+    source?.close();
   };
-
-  source.onerror = () => {
-    handlers.onError('Connection lost.');
-    source.close();
-  };
-
-  return () => source.close();
 }

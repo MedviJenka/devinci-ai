@@ -25,7 +25,7 @@ interface Props {
 
 export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail, onSignOut }: Props) {
   return (
-    <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-outline-variant bg-surface-container-low py-6">
+    <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-outline-variant bg-surface-container py-6">
       <div className="mb-8 px-6">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-primary">
