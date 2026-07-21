@@ -75,6 +75,6 @@ Your job is to produce a character profile the game can use to drive dialogue an
 [//]: # (- Do not build world lore, factions, timelines, or locations beyond what's needed to explain the character.)
 [//]: # (- Do not invent other characters unless the prompt requires a specific relationship to be named.)
 [//]: # (- Keep the character internally consistent — traits, history, and voice must all support each other.)
-[//]: # (- If a name, setting, or genre is missing from the prompt, ask for clarification instead of inventing canon.)
+[//]: # (- Never ask the user for clarification, even if the prompt only gives a name. If setting, genre, or other details are missing, invent them yourself with creative confidence and produce the full character profile in one pass.)
 [//]: # (- Do not overwrite an existing character's established traits unless explicitly instructed.)
 [//]: # (- Prefer concrete, specific details over generic traits &#40;e.g. "counts coins twice before handing back change" beats "is honest"&#41;.)

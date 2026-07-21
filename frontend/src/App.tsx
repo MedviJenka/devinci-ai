@@ -20,6 +20,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [screen, setScreen] = useState<Screen>('npcs');
   const [npcs, setNpcs] = useState<NpcSummary[]>([]);
+  const [npcsLoading, setNpcsLoading] = useState(true);
   const [selected, setSelected] = useState<NpcDetail | null>(null);
   const [tab, setTab] = useState<Tab>('chat');
   const [showCreate, setShowCreate] = useState(false);
@@ -31,7 +32,11 @@ function App() {
   };
 
   const refreshList = async () => {
-    setNpcs(await listNpcs());
+    try {
+      setNpcs(await listNpcs());
+    } finally {
+      setNpcsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -99,10 +104,11 @@ function App() {
     llm: string;
     persona_notes: string;
     voice: VoiceSettings;
+    structured_output: boolean;
   }) => {
     if (!selected) return;
-    const updated = await updateNpc(selected.slug, fields);
-    setSelected(updated);
+    await updateNpc(selected.slug, fields);
+    setSelected(null);
     await refreshList();
   };
 
@@ -150,6 +156,7 @@ function App() {
         {screen === 'npcs' && !selected && (
           <Library
             npcs={npcs}
+            loading={npcsLoading}
             onOpenChat={(slug) => openNpc(slug, 'chat')}
             onOpenPersona={(slug) => openNpc(slug, 'persona')}
             onDelete={handleDelete}

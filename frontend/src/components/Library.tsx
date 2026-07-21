@@ -3,6 +3,7 @@ import { NpcSummary } from '../types';
 
 interface Props {
   npcs: NpcSummary[];
+  loading?: boolean;
   onOpenChat: (slug: string) => void;
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
@@ -12,7 +13,7 @@ interface Props {
 
 const METRIC_BAR_HEIGHTS = [30, 45, 20, 60, 85, 40, 55, 70, 35, 90, 50, 65];
 
-export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onCreate, onNavigateStorylines }: Props) {
+export default function Library({ npcs, loading, onOpenChat, onOpenPersona, onDelete, onCreate, onNavigateStorylines }: Props) {
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -62,7 +63,12 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
       </div>
 
       <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container shadow-2xl">
-        {filtered.length > 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-32 text-center">
+            <span className="material-symbols-outlined animate-spin text-4xl text-primary/60">progress_activity</span>
+            <p className="text-on-surface-variant">Loading NPCs…</p>
+          </div>
+        ) : filtered.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>

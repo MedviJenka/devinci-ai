@@ -12,8 +12,6 @@ from core.storage import client as storage
 from core.voice.schemas import VoiceSettings
 
 
-DEFAULT_LLM = 'openai/gpt-5.5'
-
 _NPC_PY = '''
 import asyncio
 from pathlib import Path
@@ -103,6 +101,8 @@ class NpcDetail(NpcSummary):
     backstory: str
     persona_notes: str
     voice: VoiceSettings = Field(default_factory=VoiceSettings)
+    structured_output: bool = False
+    has_response_schema: bool = False
 
 
 # Advanced options: an optional per-NPC Pydantic response schema. Fields are described
@@ -142,6 +142,7 @@ class NpcUpdateRequest(BaseModel):
     llm: str | None = None
     persona_notes: str | None = None
     voice: VoiceSettings | None = None
+    structured_output: bool | None = None
 
 
 def slugify(name: str) -> str:
@@ -222,9 +223,17 @@ def _load_jsonc_text(text: str) -> Any:
     return json.loads(strip_jsonc_comments(text))
 
 
+def _load_crew_jsonc(user_id: str, slug: str) -> dict[str, Any]:
+    return _load_jsonc_text(storage.get_text(_bucket(), _npc_prefix(user_id, slug) + 'crew.jsonc'))
+
+
 def _agent_name_for(user_id: str, slug: str) -> str:
-    crew = _load_jsonc_text(storage.get_text(_bucket(), _npc_prefix(user_id, slug) + 'crew.jsonc'))
-    return crew['agents'][0]
+    return _load_crew_jsonc(user_id, slug)['agents'][0]
+
+
+def _has_structured_output(crew: dict[str, Any]) -> bool:
+    tasks = crew.get('tasks') or []
+    return bool(tasks) and bool(tasks[0].get('output_pydantic'))
 
 
 def _voice_key(user_id: str, slug: str) -> str:
@@ -294,7 +303,8 @@ def get_npc(user_id: str, slug: str) -> NpcDetail:
     if not storage.exists(_bucket(), prefix + 'crew.jsonc'):
         raise NpcNotFoundError(slug)
 
-    agent_name = _agent_name_for(user_id, slug)
+    crew = _load_crew_jsonc(user_id, slug)
+    agent_name = crew['agents'][0]
     agent = _load_jsonc_text(storage.get_text(_bucket(), prefix + f'agents/{agent_name}.jsonc'))
 
     skill_key = _skill_md_key(user_id, slug)
@@ -310,6 +320,8 @@ def get_npc(user_id: str, slug: str) -> NpcDetail:
         backstory=agent.get('backstory', ''),
         persona_notes=persona_notes,
         voice=voice,
+        structured_output=_has_structured_output(crew),
+        has_response_schema=storage.exists(_bucket(), prefix + 'schema.py'),
     )
 
 
@@ -341,12 +353,17 @@ def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
     backstory = req.backstory if req.backstory is not None else current.backstory
     llm = req.llm if req.llm is not None else current.llm
     persona_notes = req.persona_notes if req.persona_notes is not None else current.persona_notes
+    structured_output = req.structured_output if req.structured_output is not None else current.structured_output
+
+    if structured_output and not current.has_response_schema:
+        raise ValueError('this npc has no response schema defined; structured output cannot be enabled')
 
     agent_name = _agent_name_for(user_id, slug)
     existing_skill_key = _skill_md_key(user_id, slug)
     skill_dir_name = existing_skill_key.rsplit('/', 2)[-2] if existing_skill_key else slug
 
     _write_agent_jsonc(user_id, slug, agent_name, goal, backstory, llm)
+    _write_crew_jsonc(user_id, slug, agent_name, structured_output=structured_output)
     _write_skill_md(user_id, slug, skill_dir_name, goal, persona_notes)
     if req.voice is not None:
         set_voice_settings(user_id, slug, req.voice)

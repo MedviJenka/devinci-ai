@@ -36,6 +36,8 @@ export interface NpcDetail extends NpcSummary {
   backstory: string;
   persona_notes: string;
   voice: VoiceSettings;
+  structured_output: boolean;
+  has_response_schema: boolean;
 }
 
 export type SchemaFieldKind = 'str' | 'int' | 'float' | 'bool' | 'list' | 'dict' | 'optional' | 'literal';
@@ -69,6 +71,7 @@ export interface NpcUpdateRequest {
   llm?: string;
   persona_notes?: string;
   voice?: VoiceSettings;
+  structured_output?: boolean;
 }
 
 export interface ChatMessage {

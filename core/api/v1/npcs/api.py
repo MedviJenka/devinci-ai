@@ -69,6 +69,8 @@ async def update_npc_route(
         return update_npc(user_id, slug, req)
     except NpcNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.delete('/{slug}', status_code=204)

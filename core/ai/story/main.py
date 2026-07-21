@@ -1,5 +1,6 @@
 import asyncio
 import re
+import uuid
 from pathlib import Path
 from crewai.project import load_crew
 
@@ -13,7 +14,11 @@ def _slugify(name: str) -> str:
 async def run_character_creator(prompt: str, npc_name: str) -> Path:
     crew, _ = load_crew(Path(__file__).with_name('crew.jsonc'))
 
-    output_path = Path(__file__).with_name('output')/'SKILL.md'
+    # Each call gets its own output file so concurrent generations (e.g. a fast double
+    # click, or two users generating at once) never read/unlink each other's file.
+    output_dir = Path(__file__).with_name('output')
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir/f'{uuid.uuid4().hex}.md'
     for task in crew.tasks:
         if task.output_file:
             task.output_file = str(output_path)

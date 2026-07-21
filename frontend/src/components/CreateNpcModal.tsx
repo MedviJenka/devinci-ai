@@ -10,7 +10,8 @@ const inputClass =
   'w-full rounded border border-outline-variant bg-surface-container-lowest p-3 font-body-md text-on-surface outline-none transition-colors focus:border-primary';
 const labelClass = 'font-label-caps text-label-caps uppercase text-outline';
 const selectClass =
-  'rounded border border-outline-variant bg-surface-container-lowest p-2 font-body-md text-on-surface outline-none transition-colors focus:border-primary';
+  'w-full rounded border border-outline-variant bg-surface-container-lowest p-3 font-body-md text-on-surface outline-none transition-colors focus:border-primary';
+const fieldLabelClass = 'font-code-md text-[10px] uppercase tracking-wide text-outline';
 
 type PrimitiveKind = 'str' | 'int' | 'float' | 'bool';
 
@@ -126,7 +127,9 @@ export default function CreateNpcModal({ onCreate, onClose }: Props) {
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <form
         onSubmit={submit}
-        className="max-h-[90vh] w-full max-w-md space-y-5 overflow-y-auto rounded-lg border border-outline-variant bg-surface-container p-6 shadow-[0_0_40px_-10px_rgba(208,188,255,0.15)]"
+        className={`max-h-[90vh] w-full space-y-5 overflow-y-auto rounded-lg border border-outline-variant bg-surface-container p-6 shadow-[0_0_40px_-10px_rgba(208,188,255,0.15)] transition-[max-width] ${
+          structuredOutput ? 'max-w-xl' : 'max-w-md'
+        }`}
       >
         <div className="flex items-center gap-3 border-b border-outline-variant pb-4">
           <span className="material-symbols-outlined text-primary">person_add</span>
@@ -193,26 +196,10 @@ export default function CreateNpcModal({ onCreate, onClose }: Props) {
 
               {structuredOutput && (
                 <div className="space-y-3">
-                  {fields.map((row) => (
-                    <div key={row.id} className="space-y-2 rounded border border-outline-variant p-3">
-                      <div className="flex items-center gap-2">
-                        <input
-                          value={row.name}
-                          onChange={(e) => updateField(row.id, { name: e.target.value })}
-                          placeholder="field_name"
-                          className={`${inputClass} flex-1`}
-                        />
-                        <select
-                          value={row.kind}
-                          onChange={(e) => updateField(row.id, { kind: e.target.value as SchemaFieldKind })}
-                          className={selectClass}
-                        >
-                          {FIELD_KINDS.map((k) => (
-                            <option key={k.value} value={k.value}>
-                              {k.label}
-                            </option>
-                          ))}
-                        </select>
+                  {fields.map((row, index) => (
+                    <div key={row.id} className="space-y-3 rounded border border-outline-variant p-4">
+                      <div className="flex items-center justify-between">
+                        <span className={fieldLabelClass}>Field {index + 1}</span>
                         <button
                           type="button"
                           onClick={() => removeField(row.id)}
@@ -223,9 +210,35 @@ export default function CreateNpcModal({ onCreate, onClose }: Props) {
                         </button>
                       </div>
 
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className={fieldLabelClass}>Field name</label>
+                          <input
+                            value={row.name}
+                            onChange={(e) => updateField(row.id, { name: e.target.value })}
+                            placeholder="field_name"
+                            className={inputClass}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className={fieldLabelClass}>Type</label>
+                          <select
+                            value={row.kind}
+                            onChange={(e) => updateField(row.id, { kind: e.target.value as SchemaFieldKind })}
+                            className={selectClass}
+                          >
+                            {FIELD_KINDS.map((k) => (
+                              <option key={k.value} value={k.value}>
+                                {k.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
                       {(row.kind === 'list' || row.kind === 'optional') && (
-                        <div className="flex items-center gap-2">
-                          <span className="font-code-md text-[11px] text-outline">of</span>
+                        <div className="space-y-1">
+                          <label className={fieldLabelClass}>Of</label>
                           <select
                             value={row.itemKind}
                             onChange={(e) => updateField(row.id, { itemKind: e.target.value as PrimitiveKind })}
@@ -241,49 +254,59 @@ export default function CreateNpcModal({ onCreate, onClose }: Props) {
                       )}
 
                       {row.kind === 'dict' && (
-                        <div className="flex items-center gap-2">
-                          <span className="font-code-md text-[11px] text-outline">keys</span>
-                          <select
-                            value={row.keyKind}
-                            onChange={(e) => updateField(row.id, { keyKind: e.target.value as PrimitiveKind })}
-                            className={selectClass}
-                          >
-                            {PRIMITIVE_KINDS.map((k) => (
-                              <option key={k.value} value={k.value}>
-                                {k.label}
-                              </option>
-                            ))}
-                          </select>
-                          <span className="font-code-md text-[11px] text-outline">values</span>
-                          <select
-                            value={row.valueKind}
-                            onChange={(e) => updateField(row.id, { valueKind: e.target.value as PrimitiveKind })}
-                            className={selectClass}
-                          >
-                            {PRIMITIVE_KINDS.map((k) => (
-                              <option key={k.value} value={k.value}>
-                                {k.label}
-                              </option>
-                            ))}
-                          </select>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className={fieldLabelClass}>Keys</label>
+                            <select
+                              value={row.keyKind}
+                              onChange={(e) => updateField(row.id, { keyKind: e.target.value as PrimitiveKind })}
+                              className={selectClass}
+                            >
+                              {PRIMITIVE_KINDS.map((k) => (
+                                <option key={k.value} value={k.value}>
+                                  {k.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className={fieldLabelClass}>Values</label>
+                            <select
+                              value={row.valueKind}
+                              onChange={(e) => updateField(row.id, { valueKind: e.target.value as PrimitiveKind })}
+                              className={selectClass}
+                            >
+                              {PRIMITIVE_KINDS.map((k) => (
+                                <option key={k.value} value={k.value}>
+                                  {k.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                       )}
 
                       {row.kind === 'literal' && (
-                        <input
-                          value={row.literalValues}
-                          onChange={(e) => updateField(row.id, { literalValues: e.target.value })}
-                          placeholder="Angry, Sad, Happy"
-                          className={inputClass}
-                        />
+                        <div className="space-y-1">
+                          <label className={fieldLabelClass}>Allowed values (comma-separated)</label>
+                          <input
+                            value={row.literalValues}
+                            onChange={(e) => updateField(row.id, { literalValues: e.target.value })}
+                            placeholder="Angry, Sad, Happy"
+                            className={inputClass}
+                          />
+                        </div>
                       )}
 
-                      <input
-                        value={row.description}
-                        onChange={(e) => updateField(row.id, { description: e.target.value })}
-                        placeholder="Description (optional, guides the LLM)"
-                        className={inputClass}
-                      />
+                      <div className="space-y-1">
+                        <label className={fieldLabelClass}>Description (optional, guides the LLM)</label>
+                        <input
+                          value={row.description}
+                          onChange={(e) => updateField(row.id, { description: e.target.value })}
+                          placeholder="e.g. current npc mood based on the prompt"
+                          className={inputClass}
+                        />
+                      </div>
                     </div>
                   ))}
 

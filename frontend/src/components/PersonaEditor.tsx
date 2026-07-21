@@ -11,6 +11,7 @@ interface Props {
     llm: string;
     persona_notes: string;
     voice: VoiceSettings;
+    structured_output: boolean;
   }) => Promise<void>;
 }
 
@@ -24,6 +25,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
   const [goal, setGoal] = useState(npc.goal);
   const [backstory, setBackstory] = useState(npc.backstory);
   const [llm, setLlm] = useState(npc.llm);
+  const [structuredOutput, setStructuredOutput] = useState(npc.structured_output);
   const [personaNotes, setPersonaNotes] = useState(npc.persona_notes);
   const [voiceEnabled, setVoiceEnabled] = useState((npc.voice ?? DEFAULT_VOICE).enabled);
   const [voiceName, setVoiceName] = useState<SupportedVoice>((npc.voice ?? DEFAULT_VOICE).voice);
@@ -41,6 +43,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
     setGoal(npc.goal);
     setBackstory(npc.backstory);
     setLlm(npc.llm);
+    setStructuredOutput(npc.structured_output);
     setPersonaNotes(npc.persona_notes);
     setVoiceEnabled(voice.enabled);
     setVoiceName(voice.voice);
@@ -65,6 +68,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
         llm,
         persona_notes: personaNotes,
         voice: { enabled: voiceEnabled, voice: voiceName, language: voiceLanguage },
+        structured_output: structuredOutput,
       });
       setSaved(true);
     } finally {
@@ -112,6 +116,31 @@ export default function PersonaEditor({ npc, onSave }: Props) {
         <div className="space-y-2">
           <label className={labelClass}>LLM</label>
           <input value={llm} onChange={(e) => setLlm(e.target.value)} className={inputClass} />
+        </div>
+
+        <div className="space-y-2">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={structuredOutput}
+              disabled={!npc.has_response_schema}
+              onChange={(e) => setStructuredOutput(e.target.checked)}
+            />
+            <span className={`font-body-md ${npc.has_response_schema ? 'text-on-surface' : 'text-on-surface-variant'}`}>
+              Return structured output (Pydantic model_dump)
+            </span>
+          </label>
+          {npc.has_response_schema ? (
+            <p className="font-code-md text-[11px] text-outline">
+              Off: the NPC replies with a raw string. On: replies are validated against its{' '}
+              <code>ResponseSchema</code> and returned as a dict.
+            </p>
+          ) : (
+            <p className="font-code-md text-[11px] text-outline">
+              No response schema was defined for this NPC at creation time, so structured output can't be enabled
+              here.
+            </p>
+          )}
         </div>
       </div>
 
