@@ -10,6 +10,7 @@ dependencies = [
     "crewai",
     "fastapi",
     "logfire",
+    "openai>=2.46.0",
     "pydantic-settings",
     "python-dotenv",
     "stripe>=15.3.1",

@@ -6,6 +6,7 @@ from typing import AsyncGenerator
 from contextlib import asynccontextmanager
 from core.api.v1.npcs.api import router as npc_router
 from core.api.v1.story_creation.api import router as story_router
+from core.api.v1.voice.api import router as voice_router
 
 log = Logger(name="api-service")
 
@@ -28,6 +29,7 @@ app.add_middleware(
 
 app.include_router(npc_router)
 app.include_router(story_router)
+app.include_router(voice_router)
 
 
 

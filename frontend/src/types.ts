@@ -1,13 +1,41 @@
+export type SupportedVoice =
+  | 'alloy'
+  | 'ash'
+  | 'ballad'
+  | 'coral'
+  | 'echo'
+  | 'fable'
+  | 'nova'
+  | 'onyx'
+  | 'sage'
+  | 'shimmer'
+  | 'verse';
+
+export type SupportedLanguage = 'en' | 'he';
+
+export interface VoiceSettings {
+  enabled: boolean;
+  voice: SupportedVoice;
+  language: SupportedLanguage;
+}
+
+export interface VoiceOptions {
+  voices: SupportedVoice[];
+  languages: SupportedLanguage[];
+}
+
 export interface NpcSummary {
   slug: string;
   role: string;
   goal: string;
   llm: string;
+  voice_enabled: boolean;
 }
 
 export interface NpcDetail extends NpcSummary {
   backstory: string;
   persona_notes: string;
+  voice: VoiceSettings;
 }
 
 export type SchemaFieldKind = 'str' | 'int' | 'float' | 'bool' | 'list' | 'dict' | 'optional' | 'literal';
@@ -40,6 +68,7 @@ export interface NpcUpdateRequest {
   backstory?: string;
   llm?: string;
   persona_notes?: string;
+  voice?: VoiceSettings;
 }
 
 export interface ChatMessage {

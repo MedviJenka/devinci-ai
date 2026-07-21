@@ -1,8 +1,9 @@
-import { NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
+import { NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest, VoiceOptions } from './types';
 import { supabase } from './supabaseClient';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5555/api/v1/npcs';
 const CHARACTER_API_BASE = process.env.REACT_APP_CHARACTER_API_BASE || 'http://localhost:5555/api/v1/character';
+const VOICE_API_BASE = process.env.REACT_APP_VOICE_API_BASE || 'http://localhost:5555/api/v1/voice';
 
 async function authToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
@@ -59,6 +60,22 @@ export interface TalkHandlers {
   onChunk?: (text: string) => void;
   onDone: (text: string, mood?: string) => void;
   onError: (message: string) => void;
+}
+
+export const getVoiceOptions = () => request<VoiceOptions>('/options', undefined, VOICE_API_BASE);
+
+export async function fetchNpcSpeechUrl(slug: string, text: string): Promise<string> {
+  const token = await authToken();
+  const params = new URLSearchParams({ text });
+  const res = await fetch(`${API_BASE}/${encodeURIComponent(slug)}/speak?${params.toString()}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `request failed (${res.status})`);
+  }
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
 }
 
 export function streamTalk(slug: string, query: string, handlers: TalkHandlers): () => void {

@@ -82,7 +82,7 @@ class NpcApiMock:
     stream_events: list | None = None  # override the /talk SSE script
     talk_requests: list = field(default_factory=list)  # recorded (slug, query) pairs
 
-    def seed(self, *, slug: str, role: str, goal="", backstory="", llm="gpt-4o", persona_notes=""):
+    def seed(self, *, slug: str, role: str, goal="", backstory="", llm="gpt-4o", persona_notes="", voice=None):
         detail = {
             "slug": slug,
             "role": role,
@@ -90,13 +90,21 @@ class NpcApiMock:
             "backstory": backstory,
             "llm": llm,
             "persona_notes": persona_notes,
+            "voice_enabled": bool(voice and voice.get("enabled")),
+            "voice": voice or {"enabled": False, "voice": "coral", "language": "en"},
         }
         self.npcs[slug] = detail
         return detail
 
     def summaries(self):
         return [
-            {"slug": n["slug"], "role": n["role"], "goal": n["goal"], "llm": n["llm"]}
+            {
+                "slug": n["slug"],
+                "role": n["role"],
+                "goal": n["goal"],
+                "llm": n["llm"],
+                "voice_enabled": n.get("voice_enabled", False),
+            }
             for n in self.npcs.values()
         ]
 
@@ -125,6 +133,7 @@ def _install_npc_api_routes(page, mock: NpcApiMock) -> None:
                 backstory=payload.get("backstory") or "",
                 llm=payload.get("llm") or "gpt-4o",
                 persona_notes=payload.get("persona_notes") or "",
+                voice=payload.get("voice"),
             )
             _json(route, request, 201, detail)
             return
@@ -170,6 +179,8 @@ def _install_npc_api_routes(page, mock: NpcApiMock) -> None:
             payload = json.loads(request.post_data or "{}")
             detail = mock.npcs[slug]
             detail.update({k: v for k, v in payload.items() if v is not None})
+            if payload.get("voice") is not None:
+                detail["voice_enabled"] = bool(payload["voice"].get("enabled"))
             _json(route, request, 200, detail)
             return
 

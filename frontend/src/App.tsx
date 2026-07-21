@@ -11,7 +11,7 @@ import CreateNpcModal from './components/CreateNpcModal';
 import PersonaEditor from './components/PersonaEditor';
 import Chat from './components/Chat';
 import SignIn from './components/SignIn';
-import { NpcCreateRequest, NpcDetail, NpcSummary } from './types';
+import { NpcCreateRequest, NpcDetail, NpcSummary, VoiceSettings } from './types';
 
 type Tab = 'persona' | 'chat';
 
@@ -93,7 +93,13 @@ function App() {
     }
   };
 
-  const handleSave = async (fields: { goal: string; backstory: string; llm: string; persona_notes: string }) => {
+  const handleSave = async (fields: {
+    goal: string;
+    backstory: string;
+    llm: string;
+    persona_notes: string;
+    voice: VoiceSettings;
+  }) => {
     if (!selected) return;
     const updated = await updateNpc(selected.slug, fields);
     setSelected(updated);
@@ -167,6 +173,14 @@ function App() {
                 <span className="rounded bg-surface-container-highest px-2 py-1 font-code-md text-code-md text-outline">
                   {selected.llm}
                 </span>
+                {selected.voice?.enabled && (
+                  <span
+                    title={`Voice: ${selected.voice.voice} (${selected.voice.language})`}
+                    className="material-symbols-outlined text-[18px] text-primary"
+                  >
+                    volume_up
+                  </span>
+                )}
               </div>
               <div className="flex gap-1 rounded bg-surface-container-high p-1">
                 <button
@@ -190,7 +204,7 @@ function App() {
 
             <div className="min-h-0 flex-1">
               {tab === 'chat' ? (
-                <Chat slug={selected.slug} />
+                <Chat slug={selected.slug} voiceEnabled={Boolean(selected.voice?.enabled)} />
               ) : (
                 <div className="h-full overflow-y-auto custom-scrollbar bg-background">
                   <PersonaEditor npc={selected} onSave={handleSave} />

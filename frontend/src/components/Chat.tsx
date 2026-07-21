@@ -1,23 +1,48 @@
 import { useEffect, useRef, useState } from 'react';
-import { streamTalk } from '../api';
+import { fetchNpcSpeechUrl, streamTalk } from '../api';
 import { ChatMessage } from '../types';
 
 interface Props {
   slug: string;
+  voiceEnabled: boolean;
 }
 
-export default function Chat({ slug }: Props) {
+export default function Chat({ slug, voiceEnabled }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
   const closeRef = useRef<(() => void) | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     closeRef.current?.();
     setMessages([]);
     setPending(false);
   }, [slug]);
+
+  useEffect(
+    () => () => {
+      audioRef.current?.pause();
+    },
+    [],
+  );
+
+  const speak = async (id: string, text: string) => {
+    audioRef.current?.pause();
+    setSpeakingId(id);
+    try {
+      const url = await fetchNpcSpeechUrl(slug, text);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setSpeakingId((current) => (current === id ? null : current));
+      audio.onerror = () => setSpeakingId((current) => (current === id ? null : current));
+      await audio.play();
+    } catch {
+      setSpeakingId((current) => (current === id ? null : current));
+    }
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -84,7 +109,21 @@ export default function Chat({ slug }: Props) {
                       {m.mood}
                     </span>
                   )}
-                  <p className="font-body-md italic leading-relaxed text-on-surface">{m.text}</p>
+                  <div className="flex items-start gap-2">
+                    <p className="font-body-md italic leading-relaxed text-on-surface">{m.text}</p>
+                    {voiceEnabled && (
+                      <button
+                        onClick={() => speak(m.id, m.text)}
+                        disabled={speakingId === m.id}
+                        title="Hear this line"
+                        className="shrink-0 text-outline transition-colors hover:text-primary disabled:animate-pulse disabled:text-primary"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">
+                          {speakingId === m.id ? 'graphic_eq' : 'volume_up'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

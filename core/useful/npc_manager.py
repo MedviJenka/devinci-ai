@@ -9,6 +9,7 @@ from crewai.project import strip_jsonc_comments
 from pydantic import BaseModel, Field
 from core.settings import Config
 from core.storage import client as storage
+from core.voice.schemas import VoiceSettings
 
 
 DEFAULT_LLM = 'openai/gpt-5.5'
@@ -95,11 +96,13 @@ class NpcSummary(BaseModel):
     role: str
     goal: str
     llm: str
+    voice_enabled: bool = False
 
 
 class NpcDetail(NpcSummary):
     backstory: str
     persona_notes: str
+    voice: VoiceSettings = Field(default_factory=VoiceSettings)
 
 
 # Advanced options: an optional per-NPC Pydantic response schema. Fields are described
@@ -138,6 +141,7 @@ class NpcUpdateRequest(BaseModel):
     backstory: str | None = None
     llm: str | None = None
     persona_notes: str | None = None
+    voice: VoiceSettings | None = None
 
 
 def slugify(name: str) -> str:
@@ -223,6 +227,24 @@ def _agent_name_for(user_id: str, slug: str) -> str:
     return crew['agents'][0]
 
 
+def _voice_key(user_id: str, slug: str) -> str:
+    return _npc_prefix(user_id, slug) + 'voice.json'
+
+
+def get_voice_settings(user_id: str, slug: str) -> VoiceSettings:
+    key = _voice_key(user_id, slug)
+    if not storage.exists(_bucket(), key):
+        return VoiceSettings()
+    return VoiceSettings.model_validate_json(storage.get_text(_bucket(), key))
+
+
+def set_voice_settings(user_id: str, slug: str, settings: VoiceSettings) -> VoiceSettings:
+    if not storage.exists(_bucket(), _npc_prefix(user_id, slug) + 'crew.jsonc'):
+        raise NpcNotFoundError(slug)
+    storage.put_text(_bucket(), _voice_key(user_id, slug), settings.model_dump_json())
+    return settings
+
+
 def _skill_md_key(user_id: str, slug: str) -> str | None:
     prefix = _npc_prefix(user_id, slug) + 'skills/'
     for key in storage.list_files(_bucket(), prefix):
@@ -263,7 +285,8 @@ def list_npcs(user_id: str) -> list[NpcSummary]:
 def _read_summary(user_id: str, slug: str) -> NpcSummary:
     agent_name = _agent_name_for(user_id, slug)
     agent = _load_jsonc_text(storage.get_text(_bucket(), _npc_prefix(user_id, slug) + f'agents/{agent_name}.jsonc'))
-    return NpcSummary(slug=slug, role=agent['role'], goal=agent['goal'], llm=agent['llm'])
+    voice_enabled = get_voice_settings(user_id, slug).enabled
+    return NpcSummary(slug=slug, role=agent['role'], goal=agent['goal'], llm=agent['llm'], voice_enabled=voice_enabled)
 
 
 def get_npc(user_id: str, slug: str) -> NpcDetail:
@@ -276,14 +299,17 @@ def get_npc(user_id: str, slug: str) -> NpcDetail:
 
     skill_key = _skill_md_key(user_id, slug)
     persona_notes = _split_skill_md(storage.get_text(_bucket(), skill_key))[1] if skill_key else ''
+    voice = get_voice_settings(user_id, slug)
 
     return NpcDetail(
         slug=slug,
         role=agent['role'],
         goal=agent['goal'],
         llm=agent['llm'],
+        voice_enabled=voice.enabled,
         backstory=agent.get('backstory', ''),
         persona_notes=persona_notes,
+        voice=voice,
     )
 
 
@@ -322,6 +348,8 @@ def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
 
     _write_agent_jsonc(user_id, slug, agent_name, goal, backstory, llm)
     _write_skill_md(user_id, slug, skill_dir_name, goal, persona_notes)
+    if req.voice is not None:
+        set_voice_settings(user_id, slug, req.voice)
 
     return get_npc(user_id, slug)
 

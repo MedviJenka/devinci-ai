@@ -1,12 +1,13 @@
 import importlib.util
 from core.useful.log import Logger
 from core.useful.stream import _sse
-from core.settings import Config
+from core.settings import Config, openai_client
 from typing import AsyncGenerator
 from core.useful.auth import get_current_user_id
 from fastapi.responses import StreamingResponse
 from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, HTTPException, Query, FastAPI
+from core.voice.engine import VoiceEngine
 from core.useful.npc_manager import (
     NpcAlreadyExistsError,
     NpcCreateRequest,
@@ -18,6 +19,7 @@ from core.useful.npc_manager import (
     delete_npc,
     ensure_cached,
     get_npc,
+    get_voice_settings,
     list_npcs,
     update_npc,
 )
@@ -134,4 +136,32 @@ async def talk_stream(
             'Cache-Control': 'no-cache',
             'X-Accel-Buffering': 'no',
         },
+    )
+
+
+@router.get('/{slug}/speak')
+async def speak_npc_route(
+    slug: str,
+    text: str = Query(default=..., description='text for the npc to say aloud'),
+    user_id: str = Depends(get_current_user_id),
+) -> StreamingResponse:
+    try:
+        get_npc(user_id, slug)
+    except NpcNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
+
+    voice = get_voice_settings(user_id, slug)
+    if not voice.enabled:
+        raise HTTPException(status_code=422, detail='voice is not enabled for this npc')
+
+    engine = VoiceEngine(voice=voice.voice.value)
+
+    async def generate() -> AsyncGenerator[bytes, None]:
+        async for chunk in engine.stream_bytes(text=text, language=voice.language, openai_client=openai_client):
+            yield chunk
+
+    return StreamingResponse(
+        generate(),
+        media_type='audio/mpeg',
+        headers={'Cache-Control': 'no-cache'},
     )

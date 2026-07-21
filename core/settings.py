@@ -1,6 +1,7 @@
 from pydantic import Field, ConfigDict
 from pydantic_settings import BaseSettings
 from typing import Optional
+from openai import AsyncOpenAI
 from supabase import create_client
 
 
@@ -35,3 +36,4 @@ class Settings(BaseSettings):
 Config = Settings()
 
 db = create_client(supabase_url=Config.SUPABASE_URL, supabase_key=Config.SUPABASE_SECRET_API_KEY)
+openai_client = AsyncOpenAI(api_key=Config.OPENAI_API_KEY)
