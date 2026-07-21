@@ -9,3 +9,9 @@ wheels/
 # Virtual environments
 .venv
 .env
+frontend/node_modules
+.idea
+.DS_Store
+
+# Local execution cache synced from Supabase Storage
+.npc_cache/

@@ -1,0 +1,79 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  push:
+    branches: [ "main", "integration" ]
+  pull_request:
+    branches: [ "main", "integration" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv and Python
+      uses: astral-sh/setup-uv@v5
+      with:
+        python-version: "3.12"
+        enable-cache: true
+
+    - name: Install dependencies
+      run: |
+        uv sync --locked
+        uv pip install flake8 pytest pytest-xdist
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Test with pytest
+      run: uv run pytest -n auto --dist loadscope
+
+    - name: Write .env for Docker Compose
+      env:
+        API_VERSION: ${{ secrets.API_VERSION }}
+        GOOGLE_OAUTH_CALLBACK_URI: ${{ secrets.GOOGLE_OAUTH_CALLBACK_URI }}
+        SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+        SUPABASE_PUBLISHABLE_API_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_API_KEY }}
+        SUPABASE_SECRET_API_KEY: ${{ secrets.SUPABASE_SECRET_API_KEY }}
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      run: |
+        cat > .env <<EOF
+        API_VERSION=${API_VERSION}
+        GOOGLE_OAUTH_CALLBACK_URI=${GOOGLE_OAUTH_CALLBACK_URI}
+        SUPABASE_PROJECT_ID=${SUPABASE_PROJECT_ID}
+        SUPABASE_PUBLISHABLE_API_KEY=${SUPABASE_PUBLISHABLE_API_KEY}
+        SUPABASE_SECRET_API_KEY=${SUPABASE_SECRET_API_KEY}
+        SUPABASE_URL=${SUPABASE_URL}
+        EOF
+
+    - name: Build and start containers
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_PUBLISHABLE_API_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_API_KEY }}
+      run: docker compose up -d --build
+
+    - name: Show container logs on failure
+      if: failure()
+      run: docker compose logs
+
+    - name: Stop containers
+      if: always()
+      run: docker compose down
+
