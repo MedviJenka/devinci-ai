@@ -12,9 +12,14 @@ def _slugify(name: str) -> str:
 
 async def run_character_creator(prompt: str, npc_name: str) -> Path:
     crew, _ = load_crew(Path(__file__).with_name('crew.jsonc'))
-    await crew.kickoff_async({'prompt': prompt, 'npc_name': npc_name})
 
     output_path = Path(__file__).with_name('output')/'SKILL.md'
+    for task in crew.tasks:
+        if task.output_file:
+            task.output_file = str(output_path)
+
+    await crew.kickoff_async({'prompt': prompt, 'npc_name': npc_name})
+
     content = output_path.read_text(encoding='utf-8')
 
     match = _FRONTMATTER_NAME_RE.match(content)

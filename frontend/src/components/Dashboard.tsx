@@ -18,9 +18,18 @@ export default function Dashboard({ npcs, onOpenChat, onCreate }: Props) {
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar bg-surface-container-lowest p-gutter">
-      <div className="mb-8">
-        <h2 className="font-headline-lg text-headline-lg text-on-surface">Dashboard</h2>
-        <p className="mt-1 text-on-surface-variant">Overview of your narrative intelligence roster.</p>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="font-headline-lg text-headline-lg text-on-surface">Dashboard</h2>
+          <p className="mt-1 text-on-surface-variant">Overview of your narrative intelligence roster.</p>
+        </div>
+        <button
+          onClick={onCreate}
+          className="flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-label-caps text-label-caps uppercase text-on-primary shadow-lg shadow-primary/10 transition-all hover:brightness-110 active:scale-[0.98]"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          New NPC
+        </button>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">

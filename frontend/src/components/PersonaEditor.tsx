@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NpcDetail } from '../types';
 import { generateCharacter } from '../api';
+import MarkdownView from './MarkdownView';
 
 interface Props {
   npc: NpcDetail;
@@ -21,6 +22,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
   const [genPrompt, setGenPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
+  const [sheetMode, setSheetMode] = useState<'preview' | 'edit'>(npc.persona_notes ? 'preview' : 'edit');
 
   useEffect(() => {
     setGoal(npc.goal);
@@ -28,6 +30,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
     setLlm(npc.llm);
     setPersonaNotes(npc.persona_notes);
     setSaved(false);
+    setSheetMode(npc.persona_notes ? 'preview' : 'edit');
   }, [npc]);
 
   const save = async () => {
@@ -48,7 +51,10 @@ export default function PersonaEditor({ npc, onSave }: Props) {
       const result = await generateCharacter(npc.role, genPrompt.trim());
       if (!result.success) throw new Error(result.error || 'Generation failed.');
       if (result.description) setBackstory(result.description);
-      if (result.persona) setPersonaNotes(result.persona);
+      if (result.persona) {
+        setPersonaNotes(result.persona);
+        setSheetMode('preview');
+      }
       setSaved(false);
     } catch (err) {
       setGenError(err instanceof Error ? err.message : 'Failed to generate persona.');
@@ -118,14 +124,47 @@ export default function PersonaEditor({ npc, onSave }: Props) {
         <div className="space-y-2">
           <div className="flex items-end justify-between">
             <label className={labelClass}>Full character sheet</label>
-            <span className="font-code-md text-[10px] uppercase text-outline-variant opacity-60">Free text</span>
+            <div className="flex items-center gap-1 rounded bg-surface-container-lowest p-0.5">
+              <button
+                type="button"
+                onClick={() => setSheetMode('preview')}
+                className={`rounded px-2.5 py-1 font-label-caps text-[10px] uppercase transition-colors ${
+                  sheetMode === 'preview' ? 'bg-primary text-on-primary' : 'text-outline hover:text-on-surface'
+                }`}
+              >
+                Preview
+              </button>
+              <button
+                type="button"
+                onClick={() => setSheetMode('edit')}
+                className={`rounded px-2.5 py-1 font-label-caps text-[10px] uppercase transition-colors ${
+                  sheetMode === 'edit' ? 'bg-primary text-on-primary' : 'text-outline hover:text-on-surface'
+                }`}
+              >
+                Edit
+              </button>
+            </div>
           </div>
-          <textarea
-            value={personaNotes}
-            onChange={(e) => setPersonaNotes(e.target.value)}
-            rows={16}
-            className={`${inputClass} font-code-md text-code-md`}
-          />
+          {sheetMode === 'preview' ? (
+            <div
+              onClick={() => setSheetMode('edit')}
+              className="max-h-[520px] cursor-text overflow-y-auto rounded border border-outline-variant bg-surface-container-lowest p-4"
+            >
+              {personaNotes.trim() ? (
+                <MarkdownView content={personaNotes} />
+              ) : (
+                <p className="font-code-md text-code-md text-outline">No character sheet yet — click Edit to write one.</p>
+              )}
+            </div>
+          ) : (
+            <textarea
+              autoFocus
+              value={personaNotes}
+              onChange={(e) => setPersonaNotes(e.target.value)}
+              rows={16}
+              className={`${inputClass} font-code-md text-code-md`}
+            />
+          )}
         </div>
       </div>
 

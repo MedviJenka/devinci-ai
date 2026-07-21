@@ -1,9 +1,10 @@
 import json
+import keyword
 import posixpath
 import re
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from crewai.project import strip_jsonc_comments
 from pydantic import BaseModel, Field
 from core.settings import Config
@@ -11,19 +12,6 @@ from core.storage import client as storage
 
 
 DEFAULT_LLM = 'openai/gpt-5.5'
-
-_SCHEMAS_PY = '''
-from typing import Literal
-from pydantic import BaseModel, Field
-
-
-type Mood = Literal['Angry', 'Sad', 'Happy', 'Furious', 'Calm']
-
-
-class NpcResponseSchema(BaseModel):
-    mood:     Mood = Field(..., description='current npc mood based on the given prompt')
-    response: str  = Field(..., description='npc response, rely also on memory')
-'''
 
 _NPC_PY = '''
 import asyncio
@@ -114,12 +102,35 @@ class NpcDetail(NpcSummary):
     persona_notes: str
 
 
+# Advanced options: an optional per-NPC Pydantic response schema. Fields are described
+# through this constrained builder (rather than a freeform type string) because
+# SchemaFieldType gets rendered into schema.py, which crewAI later imports and executes
+# per-tenant (see ensure_cached) - a freeform annotation string would be a code-injection
+# vector into that generated, executed file.
+class SchemaFieldType(BaseModel):
+    kind: Literal['str', 'int', 'float', 'bool', 'list', 'dict', 'optional', 'literal']
+    item: 'SchemaFieldType | None' = None       # list[item] / Optional[item]
+    key: 'SchemaFieldType | None' = None        # dict[key, value_type]
+    value_type: 'SchemaFieldType | None' = None  # dict[key, value_type]
+    literal_values: list[str] | None = None     # Literal[...]
+
+
+SchemaFieldType.model_rebuild()
+
+
+class SchemaFieldSpec(BaseModel):
+    name: str
+    type: SchemaFieldType
+    description: str = ''
+
+
 class NpcCreateRequest(BaseModel):
     name: str
     goal: str = Field(default='interactive npc')
     backstory: str = Field(default='')
     llm: str = Field(default=Config.OPENAI_MODEL)
     persona_notes: str = Field(default='')
+    response_schema_fields: list[SchemaFieldSpec] = Field(default_factory=list)
 
 
 class NpcUpdateRequest(BaseModel):
@@ -134,6 +145,57 @@ def slugify(name: str) -> str:
     if not slug:
         raise ValueError('name must contain at least one alphanumeric character')
     return slug
+
+
+_FIELD_NAME_RE = re.compile(r'^[a-z][a-z0-9_]*$')
+
+
+def _validate_field_name(name: str) -> None:
+    if not _FIELD_NAME_RE.match(name) or keyword.iskeyword(name):
+        raise ValueError(f'invalid response schema field name: {name!r}')
+
+
+def _render_type(t: SchemaFieldType, used_typing: set[str]) -> str:
+    if t.kind in ('str', 'int', 'float', 'bool'):
+        return t.kind
+    if t.kind == 'list':
+        if t.item is None:
+            raise ValueError('"list" field type requires "item"')
+        return f'list[{_render_type(t.item, used_typing)}]'
+    if t.kind == 'dict':
+        if t.key is None or t.value_type is None:
+            raise ValueError('"dict" field type requires "key" and "value_type"')
+        return f'dict[{_render_type(t.key, used_typing)}, {_render_type(t.value_type, used_typing)}]'
+    if t.kind == 'optional':
+        if t.item is None:
+            raise ValueError('"optional" field type requires "item"')
+        used_typing.add('Optional')
+        return f'Optional[{_render_type(t.item, used_typing)}]'
+    if t.kind == 'literal':
+        if not t.literal_values:
+            raise ValueError('"literal" field type requires "literal_values"')
+        used_typing.add('Literal')
+        return f'Literal[{", ".join(repr(v) for v in t.literal_values)}]'
+    raise ValueError(f'unsupported response schema field type: {t.kind!r}')
+
+
+def _render_schema_py(fields: list[SchemaFieldSpec]) -> str:
+    """Render a per-NPC schema.py defining ResponseSchema(BaseModel), from user-supplied
+    field name/type/description triples. Every annotation is built from the constrained
+    SchemaFieldType tree (see its class docstring) rather than any user-supplied source
+    text, so this is safe to write into a file crewAI later imports and executes."""
+    used_typing: set[str] = set()
+    field_lines = []
+    for field in fields:
+        _validate_field_name(field.name)
+        annotation = _render_type(field.type, used_typing)
+        field_lines.append(f'    {field.name}: {annotation} = Field(..., description={field.description!r})')
+
+    imports = ['from pydantic import BaseModel, Field']
+    if used_typing:
+        imports.insert(0, f'from typing import {", ".join(sorted(used_typing))}')
+
+    return '\n'.join(imports) + '\n\n\nclass ResponseSchema(BaseModel):\n' + '\n'.join(field_lines) + '\n'
 
 
 def _bucket() -> str:
@@ -232,14 +294,15 @@ def create_npc(user_id: str, req: NpcCreateRequest) -> NpcDetail:
 
     _write_file(user_id, slug, '../__init__.py', '')
     _write_file(user_id, slug, 'npc.py', _NPC_PY)
-    _write_file(user_id, slug, 'schemas.py', _SCHEMAS_PY)
+    if req.response_schema_fields:
+        _write_file(user_id, slug, 'schema.py', _render_schema_py(req.response_schema_fields))
     _write_file(user_id, slug, 'README.md', _README_MD.format(slug=slug))
 
     persona_notes = req.persona_notes.strip() or _DEFAULT_PERSONA_NOTES.format(
         display_name=req.name, backstory=req.backstory or 'No backstory written yet.',
     )
     _write_agent_jsonc(user_id, slug, slug, req.goal, req.backstory, req.llm)
-    _write_crew_jsonc(user_id, slug, slug)
+    _write_crew_jsonc(user_id, slug, slug, structured_output=bool(req.response_schema_fields))
     _write_skill_md(user_id, slug, slug, req.goal, persona_notes)
 
     return get_npc(user_id, slug)
@@ -277,9 +340,9 @@ def delete_npc(user_id: str, slug: str) -> None:
 def ensure_cached(user_id: str, slug: str) -> Path:
     """Sync the NPC's files from storage into the local execution cache, if not already there.
 
-    crewAI's loader needs real files on disk (it imports schemas.py and resolves the
-    `skills` path relative to the project directory), so NPCs can't run directly out of
-    storage - the cache is what `/talk` actually executes against.
+    crewAI's loader needs real files on disk (it imports schema.py, when present, and
+    resolves the `skills` path relative to the project directory), so NPCs can't run
+    directly out of storage - the cache is what `/talk` actually executes against.
     """
     cache_dir = _cache_dir(user_id, slug)
     if (cache_dir / 'crew.jsonc').exists():
@@ -329,17 +392,20 @@ def _write_agent_jsonc(user_id: str, slug: str, agent_name: str, goal: str, back
     _write_file(user_id, slug, f'agents/{agent_name}.jsonc', content)
 
 
-def _write_crew_jsonc(user_id: str, slug: str, agent_name: str) -> None:
+def _write_crew_jsonc(user_id: str, slug: str, agent_name: str, structured_output: bool) -> None:
+    task: dict[str, Any] = {
+        'name': 'conversation',
+        'description': 'react to this prompt {prompt}',
+        'expected_output': 'conversation',
+        'agent': agent_name,
+    }
+    if structured_output:
+        task['output_pydantic'] = {'python': 'schema.ResponseSchema'}
+
     crew = {
         'name': 'npc',
         'agents': [agent_name],
-        'tasks': [{
-            'name': 'conversation',
-            'description': 'react to this prompt {prompt}',
-            'expected_output': 'conversation',
-            'output_pydantic': {'python': 'schemas.NpcResponseSchema'},
-            'agent': agent_name,
-        }],
+        'tasks': [task],
         'process': 'sequential',
         'verbose': True,
         'memory': True,
