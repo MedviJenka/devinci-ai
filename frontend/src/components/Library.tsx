@@ -7,9 +7,12 @@ interface Props {
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
   onCreate: () => void;
+  onNavigateStorylines?: () => void;
 }
 
-export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onCreate }: Props) {
+const METRIC_BAR_HEIGHTS = [30, 45, 20, 60, 85, 40, 55, 70, 35, 90, 50, 65];
+
+export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onCreate, onNavigateStorylines }: Props) {
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -65,8 +68,10 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-high/50">
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Name</th>
-                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Slug</th>
-                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">LLM</th>
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">ID</th>
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Status</th>
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Last Called</th>
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Call Count</th>
                   <th className="px-6 py-4 text-right font-label-caps uppercase tracking-wider text-on-surface-variant">
                     Actions
                   </th>
@@ -95,7 +100,14 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
                         {npc.slug}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-code-md text-code-md text-on-surface-variant">{npc.llm}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        <span className="font-label-caps text-xs uppercase text-primary">Published</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-on-surface-variant">—</td>
+                    <td className="px-6 py-4 font-code-md text-on-surface-variant">—</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                         <button
@@ -107,6 +119,14 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
                           className="rounded p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-primary"
                         >
                           <span className="material-symbols-outlined text-lg">edit</span>
+                        </button>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          disabled
+                          title="Analytics — coming soon"
+                          className="cursor-not-allowed rounded p-2 text-on-surface-variant/40"
+                        >
+                          <span className="material-symbols-outlined text-lg">analytics</span>
                         </button>
                         <button
                           onClick={(e) => {
@@ -155,8 +175,59 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
             <span className="font-label-caps text-xs uppercase text-on-surface-variant">
               Showing {filtered.length} of {npcs.length} NPCs
             </span>
+            <div className="flex gap-2">
+              <button
+                disabled
+                title="Pagination coming soon"
+                className="cursor-not-allowed rounded border border-outline-variant p-1.5 text-on-surface-variant opacity-30"
+              >
+                <span className="material-symbols-outlined text-sm">chevron_left</span>
+              </button>
+              <button
+                disabled
+                title="Pagination coming soon"
+                className="cursor-not-allowed rounded border border-outline-variant p-1.5 text-on-surface-variant opacity-30"
+              >
+                <span className="material-symbols-outlined text-sm">chevron_right</span>
+              </button>
+            </div>
           </div>
         )}
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container p-6 lg:col-span-8">
+          <div className="mb-6 flex items-start justify-between">
+            <div>
+              <h4 className="font-headline-sm text-headline-sm text-on-surface">Real-time Call Metrics</h4>
+              <p className="text-sm text-on-surface-variant">Active NPC interaction volume across shards</p>
+            </div>
+            <span className="material-symbols-outlined text-primary/40">monitoring</span>
+          </div>
+          <div className="flex h-48 w-full items-end gap-1 px-2">
+            {METRIC_BAR_HEIGHTS.map((height, i) => (
+              <div
+                key={i}
+                style={{ height: `${height}%` }}
+                className="w-full rounded-t-sm bg-primary/20 transition-all hover:bg-primary/40"
+              />
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col justify-between rounded-xl border border-outline-variant bg-surface-container p-6 lg:col-span-4">
+          <div>
+            <h4 className="mb-2 font-headline-sm text-headline-sm text-on-surface">Narrative Forge</h4>
+            <p className="text-sm text-on-surface-variant">
+              Connect your NPCs to multi-path storylines to create dynamic world states.
+            </p>
+          </div>
+          <button
+            onClick={onNavigateStorylines}
+            className="mt-6 flex items-center gap-2 font-label-caps text-xs uppercase text-primary transition-all hover:gap-3"
+          >
+            Go to Storylines <span className="material-symbols-outlined text-sm">arrow_forward</span>
+          </button>
+        </div>
       </div>
     </div>
   );

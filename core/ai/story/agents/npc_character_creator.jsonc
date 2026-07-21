@@ -2,13 +2,13 @@
   // Agent's role title — appears in prompts and logs.
   // You can use {placeholder} inputs in role, goal, or backstory.
   // Example: "role": "Senior {industry} Researcher"
-  "role": "Story creator",
+  "role": "NPC character creator",
 
   // Optional custom Agent subclass
   // "type": {"python": "my_project.agents.CustomAgent"},
 
   // The agent's primary objective
-  "goal": "story creator for games",
+  "goal": "design grounded, playable NPC characters for games",
 
   // Background story that shapes the agent's personality and approach
   "backstory": "creative",
@@ -67,7 +67,7 @@
     "allow_delegation": false,
 
     // Maximum reasoning iterations per task (prevents infinite loops)
-    // "max_iter": 25,
+    "max_iter": 10
 
     // Maximum tokens for agent's response generation
     // "max_tokens": null,
@@ -91,7 +91,7 @@
     // "max_retry_limit": 2,
 
     // Enable step-by-step planning before task execution
-    "planning": true
+//    "planning": true
 
     // Include system prompt in LLM calls
     // "use_system_prompt": true

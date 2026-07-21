@@ -1,18 +1,19 @@
 import json
+import posixpath
 import re
 import shutil
 from pathlib import Path
 from typing import Any
 from crewai.project import strip_jsonc_comments
 from pydantic import BaseModel, Field
-
 from core.settings import Config
 from core.storage import client as storage
 
 
 DEFAULT_LLM = 'openai/gpt-5.5'
 
-_SCHEMAS_PY = '''from typing import Literal
+_SCHEMAS_PY = '''
+from typing import Literal
 from pydantic import BaseModel, Field
 
 
@@ -24,7 +25,8 @@ class NpcResponseSchema(BaseModel):
     response: str  = Field(..., description='npc response, rely also on memory')
 '''
 
-_NPC_PY = '''import asyncio
+_NPC_PY = '''
+import asyncio
 from pathlib import Path
 import core.ai.crewai_compat  # noqa: F401
 from crewai.project import load_crew
@@ -116,7 +118,7 @@ class NpcCreateRequest(BaseModel):
     name: str
     goal: str = Field(default='interactive npc')
     backstory: str = Field(default='')
-    llm: str = Field(default=DEFAULT_LLM)
+    llm: str = Field(default=Config.OPENAI_MODEL)
     persona_notes: str = Field(default='')
 
 
@@ -228,7 +230,7 @@ def create_npc(user_id: str, req: NpcCreateRequest) -> NpcDetail:
     if storage.exists(_bucket(), _npc_prefix(user_id, slug) + 'crew.jsonc'):
         raise NpcAlreadyExistsError(slug)
 
-    _write_file(user_id, slug, '__init__.py', '')
+    _write_file(user_id, slug, '../__init__.py', '')
     _write_file(user_id, slug, 'npc.py', _NPC_PY)
     _write_file(user_id, slug, 'schemas.py', _SCHEMAS_PY)
     _write_file(user_id, slug, 'README.md', _README_MD.format(slug=slug))
@@ -303,7 +305,11 @@ def _write_file(user_id: str, slug: str, rel_path: str, content: str) -> None:
     local_path = _cache_dir(user_id, slug) / rel_path
     local_path.parent.mkdir(parents=True, exist_ok=True)
     local_path.write_text(content, encoding='utf-8')
-    storage.put_text(_bucket(), _npc_prefix(user_id, slug) + rel_path, content)
+    # normalize away '..' segments (e.g. rel_path='../__init__.py'): Supabase Storage's
+    # Cloudflare front collapses '..' in the URL path before it reaches the S3-compatible
+    # origin, which no longer matches the path boto3 signed -> SignatureDoesNotMatch.
+    storage_key = posixpath.normpath(_npc_prefix(user_id, slug) + rel_path)
+    storage.put_text(_bucket(), storage_key, content)
 
 
 def _write_agent_jsonc(user_id: str, slug: str, agent_name: str, goal: str, backstory: str, llm: str) -> None:

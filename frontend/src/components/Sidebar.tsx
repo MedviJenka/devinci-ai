@@ -1,3 +1,5 @@
+import LogoIcon from './icons/LogoIcon';
+
 export type Screen = 'dashboard' | 'npcs' | 'storylines' | 'api-keys';
 
 interface NavItem {
@@ -29,9 +31,7 @@ export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail,
       <div className="mb-8 px-6">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-primary">
-            <span className="material-symbols-outlined text-[20px] text-on-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-              bolt
-            </span>
+            <LogoIcon className="h-5 w-5 text-on-primary" />
           </div>
           <div>
             <h1 className="font-headline-md text-headline-md font-bold leading-none tracking-tight text-on-surface">
@@ -50,11 +50,13 @@ export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail,
               key={item.label}
               onClick={() => !item.disabled && item.screen && onNavigate(item.screen)}
               className={`flex items-center justify-between gap-3 border-l-2 px-4 py-3 transition-colors ${
+                item.disabled ? 'cursor-default' : 'cursor-pointer'
+              } ${
                 active
                   ? 'border-primary bg-primary/5 text-primary'
                   : item.disabled
                     ? 'border-transparent text-outline/50'
-                    : 'cursor-pointer border-transparent text-on-surface-variant hover:bg-surface-container-high'
+                    : 'border-transparent text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
               <div className="flex items-center gap-3">

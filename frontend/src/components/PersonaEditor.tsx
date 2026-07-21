@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NpcDetail } from '../types';
+import { generateCharacter } from '../api';
 
 interface Props {
   npc: NpcDetail;
@@ -17,6 +18,9 @@ export default function PersonaEditor({ npc, onSave }: Props) {
   const [personaNotes, setPersonaNotes] = useState(npc.persona_notes);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [genPrompt, setGenPrompt] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
 
   useEffect(() => {
     setGoal(npc.goal);
@@ -34,6 +38,22 @@ export default function PersonaEditor({ npc, onSave }: Props) {
       setSaved(true);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const generate = async () => {
+    setGenerating(true);
+    setGenError(null);
+    try {
+      const result = await generateCharacter(npc.role, genPrompt.trim());
+      if (!result.success) throw new Error(result.error || 'Generation failed.');
+      if (result.description) setBackstory(result.description);
+      if (result.persona) setPersonaNotes(result.persona);
+      setSaved(false);
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : 'Failed to generate persona.');
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -65,6 +85,34 @@ export default function PersonaEditor({ npc, onSave }: Props) {
         <div className="mb-4 flex items-center gap-3 border-b border-outline-variant pb-4">
           <span className="material-symbols-outlined text-primary">psychology_alt</span>
           <h3 className="font-headline-sm text-headline-sm text-on-surface">Persona Notes</h3>
+        </div>
+
+        <div className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-lowest/50 p-4">
+          <div className="space-y-2">
+            <label className={labelClass}>Generation prompt (optional)</label>
+            <input
+              value={genPrompt}
+              onChange={(e) => setGenPrompt(e.target.value)}
+              placeholder="e.g. gruff blacksmith who lost his son in the war"
+              className={inputClass}
+            />
+          </div>
+
+          {genError && <p className="text-sm text-error">{genError}</p>}
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={generate}
+              disabled={generating}
+              className="flex items-center gap-2 rounded bg-primary px-4 py-1.5 font-label-caps text-label-caps uppercase text-on-primary transition-all hover:brightness-110 disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+              {generating ? 'Generating...' : 'Generate with AI'}
+            </button>
+            <span className="font-code-md text-[11px] text-outline">
+              Writes a SKILL.md character sheet into Backstory &amp; the field below — review before saving.
+            </span>
+          </div>
         </div>
 
         <div className="space-y-2">

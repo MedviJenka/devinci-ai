@@ -32,7 +32,6 @@ export default function GenerateApiKeyModal({ onGenerate, onClose }: Props) {
         <div className="space-y-2">
           <label className={labelClass}>Key Name</label>
           <input
-            autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Production_Orchestrator_Main"
