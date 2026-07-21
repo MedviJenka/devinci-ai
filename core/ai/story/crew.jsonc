@@ -3,20 +3,20 @@
   "name": "story",
 
   // Agents to include — each must have a matching agents/<name>.jsonc file
-  "agents": ["story_creator"],
+  "agents": ["npc_character_creator"],
 
   // Task definitions — executed in order for sequential process
   "tasks": [
     {
       // Task identifier
-      "name": "create_a_creative_story_task",
+      "name": "create_npc_character_task",
 
       // What the task should accomplish
       // Use {placeholder} inputs here; crewai run prompts for missing values
-      "description": "create a creative story based on this prompt: {prompt}",
+      "description": "Create a game NPC character named {npc_name} based on this prompt: {prompt}. Format the entire output as a SKILL.md file: start with YAML frontmatter exactly in this shape:\n---\nname: <npc_name lowercased, spaces and non-alphanumeric characters replaced with underscores>\ndescription: <one sentence describing the NPC>\n---\nfollowed by the character profile.",
 
       // Clear definition of what the output should look like
-      "expected_output": "game story",
+      "expected_output": "a SKILL.md file starting with '---' YAML frontmatter containing 'name' (an underscore-slug of npc_name) and 'description' fields, followed by the full NPC character profile",
 
       // Optional task guardrail(s) validate output before completion
       // Use "guardrail" for one rule or "guardrails" for many
@@ -42,7 +42,7 @@
       // "security_config": {},
 
       // Which agent handles this task
-      "agent": "story_creator"
+      "agent": "npc_character_creator"
 
       // "tools": [],
       // "human_input": false,
@@ -84,10 +84,10 @@
   // "function_calling_llm": "openai/gpt-4o-mini",
   // "max_rpm": null,
   // "cache": true,
-  // "knowledge_sources": [],
+   "knowledge_sources": [],
   // "embedder": {},
   // "output_log_file": "crew.log",
-  // "stream": false,
+  "stream": true,
   // "tracing": false,
   // "security_config": {},
 

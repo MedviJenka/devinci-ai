@@ -36,7 +36,6 @@ export default function CreateStorylineModal({ npcs, onCreate, onClose }: Props)
         <div className="space-y-2">
           <label className={labelClass}>Title</label>
           <input
-            autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. The Smith's Lost Apprentice"

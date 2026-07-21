@@ -5,7 +5,7 @@ from supabase import create_client
 
 
 class Settings(BaseSettings):
-    model_config                                = ConfigDict(extra='allow')
+    model_config                                  = ConfigDict(extra='allow')
     API_VERSION:                    str           = Field(default='v1')
     ENV:                            str           = Field(default='dev')
     LOG_DIR:                        str           = Field(default='/logs')
@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     SUPABASE_STORAGE_ACCESS_SECRET: str           = Field(default='')
     NPC_STORAGE_BUCKET:             str           = Field(default='npcs')
     NPC_CACHE_DIR:                  str           = Field(default='./.npc_cache')
+    FRONTEND_URL:                   str           = Field(default='http://localhost:3000')
+    STRIPE_API_KEY:                 str           = Field(default='')
+    STRIPE_WEBHOOK_SECRET:          str           = Field(default='')
+    STRIPE_PRICE_ID_PRO:            str           = Field(default='')
+    STRIPE_PRICE_ID_PREMIUM:        str           = Field(default='')
 
 
 Config = Settings()

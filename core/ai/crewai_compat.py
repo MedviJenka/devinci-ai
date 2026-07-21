@@ -1,4 +1,5 @@
-"""Workaround for crewAIInc/crewAI#6585.
+"""
+Workaround for crewAIInc/crewAI#6585.
 
 Relative "skills" paths in JSON/JSONC agent configs are resolved against the
 process's current working directory instead of the project root, unlike
@@ -13,12 +14,10 @@ against project_root at agent-load time, matching tools/output_pydantic.
 Remove once upstream ships a fix (linked PRs: #6587, #6596).
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
-
 from crewai.project import json_loader as _json_loader
+
 
 _original_resolve_agent_python_refs = _json_loader._resolve_agent_python_refs
 
@@ -30,9 +29,7 @@ def _resolve_skill_entry(entry: Any, root: Path) -> Any:
     return entry if path.is_absolute() else str((root / path).resolve())
 
 
-def _patched_resolve_agent_python_refs(
-    kwargs: dict[str, Any], source: Any, project_root: Path | None
-) -> None:
+def _patched_resolve_agent_python_refs(kwargs: dict[str, Any], source: Any, project_root: Path | None) -> None:
     _original_resolve_agent_python_refs(kwargs, source, project_root)
     skills = kwargs.get("skills")
     if not isinstance(skills, list):

@@ -1,13 +1,13 @@
 import uvicorn
-from core.log import Logger
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from typing import AsyncGenerator
+from core.useful.log import Logger
 from contextlib import asynccontextmanager
-from core.api.v1.npcs.api import router as npc_router
+from fastapi.middleware.cors import CORSMiddleware
+from core.api.v1.payment.api import router as payment_router
 
 
-log = Logger(name="api-service")
+log = Logger(name="payment-service")
 
 
 @asynccontextmanager
@@ -26,8 +26,8 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-app.include_router(npc_router)
+app.include_router(payment_router)
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=5555)
+    uvicorn.run(app, host="0.0.0.0", port=5556)

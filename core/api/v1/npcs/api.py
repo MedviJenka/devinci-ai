@@ -1,12 +1,13 @@
 import importlib.util
-from typing import AsyncGenerator
-from core.auth import get_current_user_id
-from core.log import Logger
+from core.useful.log import Logger
+from core.useful.stream import _sse
 from core.settings import Config
-from core.stream import _sse
-from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import AsyncGenerator
+from core.useful.auth import get_current_user_id
 from fastapi.responses import StreamingResponse
-from npcs.manager import (
+from contextlib import asynccontextmanager
+from fastapi import APIRouter, Depends, HTTPException, Query, FastAPI
+from core.useful.npc_manager import (
     NpcAlreadyExistsError,
     NpcCreateRequest,
     NpcDetail,
@@ -23,7 +24,16 @@ from npcs.manager import (
 
 log = Logger(name="npc-service")
 
-router = APIRouter(prefix=f'/api/{Config.API_VERSION}/npcs')
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncGenerator:
+    log.fire.info(f'{log.name} started successfully')
+    yield
+    log.fire.info(f'{log.name} stopped successfully')
+
+
+router = APIRouter(prefix=f'/api/{Config.API_VERSION}/npcs', lifespan=lifespan)
+
 
 
 @router.get('/')
