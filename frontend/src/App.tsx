@@ -11,7 +11,7 @@ import CreateNpcModal from './components/CreateNpcModal';
 import PersonaEditor from './components/PersonaEditor';
 import Chat from './components/Chat';
 import SignIn from './components/SignIn';
-import { NpcCreateRequest, NpcDetail, NpcSummary } from './types';
+import { NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
 
 type Tab = 'persona' | 'chat';
 
@@ -93,7 +93,7 @@ function App() {
     }
   };
 
-  const handleSave = async (fields: { goal: string; backstory: string; llm: string; persona_notes: string }) => {
+  const handleSave = async (fields: NpcUpdateRequest) => {
     if (!selected) return;
     const updated = await updateNpc(selected.slug, fields);
     setSelected(updated);

@@ -65,6 +65,8 @@ async def update_npc_route(
 ) -> NpcDetail:
     try:
         return update_npc(user_id, slug, req)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except NpcNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
 

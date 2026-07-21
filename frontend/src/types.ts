@@ -1,3 +1,13 @@
+export type PydanticFieldType = 'string' | 'integer' | 'float' | 'boolean' | 'enum';
+
+export interface PydanticFieldDef {
+  name: string;
+  type: PydanticFieldType;
+  description: string;
+  enum_values: string[];
+  required: boolean;
+}
+
 export interface NpcSummary {
   slug: string;
   role: string;
@@ -8,6 +18,8 @@ export interface NpcSummary {
 export interface NpcDetail extends NpcSummary {
   backstory: string;
   persona_notes: string;
+  pydantic_enabled: boolean;
+  pydantic_fields: PydanticFieldDef[];
 }
 
 export interface NpcCreateRequest {
@@ -23,6 +35,8 @@ export interface NpcUpdateRequest {
   backstory?: string;
   llm?: string;
   persona_notes?: string;
+  pydantic_enabled?: boolean;
+  pydantic_fields?: PydanticFieldDef[];
 }
 
 export interface ChatMessage {
