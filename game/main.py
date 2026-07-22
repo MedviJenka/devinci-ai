@@ -17,30 +17,35 @@ DIM_TEXT_COLOR = (150, 158, 179)
 PANEL_COLOR = (20, 22, 38)
 PANEL_BORDER = (255, 66, 161)
 
-NPC_NAME = 'john_doe'
-NPC_PROMPT = 'Greet the player who just walked up to your stall in the Neon District market.'
+NPC_NAME = 'john'
+GREETING_PROMPT = 'Greet the player who just walked up to your stall in the Neon District market.'
 
 
 class NpcInteraction:
     """Runs the Devinci NPC API call on a background thread so the game loop never blocks."""
 
-    IDLE, LOADING, RESULT, ERROR = 'idle', 'loading', 'result', 'error'
+    IDLE, TYPING, LOADING, RESULT, ERROR = 'idle', 'typing', 'loading', 'result', 'error'
 
     def __init__(self) -> None:
         self.state = self.IDLE
         self.text = ''
+        self.input_text = ''
         self._results: queue.Queue = queue.Queue()
 
-    def start(self) -> None:
+    def begin_typing(self) -> None:
+        self.state = self.TYPING
+        self.input_text = ''
+
+    def start(self, prompt: str) -> None:
         if self.state == self.LOADING:
             return
         self.state = self.LOADING
         self.text = ''
-        threading.Thread(target=self._call_api, daemon=True).start()
+        threading.Thread(target=self._call_api, args=(prompt,), daemon=True).start()
 
-    def _call_api(self) -> None:
+    def _call_api(self, prompt: str) -> None:
         try:
-            dialogue = generate_npc_response(NPC_NAME, NPC_PROMPT)
+            dialogue = generate_npc_response(NPC_NAME, prompt)
             self._results.put((self.RESULT, dialogue))
         except Exception as exc:
             self._results.put((self.ERROR, f'NPC did not respond: {exc}'))
@@ -56,6 +61,7 @@ class NpcInteraction:
     def close(self) -> None:
         self.state = self.IDLE
         self.text = ''
+        self.input_text = ''
 
 
 def draw_background(screen: pygame.Surface) -> None:
@@ -92,6 +98,17 @@ def draw_dialogue_panel(screen: pygame.Surface, font: pygame.font.Font, title_fo
     title = title_font.render('Neon District Merchant', True, NPC_COLOR)
     screen.blit(title, (panel_rect.x + 20, panel_rect.y + 14))
 
+    if interaction.state == NpcInteraction.TYPING:
+        cursor = '_' if pygame.time.get_ticks() % 1000 < 500 else ' '
+        body = f'{interaction.input_text}{cursor}'
+        color = TEXT_COLOR
+        for i, line in enumerate(wrap_text(font, body, panel_rect.width - 40) or ['']):
+            rendered = font.render(line, True, color)
+            screen.blit(rendered, (panel_rect.x + 20, panel_rect.y + 50 + i * 24))
+        hint = font.render('Type your message, Enter to send, Esc to cancel', True, DIM_TEXT_COLOR)
+        screen.blit(hint, (panel_rect.x + 20, panel_rect.bottom - 28))
+        return
+
     if interaction.state == NpcInteraction.LOADING:
         body = 'Contacting Devinci NPC service...'
         color = DIM_TEXT_COLOR
@@ -124,19 +141,44 @@ def main() -> None:
 
     interaction = NpcInteraction()
     running = True
+    met_npc = False
+    was_in_range = False
 
     while running:
+        in_range = pygame.Vector2(player.center).distance_to(npc.center) <= INTERACT_RADIUS
+
+        # First encounter: the NPC greets the player automatically, no input required.
+        if in_range and not was_in_range and not met_npc and interaction.state == NpcInteraction.IDLE:
+            met_npc = True
+            interaction.start(GREETING_PROMPT)
+        was_in_range = in_range
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                if interaction.state == NpcInteraction.IDLE:
-                    if pygame.Vector2(player.center).distance_to(npc.center) <= INTERACT_RADIUS:
-                        interaction.start()
-                else:
-                    interaction.close()
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    if interaction.state == NpcInteraction.IDLE:
+                        # Later encounters: let the player type whatever they want to say.
+                        if in_range and met_npc:
+                            interaction.begin_typing()
+                    elif interaction.state == NpcInteraction.TYPING:
+                        if interaction.input_text.strip():
+                            interaction.start(interaction.input_text.strip())
+                        else:
+                            interaction.close()
+                    else:
+                        interaction.close()
+                elif event.key == pygame.K_ESCAPE:
+                    if interaction.state == NpcInteraction.TYPING:
+                        interaction.close()
+                    else:
+                        running = False
+                elif interaction.state == NpcInteraction.TYPING:
+                    if event.key == pygame.K_BACKSPACE:
+                        interaction.input_text = interaction.input_text[:-1]
+                    elif event.unicode.isprintable():
+                        interaction.input_text += event.unicode
 
         if interaction.state == NpcInteraction.IDLE:
             keys = pygame.key.get_pressed()
@@ -149,12 +191,11 @@ def main() -> None:
 
         draw_background(screen)
 
-        in_range = pygame.Vector2(player.center).distance_to(npc.center) <= INTERACT_RADIUS
         pygame.draw.circle(screen, GRID_COLOR, npc.center, INTERACT_RADIUS, width=1)
         pygame.draw.rect(screen, NPC_COLOR, npc, border_radius=6)
         pygame.draw.rect(screen, PLAYER_COLOR, player, border_radius=6)
 
-        if interaction.state == NpcInteraction.IDLE and in_range:
+        if interaction.state == NpcInteraction.IDLE and in_range and met_npc:
             prompt = font.render('Press Enter to talk', True, TEXT_COLOR)
             screen.blit(prompt, (npc.centerx - prompt.get_width() // 2, npc.top - 28))
 

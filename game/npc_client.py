@@ -26,6 +26,3 @@ def generate_npc_response(npc_name: str, prompt: str) -> str:
             raise RuntimeError(event['message'])
 
     return ''.join(chunks)
-
-
-print(generate_npc_response(npc_name='john_doe', prompt='hi'))
