@@ -42,22 +42,32 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
           <h2 className="font-headline-lg text-headline-lg text-on-surface">Entity Library</h2>
           <p className="mt-1 text-on-surface-variant">Manage your narrative intelligence components.</p>
         </div>
-        <div className="relative w-72">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">
-            search
-          </span>
-          <input
-            ref={searchRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search NPC library..."
-            className="w-full rounded-lg border border-outline-variant bg-surface-container py-1.5 pl-10 pr-10 text-body-md text-on-surface outline-none transition-all focus:ring-1 focus:ring-primary"
-          />
-          {!query && (
-            <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-code-md text-[10px] text-on-surface-variant">
-              /
-            </kbd>
-          )}
+        <div className="flex items-end gap-3">
+          <div className="relative w-72">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">
+              search
+            </span>
+            <input
+              ref={searchRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search NPC library..."
+              className="w-full rounded-lg border border-outline-variant bg-surface-container py-1.5 pl-10 pr-10 text-body-md text-on-surface outline-none transition-all focus:ring-1 focus:ring-primary"
+            />
+            {!query && (
+              <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-code-md text-[10px] text-on-surface-variant">
+                /
+              </kbd>
+            )}
+          </div>
+          <button
+            onClick={onCreate}
+            title="Create a new NPC"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 font-label-caps text-label-caps uppercase text-on-primary transition-all hover:brightness-110 active:scale-[0.98]"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            New NPC
+          </button>
         </div>
       </div>
 
