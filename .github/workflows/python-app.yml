@@ -18,7 +18,24 @@ permissions:
 
 jobs:
   build:
+    runs-on: ubuntu-latest
 
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv and Python
+      uses: astral-sh/setup-uv@v5
+      with:
+        python-version: "3.12"
+        enable-cache: true
+
+    - name: Install dependencies
+      run: |
+        uv sync --locked
+        uv pip install flake8 pytest pytest-xdist
+
+  lint:
+    needs: [build]
     runs-on: ubuntu-latest
 
     steps:
@@ -45,22 +62,59 @@ jobs:
     - name: Test with pytest
       run: uv run pytest -n auto --dist loadscope
 
+  docker:
+    needs: [lint]
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
     - name: Write .env for Docker Compose
       env:
-        API_VERSION: ${{ secrets.API_VERSION }}
+        API_VERSION: v1
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_MODEL: openai/gpt-5.5
+        GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         GOOGLE_OAUTH_CALLBACK_URI: ${{ secrets.GOOGLE_OAUTH_CALLBACK_URI }}
+        LOGFIRE_TOKEN: ${{ secrets.LOGFIRE_TOKEN }}
         SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
         SUPABASE_PUBLISHABLE_API_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_API_KEY }}
         SUPABASE_SECRET_API_KEY: ${{ secrets.SUPABASE_SECRET_API_KEY }}
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_STORAGE_URL: ${{ secrets.SUPABASE_STORAGE_URL }}
+        SUPABASE_STORAGE_REGION: eu-central-1
+        SUPABASE_STORAGE_ACCESS_ID: ${{ secrets.SUPABASE_STORAGE_ACCESS_ID }}
+        SUPABASE_STORAGE_ACCESS_SECRET: ${{ secrets.SUPABASE_STORAGE_ACCESS_SECRET }}
+        STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+        STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        STRIPE_PRICE_ID_PRO: ${{ secrets.STRIPE_PRICE_ID_PRO }}
+        STRIPE_PRICE_ID_PREMIUM: ${{ secrets.STRIPE_PRICE_ID_PREMIUM }}
+        FRONTEND_URL: http://localhost:3000
+        GOOGLE_STITCH_API_KEY: ${{ secrets.GOOGLE_STITCH_API_KEY }}
+        TEST_API_KEY: ${{ secrets.TEST_API_KEY }}
       run: |
         cat > .env <<EOF
         API_VERSION=${API_VERSION}
+        OPENAI_API_KEY=${OPENAI_API_KEY}
+        OPENAI_MODEL=${OPENAI_MODEL}
+        GHCR_TOKEN=${GHCR_TOKEN}
         GOOGLE_OAUTH_CALLBACK_URI=${GOOGLE_OAUTH_CALLBACK_URI}
+        LOGFIRE_TOKEN=${LOGFIRE_TOKEN}
         SUPABASE_PROJECT_ID=${SUPABASE_PROJECT_ID}
         SUPABASE_PUBLISHABLE_API_KEY=${SUPABASE_PUBLISHABLE_API_KEY}
         SUPABASE_SECRET_API_KEY=${SUPABASE_SECRET_API_KEY}
         SUPABASE_URL=${SUPABASE_URL}
+        SUPABASE_STORAGE_URL=${SUPABASE_STORAGE_URL}
+        SUPABASE_STORAGE_REGION=${SUPABASE_STORAGE_REGION}
+        SUPABASE_STORAGE_ACCESS_ID=${SUPABASE_STORAGE_ACCESS_ID}
+        SUPABASE_STORAGE_ACCESS_SECRET=${SUPABASE_STORAGE_ACCESS_SECRET}
+        STRIPE_API_KEY=${STRIPE_API_KEY}
+        STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+        STRIPE_PRICE_ID_PRO=${STRIPE_PRICE_ID_PRO}
+        STRIPE_PRICE_ID_PREMIUM=${STRIPE_PRICE_ID_PREMIUM}
+        FRONTEND_URL=${FRONTEND_URL}
+        GOOGLE_STITCH_API_KEY=${GOOGLE_STITCH_API_KEY}
+        TEST_API_KEY=${TEST_API_KEY}
         EOF
 
     - name: Build and start containers
@@ -76,4 +130,3 @@ jobs:
     - name: Stop containers
       if: always()
       run: docker compose down
-
