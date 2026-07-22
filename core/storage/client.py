@@ -83,6 +83,15 @@ def list_files(bucket: str, prefix: str = '') -> list[str]:
     return keys
 
 
+def delete(bucket: str, key: str) -> None:
+    try:
+        _client().delete_object(Bucket=bucket, Key=key)
+        log.fire.info(f'deleted {key}')
+    except ClientError as e:
+        log.fire.error(f'{e}')
+        raise
+
+
 def list_prefixes(bucket: str, prefix: str) -> list[str]:
     """Immediate 'subdirectories' under prefix (e.g. NPC slugs under a user's namespace)."""
     response = _client().list_objects_v2(Bucket=bucket, Prefix=prefix, Delimiter='/')

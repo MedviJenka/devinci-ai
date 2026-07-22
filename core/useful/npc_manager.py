@@ -14,6 +14,12 @@ from core.storage import client as storage
 
 DEFAULT_LLM = 'openai/gpt-5.5'
 
+# Filenames written by code paths that no longer exist (an earlier structured-output
+# implementation wrote 'schema.py' before it was reworked into 'schemas.py' +
+# 'output_schema.jsonc'; 'voice.json' was per-NPC TTS settings for a feature not present
+# on this branch). Nothing reads these; update_npc prunes them from storage/cache on touch.
+_LEGACY_FILES = ('schema.py', 'voice.json')
+
 _FIELD_TYPE_ANNOTATIONS = {
     'string': 'str',
     'integer': 'int',
@@ -38,10 +44,13 @@ from crewai.types.streaming import CrewStreamingOutput
 from crewai.memory import Memory
 
 
-memory = Memory('')
-
 async def main(prompt: str) -> CrewStreamingOutput:
     crew, _ = load_crew(Path(__file__).with_name('crew.jsonc'))
+    # crew.jsonc's "memory": true would default to a store shared by every NPC in this
+    # process (keyed off the project dir, not the NPC) - point it at this NPC's own cache
+    # dir instead, then re-run the memory validator so crew._memory picks it up.
+    crew.memory = Memory(storage=str(Path(__file__).with_name('memory')))
+    crew.create_crew_memory()
     return await crew.kickoff_async(inputs={'prompt': prompt})
 
 
@@ -370,13 +379,31 @@ def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
 
     _write_agent_jsonc(user_id, slug, agent_name, goal, backstory, llm)
     _write_skill_md(user_id, slug, skill_dir_name, goal, persona_notes)
+    # Rewritten unconditionally (not just on creation) so existing NPCs pick up template
+    # fixes - e.g. the per-NPC memory wiring - the next time they're edited, instead of
+    # being stuck forever with whatever npc.py existed when they were first created.
+    _write_file(user_id, slug, 'npc.py', _NPC_PY)
 
     if req.pydantic_enabled is not None or req.pydantic_fields is not None:
         enabled = req.pydantic_enabled if req.pydantic_enabled is not None else current.pydantic_enabled
         fields = req.pydantic_fields if req.pydantic_fields is not None else current.pydantic_fields
         _write_output_schema(user_id, slug, enabled, fields)
 
+    _prune_legacy_files(user_id, slug)
+
     return get_npc(user_id, slug)
+
+
+def _prune_legacy_files(user_id: str, slug: str) -> None:
+    prefix = _npc_prefix(user_id, slug)
+    cache_dir = _cache_dir(user_id, slug)
+    for name in _LEGACY_FILES:
+        key = prefix + name
+        if storage.exists(_bucket(), key):
+            storage.delete(_bucket(), key)
+        local_path = cache_dir / name
+        if local_path.exists():
+            local_path.unlink()
 
 
 def delete_npc(user_id: str, slug: str) -> None:
@@ -408,13 +435,37 @@ def ensure_cached(user_id: str, slug: str) -> Path:
 
     for key in keys:
         rel = key[len(prefix):]
-        if not rel:
+        if not rel or rel in _LEGACY_FILES:
             continue
         dest = cache_dir / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(storage.get_text(_bucket(), key), encoding='utf-8')
+        if rel.startswith('memory/'):
+            # LanceDB fragment files are binary - route them through the file-based
+            # upload/download calls instead of the utf-8 text ones used for everything else.
+            storage.download(_bucket(), key, str(dest))
+        else:
+            dest.write_text(storage.get_text(_bucket(), key), encoding='utf-8')
 
     return cache_dir
+
+
+def sync_memory(user_id: str, slug: str) -> None:
+    """Push an NPC's local LanceDB memory files up to storage after a conversation.
+
+    crewAI's memory only ever writes to the local cache dir (see `ensure_cached`), so
+    without this a fresh cache - a different instance, or this one after eviction - would
+    come back with no memory of prior conversations.
+    """
+    cache_dir = _cache_dir(user_id, slug)
+    memory_dir = cache_dir / 'memory'
+    if not memory_dir.is_dir():
+        return
+
+    prefix = _npc_prefix(user_id, slug)
+    for path in memory_dir.rglob('*'):
+        if path.is_file():
+            rel = path.relative_to(cache_dir).as_posix()
+            storage.upload(_bucket(), prefix + rel, str(path))
 
 
 def _write_file(user_id: str, slug: str, rel_path: str, content: str) -> None:

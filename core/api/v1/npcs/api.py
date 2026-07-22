@@ -19,6 +19,7 @@ from core.useful.npc_manager import (
     ensure_cached,
     get_npc,
     list_npcs,
+    sync_memory,
     update_npc,
 )
 
@@ -125,6 +126,11 @@ async def talk_stream(
             if streaming.result.pydantic is not None:
                 done_payload['mood'] = streaming.result.pydantic.model_dump().get('mood')
             yield _sse(done_payload)
+
+            try:
+                sync_memory(user_id, slug)
+            except Exception as exc:
+                log.fire.error(f'memory sync failed: {exc}')
         except Exception as exc:
             log.fire.error(f'stream failed: {exc}')
             yield _sse({'type': 'error', 'message': 'Failed to generate response.'})
