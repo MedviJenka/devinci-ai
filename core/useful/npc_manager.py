@@ -43,15 +43,29 @@ from crewai.project import load_crew
 from crewai.types.streaming import CrewStreamingOutput
 from crewai.memory import Memory
 
+_crew = None
+
+
+def _get_crew():
+    # Built once per process and cached - parsing crew.jsonc/agents, constructing the
+    # LLM client, and opening the LanceDB memory table (connect + schema/index checks)
+    # is expensive enough to dominate response latency if repeated on every message.
+    # Safe to reuse across calls: api.py serializes calls to a given NPC with a lock,
+    # so there's no concurrent kickoff on this same crew instance.
+    global _crew
+    if _crew is None:
+        crew, _ = load_crew(Path(__file__).with_name('crew.jsonc'))
+        # crew.jsonc's "memory": true would default to a store shared by every NPC in this
+        # process (keyed off the project dir, not the NPC) - point it at this NPC's own cache
+        # dir instead, then re-run the memory validator so crew._memory picks it up.
+        crew.memory = Memory(storage=str(Path(__file__).with_name('memory')))
+        crew.create_crew_memory()
+        _crew = crew
+    return _crew
+
 
 async def main(prompt: str) -> CrewStreamingOutput:
-    crew, _ = load_crew(Path(__file__).with_name('crew.jsonc'))
-    # crew.jsonc's "memory": true would default to a store shared by every NPC in this
-    # process (keyed off the project dir, not the NPC) - point it at this NPC's own cache
-    # dir instead, then re-run the memory validator so crew._memory picks it up.
-    crew.memory = Memory(storage=str(Path(__file__).with_name('memory')))
-    crew.create_crew_memory()
-    return await crew.kickoff_async(inputs={'prompt': prompt})
+    return await _get_crew().kickoff_async(inputs={'prompt': prompt})
 
 
 async def _demo() -> None:
@@ -397,6 +411,13 @@ def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
         _write_output_schema(user_id, slug, enabled, fields)
 
     _prune_legacy_files(user_id, slug)
+
+    # The execution cache (see ensure_cached) only ever syncs missing files, so without
+    # clearing it here an already-cached NPC would keep serving whatever agent.jsonc/npc.py
+    # it had at first talk, silently ignoring every edit made after that.
+    cache_dir = _cache_dir(user_id, slug)
+    if cache_dir.exists():
+        shutil.rmtree(cache_dir)
 
     return get_npc(user_id, slug)
 
