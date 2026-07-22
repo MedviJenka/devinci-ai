@@ -1,16 +1,18 @@
-import { NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
+import { ApiKeyCreateResponse, ApiKeySummary, NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
 import { supabase } from './supabaseClient';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5555/api/v1/npcs';
+const CHARACTER_API_BASE = process.env.REACT_APP_CHARACTER_API_BASE || 'http://localhost:5555/api/v1/character';
+const API_KEYS_BASE = process.env.REACT_APP_API_KEYS_BASE || 'http://localhost:5555/api/v1/api-keys';
 
 async function authToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token ?? null;
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, init?: RequestInit, base: string = API_BASE): Promise<T> {
   const token = await authToken();
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${base}${path}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -19,6 +21,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      await supabase.auth.signOut();
+      throw new Error('Your session expired. Please sign in again.');
+    }
     throw new Error(body.detail || `request failed (${res.status})`);
   }
   if (res.status === 204) return undefined as T;
@@ -36,6 +42,26 @@ export const updateNpc = (slug: string, req: NpcUpdateRequest) =>
   request<NpcDetail>(`/${slug}`, { method: 'PUT', body: JSON.stringify(req) });
 
 export const deleteNpc = (slug: string) => request<void>(`/${slug}`, { method: 'DELETE' });
+
+export const listApiKeys = () => request<ApiKeySummary[]>('/', {}, API_KEYS_BASE);
+
+export const createApiKey = (name: string) =>
+  request<ApiKeyCreateResponse>('/', { method: 'POST', body: JSON.stringify({ name }) }, API_KEYS_BASE);
+
+export const revokeApiKey = (id: string) => request<void>(`/${id}`, { method: 'DELETE' }, API_KEYS_BASE);
+
+export interface GenerateCharacterResult {
+  success: boolean;
+  file_location: string;
+  description: string;
+  persona: string;
+  error?: string;
+}
+
+export const generateCharacter = (npcName: string, prompt: string) => {
+  const params = new URLSearchParams({ query: prompt, npc_name: npcName });
+  return request<GenerateCharacterResult>(`/create?${params.toString()}`, { method: 'POST' }, CHARACTER_API_BASE);
+};
 
 export interface TalkHandlers {
   onChunk?: (text: string) => void;

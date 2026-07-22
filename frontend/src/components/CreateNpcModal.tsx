@@ -44,7 +44,6 @@ export default function CreateNpcModal({ onCreate, onClose }: Props) {
         <div className="space-y-2">
           <label className={labelClass}>Name</label>
           <input
-            autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Aldric the Smith"

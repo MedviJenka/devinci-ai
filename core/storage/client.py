@@ -4,7 +4,7 @@ import boto3
 from botocore.config import Config as AWSConfig
 from botocore.exceptions import ClientError
 
-from core.log import Logger
+from core.useful.log import Logger
 from core.settings import Config
 
 log = Logger(name='storage')
@@ -19,7 +19,16 @@ def _client():
         region_name=Config.SUPABASE_STORAGE_REGION,
         aws_access_key_id=Config.SUPABASE_STORAGE_ACCESS_ID,
         aws_secret_access_key=Config.SUPABASE_STORAGE_ACCESS_SECRET,
-        config=AWSConfig(s3={"addressing_style": "path"}),
+        config=AWSConfig(
+            s3={"addressing_style": "path"},
+            # botocore >=1.36 defaults to "when_supported", which sends S3 write/delete
+            # requests (e.g. DeleteObjects) using aws-chunked trailing checksums. Supabase
+            # Storage's S3-compatible gateway can't parse that framing and fails with
+            # "InvalidRequest: must have required property 'Body'". "when_required" restores
+            # the legacy behavior every non-AWS S3-compatible backend actually supports.
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        ),
     )
 
 
@@ -74,6 +83,15 @@ def list_files(bucket: str, prefix: str = '') -> list[str]:
     return keys
 
 
+def delete(bucket: str, key: str) -> None:
+    try:
+        _client().delete_object(Bucket=bucket, Key=key)
+        log.fire.info(f'deleted {key}')
+    except ClientError as e:
+        log.fire.error(f'{e}')
+        raise
+
+
 def list_prefixes(bucket: str, prefix: str) -> list[str]:
     """Immediate 'subdirectories' under prefix (e.g. NPC slugs under a user's namespace)."""
     response = _client().list_objects_v2(Bucket=bucket, Prefix=prefix, Delimiter='/')
@@ -85,7 +103,13 @@ def delete_prefix(bucket: str, prefix: str) -> None:
     if not keys:
         return
     try:
-        _client().delete_objects(Bucket=bucket, Delete={'Objects': [{'Key': k} for k in keys]})
+        # DeleteObjects (batch) is a "checksum-required" operation per the S3 API model, so
+        # botocore always frames its request body as an aws-chunked trailer regardless of
+        # request_checksum_calculation. Supabase Storage's gateway can't parse that framing
+        # and fails with "InvalidRequest: must have required property 'Body'", so objects are
+        # deleted one at a time via the plain DeleteObject call instead.
+        for key in keys:
+            _client().delete_object(Bucket=bucket, Key=key)
         log.fire.info(f'deleted {len(keys)} objects under {prefix}')
     except ClientError as e:
         log.fire.error(f'{e}')

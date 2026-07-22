@@ -54,6 +54,7 @@ def main() -> None:
     args = parser.parse_args()
 
     user_id = _find_user_id(args.email)
+
     for slug in SLUGS:
         _migrate_one(user_id, slug)
 

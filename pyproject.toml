@@ -11,7 +11,17 @@ dependencies = [
     "fastapi",
     "logfire",
     "pydantic-settings",
+    "pygame>=2.6.1",
     "python-dotenv",
+    "stripe>=15.3.1",
     "supabase>=2.31.0",
     "uvicorn",
+]
+
+[dependency-groups]
+test = [
+    "pytest>=8.3",
+    "pytest-playwright>=0.5",
+    "pytest-xdist>=3.6",
+    "filelock>=3.16",
 ]

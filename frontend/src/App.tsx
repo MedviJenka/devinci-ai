@@ -11,7 +11,7 @@ import CreateNpcModal from './components/CreateNpcModal';
 import PersonaEditor from './components/PersonaEditor';
 import Chat from './components/Chat';
 import SignIn from './components/SignIn';
-import { NpcCreateRequest, NpcDetail, NpcSummary } from './types';
+import { NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
 
 type Tab = 'persona' | 'chat';
 
@@ -83,12 +83,17 @@ function App() {
 
   const handleDelete = async (slug: string) => {
     if (!window.confirm(`Delete "${slug}"? This cannot be undone.`)) return;
-    await deleteNpc(slug);
-    if (selected?.slug === slug) setSelected(null);
-    await refreshList();
+    setError(null);
+    try {
+      await deleteNpc(slug);
+      if (selected?.slug === slug) setSelected(null);
+      await refreshList();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete NPC.');
+    }
   };
 
-  const handleSave = async (fields: { goal: string; backstory: string; llm: string; persona_notes: string }) => {
+  const handleSave = async (fields: NpcUpdateRequest) => {
     if (!selected) return;
     const updated = await updateNpc(selected.slug, fields);
     setSelected(updated);
@@ -106,6 +111,22 @@ function App() {
       />
 
       <main className="flex min-w-0 flex-1 flex-col">
+        {!(screen === 'npcs' && selected) && (
+          <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-outline-variant bg-surface-container px-gutter">
+            <div className="flex h-7 w-7 items-center justify-center rounded bg-primary">
+              <span
+                className="material-symbols-outlined text-[16px] text-on-primary"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                bolt
+              </span>
+            </div>
+            <span className="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">
+              Devinci
+            </span>
+          </div>
+        )}
+
         {error && (
           <div className="border-b border-error/30 bg-error-container/20 px-6 py-2 text-sm text-on-error-container">
             {error}
@@ -127,6 +148,7 @@ function App() {
             onOpenPersona={(slug) => openNpc(slug, 'persona')}
             onDelete={handleDelete}
             onCreate={() => setShowCreate(true)}
+            onNavigateStorylines={() => navigate('storylines')}
           />
         )}
 
