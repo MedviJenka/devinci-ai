@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     LOG_DIR:                        str           = Field(default='/logs')
     LOG_LEVEL:                      str           = Field(default='INFO')
     VERBOSE:                        bool          = Field(default=True)
-    LOGFIRE_TOKEN:                  Optional[str] = Field(default='')
+    LOGFIRE_TOKEN:                  Optional[str] = Field(default=None)
     GHCR_TOKEN:                     str           = Field(default='')
     OPENAI_API_KEY:                 str           = Field(default='')
     OPENAI_MODEL:                   str           = Field(default='')
@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET:          str           = Field(default='')
     STRIPE_PRICE_ID_PRO:            str           = Field(default='')
     STRIPE_PRICE_ID_PREMIUM:        str           = Field(default='')
+    GOOGLE_STITCH_API_KEY:          str           = Field(default='')
+    TEST_API_KEY:                   str           = Field(default='')
 
 
 Config = Settings()

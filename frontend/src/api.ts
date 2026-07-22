@@ -1,8 +1,9 @@
-import { NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
+import { ApiKeyCreateResponse, ApiKeySummary, NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
 import { supabase } from './supabaseClient';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5555/api/v1/npcs';
 const CHARACTER_API_BASE = process.env.REACT_APP_CHARACTER_API_BASE || 'http://localhost:5555/api/v1/character';
+const API_KEYS_BASE = process.env.REACT_APP_API_KEYS_BASE || 'http://localhost:5555/api/v1/api-keys';
 
 async function authToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
@@ -41,6 +42,13 @@ export const updateNpc = (slug: string, req: NpcUpdateRequest) =>
   request<NpcDetail>(`/${slug}`, { method: 'PUT', body: JSON.stringify(req) });
 
 export const deleteNpc = (slug: string) => request<void>(`/${slug}`, { method: 'DELETE' });
+
+export const listApiKeys = () => request<ApiKeySummary[]>('/', {}, API_KEYS_BASE);
+
+export const createApiKey = (name: string) =>
+  request<ApiKeyCreateResponse>('/', { method: 'POST', body: JSON.stringify({ name }) }, API_KEYS_BASE);
+
+export const revokeApiKey = (id: string) => request<void>(`/${id}`, { method: 'DELETE' }, API_KEYS_BASE);
 
 export interface GenerateCharacterResult {
   success: boolean;

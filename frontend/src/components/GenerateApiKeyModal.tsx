@@ -40,7 +40,7 @@ export default function GenerateApiKeyModal({ onGenerate, onClose }: Props) {
         </div>
 
         <p className="font-code-md text-[11px] text-outline">
-          Generated locally for now — not yet backed by a real credential store.
+          You'll see the full key once, right after it's generated — copy it somewhere safe.
         </p>
 
         <div className="flex justify-end gap-2 pt-1">
