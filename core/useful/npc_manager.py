@@ -35,7 +35,10 @@ from pathlib import Path
 import core.ai.crewai_compat  # noqa: F401
 from crewai.project import load_crew
 from crewai.types.streaming import CrewStreamingOutput
+from crewai.memory import Memory
 
+
+memory = Memory('')
 
 async def main(prompt: str) -> CrewStreamingOutput:
     crew, _ = load_crew(Path(__file__).with_name('crew.jsonc'))
