@@ -60,7 +60,6 @@ jobs:
         uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
   test:
-    needs: [lint]
     runs-on: ubuntu-latest
 
     steps:
@@ -81,7 +80,7 @@ jobs:
       run: uv run pytest -n auto --dist loadscope
 
   docker:
-    needs: [test]
+    needs: [lint, test]
     runs-on: ubuntu-latest
 
     steps:
