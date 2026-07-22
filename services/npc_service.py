@@ -31,6 +31,5 @@ app.include_router(npc_router)
 app.include_router(story_router)
 app.include_router(api_keys_router)
 
-
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=5555)
