@@ -22,10 +22,11 @@ back.
 
 import json
 import re
+import secrets
 import time
 import pytest
 from dataclasses import dataclass, field
-from tests.e2e.mock_constants import API_BASE, STATE_FILE, SUPABASE_URL
+from tests.e2e.mock_constants import API_BASE, API_KEYS_BASE, STATE_FILE, SUPABASE_URL
 
 
 # ---------------------------------------------------------------------------
@@ -191,6 +192,74 @@ def npc_api(page) -> NpcApiMock:
 
 
 # ---------------------------------------------------------------------------
+# API keys mock
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ApiKeyMock:
+    """In-memory fake of the FastAPI api-keys endpoints (core/api/v1/api_keys),
+    mirroring core/database/api_keys/client.py's key shape: a `dv_`-prefixed
+    raw key, only ever returned once at creation, plus an 11-char key_prefix
+    (`dv_` + 8 hex chars) persisted for display."""
+
+    keys: dict = field(default_factory=dict)  # id -> summary dict (no raw key)
+    _counter: int = 0
+
+    def _next_id(self) -> str:
+        self._counter += 1
+        return f"key-{self._counter}"
+
+
+def _install_api_keys_routes(page, mock: ApiKeyMock) -> None:
+    def handler(route):
+        request = route.request
+        if request.method == "OPTIONS":
+            route.fulfill(status=204, headers=_cors_headers(request))
+            return
+
+        path = request.url[len(API_KEYS_BASE):]
+        path = path.split("?", 1)[0]
+
+        if path == "/" and request.method == "GET":
+            _json(route, request, 200, list(mock.keys.values()))
+            return
+
+        if path == "/" and request.method == "POST":
+            payload = json.loads(request.post_data or "{}")
+            raw_key = f"dv_{secrets.token_hex(24)}"
+            key_id = mock._next_id()
+            summary = {
+                "id": key_id,
+                "name": payload["name"],
+                "key_prefix": raw_key[:11],
+                "created_at": "2026-01-01T00:00:00+00:00",
+                "last_used_at": None,
+                "revoked_at": None,
+            }
+            mock.keys[key_id] = summary
+            _json(route, request, 201, {**summary, "key": raw_key})
+            return
+
+        if request.method == "DELETE":
+            key_id = path[1:]
+            if key_id in mock.keys:
+                mock.keys[key_id]["revoked_at"] = "2026-01-01T00:00:01+00:00"
+            route.fulfill(status=204, headers=_cors_headers(request), body="")
+            return
+
+        route.fallback()
+
+    page.route(f"{API_KEYS_BASE}/**", handler)
+
+
+@pytest.fixture
+def api_keys(page) -> ApiKeyMock:
+    mock = ApiKeyMock()
+    _install_api_keys_routes(page, mock)
+    return mock
+
+
+# ---------------------------------------------------------------------------
 # Supabase auth mock
 # ---------------------------------------------------------------------------
 
@@ -286,6 +355,7 @@ class AppDriver:
     page: object
     npc_api: NpcApiMock
     auth_mock: AuthMock
+    api_keys: ApiKeyMock
     base_url: str
 
     def sign_in(self, email: str = "player@example.com") -> None:
@@ -302,7 +372,12 @@ class AppDriver:
 
         page.get_by_role("button", name=re.compile("verify", re.I)).click()
         # "New NPC" only renders once the authenticated app shell (Sidebar) mounts.
-        page.get_by_role("button", name=re.compile("new npc", re.I)).wait_for(state="visible")
+        # Scoped to the sidebar landmark because the Library header also has its
+        # own persistent "New NPC" button (see 3bb0485), which would otherwise
+        # make this locator match two elements.
+        page.get_by_role("complementary").get_by_role(
+            "button", name=re.compile("new npc", re.I)
+        ).wait_for(state="visible")
 
     def nav(self, label: str) -> None:
         """Sidebar items are plain <div onClick> elements, not buttons, so
@@ -317,8 +392,8 @@ class AppDriver:
 
 
 @pytest.fixture
-def app(page, frontend_base_url, auth_mock, npc_api) -> AppDriver:
+def app(page, frontend_base_url, auth_mock, npc_api, api_keys) -> AppDriver:
     """Drives the real SignIn UI (email -> OTP) against mocked network calls.
     Seed `app.npc_api` before calling `app.sign_in()` if a test needs
     existing NPCs to be present on first load."""
-    return AppDriver(page=page, npc_api=npc_api, auth_mock=auth_mock, base_url=frontend_base_url)
+    return AppDriver(page=page, npc_api=npc_api, auth_mock=auth_mock, api_keys=api_keys, base_url=frontend_base_url)

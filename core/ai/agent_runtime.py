@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from crewai import Agent
 from crewai.crews.utils import enable_agent_streaming
 from crewai.lite_agent_output import LiteAgentOutput
+from crewai.llms.base_llm import BaseLLM
 from crewai.types.streaming import StreamingOutputBase
 from crewai.utilities.streaming import create_async_chunk_generator, create_streaming_state, register_cleanup, signal_end, signal_error
 
@@ -41,6 +42,20 @@ class AgentStreamingOutput(StreamingOutputBase[LiteAgentOutput]):
 async def kickoff_streaming(agent: Agent, prompt: str, response_format: type[BaseModel] | None = None,) -> AgentStreamingOutput:
     """Run agent.kickoff_async(prompt), streaming LLM tokens as they arrive."""
     enable_agent_streaming([agent])
+
+    # enable_agent_streaming() only flips .stream on if agent.llm is a BaseLLM
+    # instance - on a crewai upgrade that changes what Agent(llm=...) constructs, or
+    # what enable_agent_streaming() checks, this would silently fall back to
+    # buffered (whole-response-at-once) output instead of raising. crewai is pinned
+    # in pyproject.toml for the same reason; fail loudly here rather than let a
+    # version bump quietly turn streaming off.
+    if not isinstance(agent.llm, BaseLLM) or not agent.llm.stream:
+        raise RuntimeError(
+            "enable_agent_streaming() did not put this agent's LLM into streaming "
+            "mode - crewai's internals this shim depends on may have changed. "
+            "Check agent_runtime.py against the installed crewai version before "
+            "bumping the pin in pyproject.toml."
+        )
 
     task_info = {
         'index': 0, 'name': 'conversation', 'id': '',

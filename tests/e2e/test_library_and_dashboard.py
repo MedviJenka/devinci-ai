@@ -107,7 +107,8 @@ def test_dashboard_shows_llm_breakdown(app):
     app.nav("Dashboard")
 
     page.get_by_text("2 npcs").wait_for(state="visible")
-    page.get_by_text("1 npc", exact=True).wait_for(state="visible")
+    # Not exact=True: the count and "· NN%" share one text node, e.g. "1 npc · 33%".
+    page.get_by_text("1 npc ·").wait_for(state="visible")
 
 
 @pytest.mark.smoke
