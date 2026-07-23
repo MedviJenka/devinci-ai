@@ -10,6 +10,9 @@ import tempfile
 # origin, so nothing needs to actually be listening on localhost:5555.
 API_BASE = "http://localhost:5555/api/v1/npcs"
 
+# Matches the default REACT_APP_API_KEYS_BASE in frontend/src/api.ts.
+API_KEYS_BASE = "http://localhost:5555/api/v1/api-keys"
+
 # Real project ref from frontend/.env, used only to scope Playwright route
 # mocks for Supabase auth calls -- no request ever reaches the real project.
 SUPABASE_URL = "https://vzfnmqywgvfnyeoobrfs.supabase.co"
