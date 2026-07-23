@@ -99,9 +99,9 @@ function App() {
 
   const handleSave = async (fields: NpcUpdateRequest) => {
     if (!selected) return;
-    const updated = await updateNpc(selected.slug, fields);
-    setSelected(updated);
+    await updateNpc(selected.slug, fields);
     await refreshList();
+    setSelected(null);
   };
 
   return (
