@@ -15,3 +15,4 @@ frontend/node_modules
 
 # Local execution cache synced from Supabase Storage
 .npc_cache/
+.gstack/

@@ -1,6 +1,5 @@
 import json
 import re
-import shutil
 from pathlib import Path
 from typing import Any
 from crewai.project import strip_jsonc_comments
@@ -120,13 +119,6 @@ class NpcCreateRequest(BaseModel):
     persona_notes: str = Field(default='')
 
 
-class NpcUpdateRequest(BaseModel):
-    goal: str | None = None
-    backstory: str | None = None
-    llm: str | None = None
-    persona_notes: str | None = None
-
-
 def slugify(name: str) -> str:
     slug = re.sub(r'[^a-z0-9]+', '_', name.strip().lower()).strip('_')
     if not slug:
@@ -136,10 +128,6 @@ def slugify(name: str) -> str:
 
 def _bucket() -> str:
     return Config.NPC_STORAGE_BUCKET
-
-
-def _user_prefix(user_id: str) -> str:
-    return f'{user_id}/'
 
 
 def _npc_prefix(user_id: str, slug: str) -> str:
@@ -183,25 +171,6 @@ def _split_skill_md(text: str) -> tuple[str, str]:
     return description, body
 
 
-def list_npcs(user_id: str) -> list[NpcSummary]:
-    summaries = []
-    for prefix in sorted(storage.list_prefixes(_bucket(), _user_prefix(user_id))):
-        slug = prefix.rstrip('/').rsplit('/', 1)[-1]
-        if slug.startswith('_') or not storage.exists(_bucket(), prefix + 'crew.jsonc'):
-            continue
-        try:
-            summaries.append(_read_summary(user_id, slug))
-        except (OSError, ValueError, KeyError, json.JSONDecodeError):
-            continue
-    return summaries
-
-
-def _read_summary(user_id: str, slug: str) -> NpcSummary:
-    agent_name = _agent_name_for(user_id, slug)
-    agent = _load_jsonc_text(storage.get_text(_bucket(), _npc_prefix(user_id, slug) + f'agents/{agent_name}.jsonc'))
-    return NpcSummary(slug=slug, role=agent['role'], goal=agent['goal'], llm=agent['llm'])
-
-
 def get_npc(user_id: str, slug: str) -> NpcDetail:
     prefix = _npc_prefix(user_id, slug)
     if not storage.exists(_bucket(), prefix + 'crew.jsonc'):
@@ -241,62 +210,6 @@ def create_npc(user_id: str, req: NpcCreateRequest) -> NpcDetail:
     _write_skill_md(user_id, slug, slug, req.goal, persona_notes)
 
     return get_npc(user_id, slug)
-
-
-def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
-    current = get_npc(user_id, slug)
-
-    goal = req.goal if req.goal is not None else current.goal
-    backstory = req.backstory if req.backstory is not None else current.backstory
-    llm = req.llm if req.llm is not None else current.llm
-    persona_notes = req.persona_notes if req.persona_notes is not None else current.persona_notes
-
-    agent_name = _agent_name_for(user_id, slug)
-    existing_skill_key = _skill_md_key(user_id, slug)
-    skill_dir_name = existing_skill_key.rsplit('/', 2)[-2] if existing_skill_key else slug
-
-    _write_agent_jsonc(user_id, slug, agent_name, goal, backstory, llm)
-    _write_skill_md(user_id, slug, skill_dir_name, goal, persona_notes)
-
-    return get_npc(user_id, slug)
-
-
-def delete_npc(user_id: str, slug: str) -> None:
-    prefix = _npc_prefix(user_id, slug)
-    if not storage.exists(_bucket(), prefix + 'crew.jsonc'):
-        raise NpcNotFoundError(slug)
-    storage.delete_prefix(_bucket(), prefix)
-
-    cache_dir = _cache_dir(user_id, slug)
-    if cache_dir.exists():
-        shutil.rmtree(cache_dir)
-
-
-def ensure_cached(user_id: str, slug: str) -> Path:
-    """Sync the NPC's files from storage into the local execution cache, if not already there.
-
-    crewAI's loader needs real files on disk (it imports schemas.py and resolves the
-    `skills` path relative to the project directory), so NPCs can't run directly out of
-    storage - the cache is what `/talk` actually executes against.
-    """
-    cache_dir = _cache_dir(user_id, slug)
-    if (cache_dir / 'crew.jsonc').exists():
-        return cache_dir
-
-    prefix = _npc_prefix(user_id, slug)
-    keys = storage.list_files(_bucket(), prefix)
-    if not keys:
-        raise NpcNotFoundError(slug)
-
-    for key in keys:
-        rel = key[len(prefix):]
-        if not rel:
-            continue
-        dest = cache_dir / rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(storage.get_text(_bucket(), key), encoding='utf-8')
-
-    return cache_dir
 
 
 def _write_file(user_id: str, slug: str, rel_path: str, content: str) -> None:

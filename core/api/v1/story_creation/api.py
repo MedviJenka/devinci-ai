@@ -2,14 +2,14 @@ import re
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-from core.ai.story.main import run_character_creator
+from core.ai.skill_agent.main import run_character_creator
 from core.api.v1.story_creation.schemas import StoryCreationSchema
 from core.useful.log import Logger
 from typing import AsyncGenerator
 from core.settings import Config
 
 
-log = Logger(name='story-creation-api')
+log = Logger(name='skill_agent-creation-api')
 
 _FRONTMATTER_RE = re.compile(r'^---\n(.*?)\n---\n(.*)$', re.DOTALL)
 _DESCRIPTION_RE = re.compile(r'^description:\s*(.+)$', re.MULTILINE)

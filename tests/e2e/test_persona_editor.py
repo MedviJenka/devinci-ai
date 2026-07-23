@@ -22,7 +22,7 @@ def test_save_persona_persists_and_shows_confirmation(app):
         slug="aldric",
         role="Aldric the Smith",
         goal="old goal",
-        backstory="old story",
+        backstory="old skill_agent",
         llm="gpt-4o",
         persona_notes="old notes",
     )

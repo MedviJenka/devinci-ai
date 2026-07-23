@@ -3,6 +3,7 @@ import { NpcSummary } from '../types';
 
 interface Props {
   npcs: NpcSummary[];
+  loading?: boolean;
   onOpenChat: (slug: string) => void;
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
@@ -10,9 +11,15 @@ interface Props {
   onNavigateStorylines?: () => void;
 }
 
-const METRIC_BAR_HEIGHTS = [30, 45, 20, 60, 85, 40, 55, 70, 35, 90, 50, 65];
-
-export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onCreate, onNavigateStorylines }: Props) {
+export default function Library({
+  npcs,
+  loading,
+  onOpenChat,
+  onOpenPersona,
+  onDelete,
+  onCreate,
+  onNavigateStorylines,
+}: Props) {
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -72,7 +79,19 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
       </div>
 
       <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container shadow-2xl">
-        {filtered.length > 0 ? (
+        {loading ? (
+          <div className="animate-pulse divide-y divide-outline-variant/30">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-6 py-4">
+                <div className="h-8 w-8 shrink-0 rounded border border-outline-variant bg-surface-container-highest" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="h-3 w-32 rounded bg-surface-container-highest" />
+                  <div className="h-2.5 w-48 rounded bg-surface-container-highest" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
@@ -96,7 +115,7 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded border border-outline-variant bg-surface-container-highest">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                           <span className="material-symbols-outlined text-sm text-primary">smart_toy</span>
                         </div>
                         <div className="min-w-0">
@@ -112,21 +131,21 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                        <span className="font-label-caps text-xs uppercase text-primary">Published</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_1px_rgba(52,211,153,0.5)]" />
+                        <span className="font-label-caps text-xs uppercase text-emerald-400">Published</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-on-surface-variant">—</td>
                     <td className="px-6 py-4 font-code-md text-on-surface-variant">—</td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="ml-auto inline-flex gap-0.5 rounded-lg p-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onOpenPersona(npc.slug);
                           }}
                           title="Edit persona"
-                          className="rounded p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-primary"
+                          className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-primary"
                         >
                           <span className="material-symbols-outlined text-lg">edit</span>
                         </button>
@@ -134,7 +153,7 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
                           onClick={(e) => e.stopPropagation()}
                           disabled
                           title="Analytics — coming soon"
-                          className="cursor-not-allowed rounded p-2 text-on-surface-variant/40"
+                          className="cursor-not-allowed rounded-md p-2 text-on-surface-variant/40"
                         >
                           <span className="material-symbols-outlined text-lg">analytics</span>
                         </button>
@@ -144,7 +163,7 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
                             onDelete(npc.slug);
                           }}
                           title="Delete NPC"
-                          className="rounded p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-error"
+                          className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-error"
                         >
                           <span className="material-symbols-outlined text-lg">delete</span>
                         </button>
@@ -209,19 +228,18 @@ export default function Library({ npcs, onOpenChat, onOpenPersona, onDelete, onC
         <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container p-6 lg:col-span-8">
           <div className="mb-6 flex items-start justify-between">
             <div>
-              <h4 className="font-headline-sm text-headline-sm text-on-surface">Real-time Call Metrics</h4>
-              <p className="text-sm text-on-surface-variant">Active NPC interaction volume across shards</p>
+              <h4 className="font-headline-sm text-headline-sm text-on-surface">Call Metrics</h4>
+              <p className="text-sm text-on-surface-variant">NPC interaction volume over time</p>
             </div>
-            <span className="material-symbols-outlined text-primary/40">monitoring</span>
+            <span className="rounded bg-surface-container-highest px-1.5 py-0.5 font-code-md text-[9px] uppercase tracking-wide text-outline">
+              Soon
+            </span>
           </div>
-          <div className="flex h-48 w-full items-end gap-1 px-2">
-            {METRIC_BAR_HEIGHTS.map((height, i) => (
-              <div
-                key={i}
-                style={{ height: `${height}%` }}
-                className="w-full rounded-t-sm bg-primary/20 transition-all hover:bg-primary/40"
-              />
-            ))}
+          <div className="flex h-48 w-full flex-col items-center justify-center gap-2 text-center">
+            <span className="material-symbols-outlined text-3xl text-primary/40">monitoring</span>
+            <p className="max-w-xs text-sm text-on-surface-variant">
+              Live call volume will appear here once usage tracking ships.
+            </p>
           </div>
         </div>
         <div className="flex flex-col justify-between rounded-xl border border-outline-variant bg-surface-container p-6 lg:col-span-4">

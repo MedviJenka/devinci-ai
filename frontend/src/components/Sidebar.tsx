@@ -30,7 +30,7 @@ export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail,
     <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-outline-variant bg-surface-container py-6">
       <div className="mb-8 px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary shadow-[0_0_24px_-4px_rgba(206,192,236,0.6)]">
             <LogoIcon className="h-5 w-5 text-on-primary" />
           </div>
           <div>
@@ -46,17 +46,20 @@ export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail,
         {NAV_ITEMS.map((item) => {
           const active = !item.disabled && item.screen === activeScreen;
           return (
-            <div
+            <button
               key={item.label}
+              type="button"
+              disabled={item.disabled}
+              aria-current={active ? 'page' : undefined}
               onClick={() => !item.disabled && item.screen && onNavigate(item.screen)}
-              className={`flex items-center justify-between gap-3 border-l-2 px-4 py-3 transition-colors ${
+              className={`flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-primary ${
                 item.disabled ? 'cursor-default' : 'cursor-pointer'
               } ${
                 active
-                  ? 'border-primary bg-primary/5 text-primary'
+                  ? 'bg-primary/15 text-primary shadow-[inset_0_0_0_1px_rgba(206,192,236,0.25)]'
                   : item.disabled
-                    ? 'border-transparent text-outline/50'
-                    : 'border-transparent text-on-surface-variant hover:bg-surface-container-high'
+                    ? 'text-outline/50'
+                    : 'text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -68,7 +71,7 @@ export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail,
                   Soon
                 </span>
               )}
-            </div>
+            </button>
           );
         })}
       </nav>
@@ -76,7 +79,7 @@ export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail,
       <div className="mt-auto space-y-3 px-4">
         <button
           onClick={onCreate}
-          className="flex w-full items-center justify-center gap-2 rounded bg-primary py-3 font-label-caps text-label-caps text-on-primary transition-all hover:brightness-110 active:scale-[0.98]"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 font-label-caps text-label-caps text-on-primary shadow-[0_0_20px_-6px_rgba(206,192,236,0.7)] transition-all hover:brightness-110 hover:shadow-[0_0_28px_-4px_rgba(206,192,236,0.85)] active:scale-[0.98]"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
           New NPC

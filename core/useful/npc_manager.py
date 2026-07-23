@@ -3,93 +3,30 @@ import keyword
 import posixpath
 import re
 import shutil
-import sys
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Literal
-from crewai.project import strip_jsonc_comments
-from pydantic import BaseModel, Field
+from crewai import Agent, Memory
+from pydantic import BaseModel, Field, create_model
 from core.settings import Config
 from core.storage import client as storage
 
 
 DEFAULT_LLM = 'openai/gpt-5.5'
 
-# Filenames written by code paths that no longer exist (an earlier structured-output
-# implementation wrote 'schema.py' before it was reworked into 'schemas.py' +
-# 'output_schema.jsonc'; 'voice.json' was per-NPC TTS settings for a feature not present
-# on this branch). Nothing reads these; update_npc prunes them from storage/cache on touch.
-_LEGACY_FILES = ('schema.py', 'voice.json')
+# Filenames written by code paths that no longer exist: 'schema.py' predates
+# 'schemas.py'; 'voice.json' was per-NPC TTS settings for a feature not present on
+# this branch; 'agent.jsonc'/'output_schema.jsonc'/'schemas.py'/'README.md' predate
+# the switch to a self-contained npc.py, which in turn was replaced by npc.json (see
+# _render_npc_config) once nothing needed the config as importable code anymore -
+# build_agent/build_response_schema construct the Agent and structured-output schema
+# directly from the parsed config instead. Nothing reads these; update_npc prunes them
+# from storage/cache on touch.
+_LEGACY_FILES = (
+    'npc.py', 'schema.py', 'voice.json', 'agent.jsonc', 'output_schema.jsonc', 'schemas.py', 'README.md',
+)
 
-_FIELD_TYPE_ANNOTATIONS = {
-    'string': 'str',
-    'integer': 'int',
-    'float': 'float',
-    'boolean': 'bool',
-}
-
-_SCHEMAS_PY_HEADER = '''
-from typing import Literal
-from pydantic import BaseModel, Field
-
-
-class NpcResponseSchema(BaseModel):
-'''
-
-_NPC_PY = '''
-import asyncio
-from pathlib import Path
-import core.ai.crewai_compat  # noqa: F401
-from crewai.project import load_crew
-from crewai.types.streaming import CrewStreamingOutput
-from crewai.memory import Memory
-
-_crew = None
-
-
-def _get_crew():
-    # Built once per process and cached - parsing crew.jsonc/agents, constructing the
-    # LLM client, and opening the LanceDB memory table (connect + schema/index checks)
-    # is expensive enough to dominate response latency if repeated on every message.
-    # Safe to reuse across calls: api.py serializes calls to a given NPC with a lock,
-    # so there's no concurrent kickoff on this same crew instance.
-    global _crew
-    if _crew is None:
-        crew, _ = load_crew(Path(__file__).with_name('crew.jsonc'))
-        # crew.jsonc's "memory": true would default to a store shared by every NPC in this
-        # process (keyed off the project dir, not the NPC) - point it at this NPC's own cache
-        # dir instead, then re-run the memory validator so crew._memory picks it up.
-        crew.memory = Memory(storage=str(Path(__file__).with_name('memory')))
-        crew.create_crew_memory()
-        _crew = crew
-    return _crew
-
-
-async def main(prompt: str) -> CrewStreamingOutput:
-    return await _get_crew().kickoff_async(inputs={'prompt': prompt})
-
-
-async def _demo() -> None:
-    streaming = await main('hello')
-    async for chunk in streaming:
-        print(chunk.content, end='')
-    print()
-    print(streaming.result.pydantic)
-
-
-if __name__ == '__main__':
-    asyncio.run(_demo())
-'''
-
-_README_MD = '''# {slug}
-
-A crewAI project using JSON-first configuration, scaffolded by the NPC creator.
-
-## Project Structure
-
-- `agents/` - Agent definition (JSONC)
-- `crew.jsonc` - Crew definition with tasks and configuration
-- `skills/` - Persona / lore for the agent
-'''
+_FIELD_TYPES: dict[str, type] = {'string': str, 'integer': int, 'float': float, 'boolean': bool}
 
 _DEFAULT_PERSONA_NOTES = '''# {display_name}
 
@@ -122,6 +59,16 @@ description: {description}
 
 {persona_notes}
 '''
+
+
+# LanceDB's on-disk format is append-only - every memory write adds new version/
+# transaction/index files and never removes old ones, so a NPC's memory/ dir only
+# grows over a conversation. Tracks, per (user_id, slug), which relative paths under
+# it are already known to exist in storage (either downloaded from there by
+# ensure_cached, or uploaded by a prior sync_memory call this process), so
+# sync_memory only has to push genuinely new files instead of re-uploading the
+# NPC's entire memory history on every single message.
+_synced_memory_paths: dict[tuple[str, str], set[str]] = defaultdict(set)
 
 
 class NpcNotFoundError(Exception):
@@ -204,10 +151,6 @@ def _cache_dir(user_id: str, slug: str) -> Path:
     return Path(Config.NPC_CACHE_DIR) / user_id / slug
 
 
-def _load_jsonc_text(text: str) -> Any:
-    return json.loads(strip_jsonc_comments(text))
-
-
 def _validate_pydantic_fields(fields: list[PydanticFieldDef]) -> None:
     seen: set[str] = set()
     for field in fields:
@@ -227,68 +170,51 @@ def _validate_pydantic_fields(fields: list[PydanticFieldDef]) -> None:
             raise ValueError(f"field '{name}' of type enum needs at least one enum value")
 
 
-def _render_schemas_py(fields: list[PydanticFieldDef]) -> str:
-    if not fields:
-        body = '    pass\n'
-    else:
-        field_lines = []
-        for field in fields:
-            if field.type == 'enum':
-                values = ', '.join(repr(v) for v in field.enum_values)
-                annotation = f'Literal[{values}]'
-            else:
-                annotation = _FIELD_TYPE_ANNOTATIONS[field.type]
-            if not field.required:
-                annotation = f'{annotation} | None'
-            default = '...' if field.required else 'None'
-            field_lines.append(
-                f'    {field.name}: {annotation} = Field({default}, description={field.description!r})',
-            )
-        body = '\n'.join(field_lines) + '\n'
-    return _SCHEMAS_PY_HEADER + body
+def build_response_schema(fields: list[PydanticFieldDef]) -> type[BaseModel]:
+    """Build an NPC's structured-output schema at runtime from its field defs, instead
+    of generating and re-parsing a `class NpcResponseSchema(BaseModel): ...` source block."""
+    definitions: dict[str, Any] = {}
+    for field in fields:
+        annotation: Any = Literal[tuple(field.enum_values)] if field.type == 'enum' else _FIELD_TYPES[field.type]
+        if not field.required:
+            annotation = annotation | None
+        default = ... if field.required else None
+        definitions[field.name] = (annotation, Field(default, description=field.description))
+    return create_model('NpcResponseSchema', **definitions)
 
 
-def _output_schema_key(user_id: str, slug: str) -> str:
-    return _npc_prefix(user_id, slug) + 'output_schema.jsonc'
+def build_agent(cache_dir: Path, npc: NpcDetail) -> Agent:
+    """Construct the crewAI Agent for a cached NPC.
+
+    Constructing the LLM client and opening the LanceDB memory table (connect +
+    schema/index checks) is expensive enough to dominate response latency if repeated
+    on every message - callers should build this once per process and reuse it.
+    """
+    return Agent(
+        role=npc.role, goal=npc.goal, backstory=npc.backstory,
+        llm={'model': npc.llm},
+        skills=[str(cache_dir / 'skills')],
+        memory=Memory(storage=str(cache_dir / 'memory')),
+    )
 
 
-def _read_output_schema(user_id: str, slug: str) -> tuple[bool, list[PydanticFieldDef]]:
-    key = _output_schema_key(user_id, slug)
-    if not storage.exists(_bucket(), key):
-        return True, _default_pydantic_fields()
-    data = _load_jsonc_text(storage.get_text(_bucket(), key))
-    fields = [PydanticFieldDef(**field) for field in data.get('fields', [])]
-    return bool(data.get('enabled', True)), fields
+def _render_npc_config(
+    role: str, goal: str, backstory: str, llm: str, enabled: bool, fields: list[PydanticFieldDef],
+) -> str:
+    return json.dumps({
+        'role': role,
+        'goal': goal,
+        'backstory': backstory,
+        'llm': llm,
+        'pydantic_enabled': enabled,
+        'pydantic_fields': [field.model_dump() for field in fields],
+    }, indent=2)
 
 
-def _write_output_schema(user_id: str, slug: str, enabled: bool, fields: list[PydanticFieldDef]) -> None:
-    _validate_pydantic_fields(fields)
-    if enabled and not fields:
-        raise ValueError('at least one field is required when structured output is enabled')
-
-    data = {'enabled': enabled, 'fields': [field.model_dump() for field in fields]}
-    content = '// Structured output schema, edited via the NPC editor\n' + json.dumps(data, indent=2) + '\n'
-    _write_file(user_id, slug, 'output_schema.jsonc', content)
-
-    _write_file(user_id, slug, 'schemas.py', _render_schemas_py(fields))
-    # crewai imports "schemas" by bare module name and caches it in sys.modules keyed only
-    # by that name, not by path - without evicting it here, a re-generated schemas.py for
-    # this NPC would silently keep serving the previous in-process import on the next /talk.
-    sys.modules.pop('schemas', None)
-
-    crew_key = _npc_prefix(user_id, slug) + 'crew.jsonc'
-    crew = _load_jsonc_text(storage.get_text(_bucket(), crew_key))
-    if enabled:
-        crew['tasks'][0]['output_pydantic'] = {'python': 'schemas.NpcResponseSchema'}
-    else:
-        crew['tasks'][0].pop('output_pydantic', None)
-    content = '// Crew definition, generated by the NPC creator\n' + json.dumps(crew, indent=2) + '\n'
-    _write_file(user_id, slug, 'crew.jsonc', content)
-
-
-def _agent_name_for(user_id: str, slug: str) -> str:
-    crew = _load_jsonc_text(storage.get_text(_bucket(), _npc_prefix(user_id, slug) + 'crew.jsonc'))
-    return crew['agents'][0]
+def _parse_npc_config(text: str) -> dict[str, Any]:
+    data = json.loads(text)
+    data['pydantic_fields'] = [PydanticFieldDef(**field) for field in data['pydantic_fields']]
+    return data
 
 
 def _skill_md_key(user_id: str, slug: str) -> str | None:
@@ -319,7 +245,7 @@ def list_npcs(user_id: str) -> list[NpcSummary]:
     summaries = []
     for prefix in sorted(storage.list_prefixes(_bucket(), _user_prefix(user_id))):
         slug = prefix.rstrip('/').rsplit('/', 1)[-1]
-        if slug.startswith('_') or not storage.exists(_bucket(), prefix + 'crew.jsonc'):
+        if slug.startswith('_') or not storage.exists(_bucket(), prefix + 'npc.json'):
             continue
         try:
             summaries.append(_read_summary(user_id, slug))
@@ -329,39 +255,35 @@ def list_npcs(user_id: str) -> list[NpcSummary]:
 
 
 def _read_summary(user_id: str, slug: str) -> NpcSummary:
-    agent_name = _agent_name_for(user_id, slug)
-    agent = _load_jsonc_text(storage.get_text(_bucket(), _npc_prefix(user_id, slug) + f'agents/{agent_name}.jsonc'))
-    return NpcSummary(slug=slug, role=agent['role'], goal=agent['goal'], llm=agent['llm'])
+    config = _parse_npc_config(storage.get_text(_bucket(), _npc_prefix(user_id, slug) + 'npc.json'))
+    return NpcSummary(slug=slug, role=config['role'], goal=config['goal'], llm=config['llm'])
 
 
 def get_npc(user_id: str, slug: str) -> NpcDetail:
     prefix = _npc_prefix(user_id, slug)
-    if not storage.exists(_bucket(), prefix + 'crew.jsonc'):
+    if not storage.exists(_bucket(), prefix + 'npc.json'):
         raise NpcNotFoundError(slug)
 
-    agent_name = _agent_name_for(user_id, slug)
-    agent = _load_jsonc_text(storage.get_text(_bucket(), prefix + f'agents/{agent_name}.jsonc'))
+    config = _parse_npc_config(storage.get_text(_bucket(), prefix + 'npc.json'))
 
     skill_key = _skill_md_key(user_id, slug)
     persona_notes = _split_skill_md(storage.get_text(_bucket(), skill_key))[1] if skill_key else ''
 
-    pydantic_enabled, pydantic_fields = _read_output_schema(user_id, slug)
-
     return NpcDetail(
         slug=slug,
-        role=agent['role'],
-        goal=agent['goal'],
-        llm=agent['llm'],
-        backstory=agent.get('backstory', ''),
+        role=config['role'],
+        goal=config['goal'],
+        llm=config['llm'],
+        backstory=config['backstory'],
         persona_notes=persona_notes,
-        pydantic_enabled=pydantic_enabled,
-        pydantic_fields=pydantic_fields,
+        pydantic_enabled=config['pydantic_enabled'],
+        pydantic_fields=config['pydantic_fields'],
     )
 
 
 def create_npc(user_id: str, req: NpcCreateRequest) -> NpcDetail:
     slug = slugify(req.name)
-    if storage.exists(_bucket(), _npc_prefix(user_id, slug) + 'crew.jsonc'):
+    if storage.exists(_bucket(), _npc_prefix(user_id, slug) + 'npc.json'):
         raise NpcAlreadyExistsError(slug)
 
     # A stale local cache dir (e.g. left behind by a crash between create and delete)
@@ -372,15 +294,11 @@ def create_npc(user_id: str, req: NpcCreateRequest) -> NpcDetail:
         shutil.rmtree(cache_dir)
 
     _write_file(user_id, slug, '../__init__.py', '')
-    _write_file(user_id, slug, 'npc.py', _NPC_PY)
-    _write_file(user_id, slug, 'README.md', _README_MD.format(slug=slug))
 
     persona_notes = req.persona_notes.strip() or _DEFAULT_PERSONA_NOTES.format(
         display_name=req.name, backstory=req.backstory or 'No backstory written yet.',
     )
-    _write_agent_jsonc(user_id, slug, slug, req.goal, req.backstory, req.llm)
-    _write_crew_jsonc(user_id, slug, slug)
-    _write_output_schema(user_id, slug, True, _default_pydantic_fields())
+    _write_npc_config(user_id, slug, req.goal, req.backstory, req.llm, True, _default_pydantic_fields())
     _write_skill_md(user_id, slug, slug, req.goal, persona_notes)
 
     return get_npc(user_id, slug)
@@ -393,28 +311,23 @@ def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
     backstory = req.backstory if req.backstory is not None else current.backstory
     llm = req.llm if req.llm is not None else current.llm
     persona_notes = req.persona_notes if req.persona_notes is not None else current.persona_notes
+    enabled = req.pydantic_enabled if req.pydantic_enabled is not None else current.pydantic_enabled
+    fields = req.pydantic_fields if req.pydantic_fields is not None else current.pydantic_fields
 
-    agent_name = _agent_name_for(user_id, slug)
     existing_skill_key = _skill_md_key(user_id, slug)
     skill_dir_name = existing_skill_key.rsplit('/', 2)[-2] if existing_skill_key else slug
 
-    _write_agent_jsonc(user_id, slug, agent_name, goal, backstory, llm)
-    _write_skill_md(user_id, slug, skill_dir_name, goal, persona_notes)
     # Rewritten unconditionally (not just on creation) so existing NPCs pick up template
     # fixes - e.g. the per-NPC memory wiring - the next time they're edited, instead of
-    # being stuck forever with whatever npc.py existed when they were first created.
-    _write_file(user_id, slug, 'npc.py', _NPC_PY)
-
-    if req.pydantic_enabled is not None or req.pydantic_fields is not None:
-        enabled = req.pydantic_enabled if req.pydantic_enabled is not None else current.pydantic_enabled
-        fields = req.pydantic_fields if req.pydantic_fields is not None else current.pydantic_fields
-        _write_output_schema(user_id, slug, enabled, fields)
+    # being stuck forever with whatever config existed when they were first created.
+    _write_npc_config(user_id, slug, goal, backstory, llm, enabled, fields)
+    _write_skill_md(user_id, slug, skill_dir_name, goal, persona_notes)
 
     _prune_legacy_files(user_id, slug)
 
     # The execution cache (see ensure_cached) only ever syncs missing files, so without
-    # clearing it here an already-cached NPC would keep serving whatever agent.jsonc/npc.py
-    # it had at first talk, silently ignoring every edit made after that.
+    # clearing it here an already-cached NPC would keep serving whatever config it had
+    # at first talk, silently ignoring every edit made after that.
     cache_dir = _cache_dir(user_id, slug)
     if cache_dir.exists():
         shutil.rmtree(cache_dir)
@@ -436,24 +349,25 @@ def _prune_legacy_files(user_id: str, slug: str) -> None:
 
 def delete_npc(user_id: str, slug: str) -> None:
     prefix = _npc_prefix(user_id, slug)
-    if not storage.exists(_bucket(), prefix + 'crew.jsonc'):
+    if not storage.exists(_bucket(), prefix + 'npc.json'):
         raise NpcNotFoundError(slug)
     storage.delete_prefix(_bucket(), prefix)
 
     cache_dir = _cache_dir(user_id, slug)
     if cache_dir.exists():
         shutil.rmtree(cache_dir)
+    _synced_memory_paths.pop((user_id, slug), None)
 
 
 def ensure_cached(user_id: str, slug: str) -> Path:
     """Sync the NPC's files from storage into the local execution cache, if not already there.
 
-    crewAI's loader needs real files on disk (it imports schemas.py and resolves the
-    `skills` path relative to the project directory), so NPCs can't run directly out of
-    storage - the cache is what `/talk` actually executes against.
+    crewAI's loader needs real files on disk (it resolves the `skills` path relative to
+    the project directory and opens the LanceDB memory table there), so NPCs can't run
+    directly out of storage - the cache is what `/talk` actually executes against.
     """
     cache_dir = _cache_dir(user_id, slug)
-    if (cache_dir / 'crew.jsonc').exists():
+    if (cache_dir / 'npc.json').exists():
         return cache_dir
 
     prefix = _npc_prefix(user_id, slug)
@@ -461,6 +375,7 @@ def ensure_cached(user_id: str, slug: str) -> Path:
     if not keys:
         raise NpcNotFoundError(slug)
 
+    already_synced = _synced_memory_paths[(user_id, slug)]
     for key in keys:
         rel = key[len(prefix):]
         if not rel or rel in _LEGACY_FILES:
@@ -471,6 +386,8 @@ def ensure_cached(user_id: str, slug: str) -> Path:
             # LanceDB fragment files are binary - route them through the file-based
             # upload/download calls instead of the utf-8 text ones used for everything else.
             storage.download(_bucket(), key, str(dest))
+            # Already in storage by definition - sync_memory shouldn't push it back up.
+            already_synced.add(rel)
         else:
             dest.write_text(storage.get_text(_bucket(), key), encoding='utf-8')
 
@@ -483,6 +400,12 @@ def sync_memory(user_id: str, slug: str) -> None:
     crewAI's memory only ever writes to the local cache dir (see `ensure_cached`), so
     without this a fresh cache - a different instance, or this one after eviction - would
     come back with no memory of prior conversations.
+
+    LanceDB's format is append-only (every write adds new version/transaction/index
+    files and never touches old ones), so memory_dir only grows over a conversation.
+    Re-uploading the whole thing on every call would make each successive message
+    slower than the last as history piles up - only files not already known to be in
+    storage get uploaded.
     """
     cache_dir = _cache_dir(user_id, slug)
     memory_dir = cache_dir / 'memory'
@@ -490,10 +413,15 @@ def sync_memory(user_id: str, slug: str) -> None:
         return
 
     prefix = _npc_prefix(user_id, slug)
+    already_synced = _synced_memory_paths[(user_id, slug)]
     for path in memory_dir.rglob('*'):
-        if path.is_file():
-            rel = path.relative_to(cache_dir).as_posix()
-            storage.upload(_bucket(), prefix + rel, str(path))
+        if not path.is_file():
+            continue
+        rel = path.relative_to(cache_dir).as_posix()
+        if rel in already_synced:
+            continue
+        storage.upload(_bucket(), prefix + rel, str(path))
+        already_synced.add(rel)
 
 
 def _write_file(user_id: str, slug: str, rel_path: str, content: str) -> None:
@@ -507,48 +435,14 @@ def _write_file(user_id: str, slug: str, rel_path: str, content: str) -> None:
     storage.put_text(_bucket(), storage_key, content)
 
 
-def _write_agent_jsonc(user_id: str, slug: str, agent_name: str, goal: str, backstory: str, llm: str) -> None:
-    # crewai resolves relative "skills" paths against the process cwd instead
-    # of the project directory (crewAIInc/crewAI#6585); core/ai/crewai_compat.py
-    # patches this so the relative path below resolves correctly regardless of
-    # where the process is launched from.
-    agent = {
-        'role': agent_name,
-        'skills': ['./skills'],
-        'goal': goal,
-        'backstory': backstory,
-        'llm': llm,
-        # memory stays off here: agent-level memory=True resolves to crewAI's default
-        # Memory(), which has no path override and falls back to a single global LanceDB
-        # store shared by every agent on the machine - and agent.memory takes precedence
-        # over crew._memory (see agent/core.py's `getattr(agent, "memory", None) or
-        # self._memory`), so it would silently shadow the per-NPC-scoped crew.memory set
-        # in npc.py and leak facts between unrelated NPCs.
-        'settings': {'verbose': True, 'memory': False, 'cache': True},
-    }
-    content = '// Agent definition, generated by the NPC creator\n' + json.dumps(agent, indent=2) + '\n'
-    _write_file(user_id, slug, f'agents/{agent_name}.jsonc', content)
-
-
-def _write_crew_jsonc(user_id: str, slug: str, agent_name: str) -> None:
-    crew = {
-        'name': 'npc',
-        'agents': [agent_name],
-        'tasks': [{
-            'name': 'conversation',
-            'description': 'react to this prompt {prompt}',
-            'expected_output': 'conversation',
-            'output_pydantic': {'python': 'schemas.NpcResponseSchema'},
-            'agent': agent_name,
-        }],
-        'process': 'sequential',
-        'verbose': True,
-        'memory': True,
-        'stream': True,
-        'inputs': {},
-    }
-    content = '// Crew definition, generated by the NPC creator\n' + json.dumps(crew, indent=2) + '\n'
-    _write_file(user_id, slug, 'crew.jsonc', content)
+def _write_npc_config(
+    user_id: str, slug: str, goal: str, backstory: str, llm: str, enabled: bool, fields: list[PydanticFieldDef],
+) -> None:
+    _validate_pydantic_fields(fields)
+    if enabled and not fields:
+        raise ValueError('at least one field is required when structured output is enabled')
+    content = _render_npc_config(role=slug, goal=goal, backstory=backstory, llm=llm, enabled=enabled, fields=fields)
+    _write_file(user_id, slug, 'npc.json', content)
 
 
 def _write_skill_md(user_id: str, slug: str, skill_dir_name: str, goal: str, persona_notes: str) -> None:

@@ -51,7 +51,7 @@ export default function Storylines({ npcs }: Props) {
           <p className="mx-auto mb-8 max-w-md text-on-surface-variant">
             {npcs.length === 0
               ? 'Create an NPC first, then draft a storyline for them.'
-              : 'Draft your first narrative arc. Storylines are saved locally for now — story generation is coming soon.'}
+              : 'Draft your first narrative arc. Storylines are saved locally for now — skill_agent generation is coming soon.'}
           </p>
           {npcs.length > 0 && (
             <button

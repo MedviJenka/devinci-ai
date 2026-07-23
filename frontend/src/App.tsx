@@ -20,6 +20,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [screen, setScreen] = useState<Screen>('npcs');
   const [npcs, setNpcs] = useState<NpcSummary[]>([]);
+  const [npcsLoading, setNpcsLoading] = useState(true);
   const [selected, setSelected] = useState<NpcDetail | null>(null);
   const [tab, setTab] = useState<Tab>('chat');
   const [showCreate, setShowCreate] = useState(false);
@@ -51,7 +52,9 @@ function App() {
 
   useEffect(() => {
     if (!session) return;
-    refreshList().catch((err) => setError(err.message));
+    refreshList()
+      .catch((err) => setError(err.message))
+      .finally(() => setNpcsLoading(false));
   }, [session]);
 
   if (authLoading) {
@@ -78,6 +81,7 @@ function App() {
     await refreshList();
     setSelected(created);
     setTab('persona');
+    setScreen('npcs');
     setShowCreate(false);
   };
 
@@ -95,9 +99,9 @@ function App() {
 
   const handleSave = async (fields: NpcUpdateRequest) => {
     if (!selected) return;
-    const updated = await updateNpc(selected.slug, fields);
-    setSelected(updated);
+    await updateNpc(selected.slug, fields);
     await refreshList();
+    setSelected(null);
   };
 
   return (
@@ -134,7 +138,12 @@ function App() {
         )}
 
         {screen === 'dashboard' && (
-          <Dashboard npcs={npcs} onOpenChat={(slug) => openNpc(slug, 'chat')} onCreate={() => setShowCreate(true)} />
+          <Dashboard
+            npcs={npcs}
+            loading={npcsLoading}
+            onOpenChat={(slug) => openNpc(slug, 'chat')}
+            onCreate={() => setShowCreate(true)}
+          />
         )}
 
         {screen === 'storylines' && <Storylines npcs={npcs} />}
@@ -144,6 +153,7 @@ function App() {
         {screen === 'npcs' && !selected && (
           <Library
             npcs={npcs}
+            loading={npcsLoading}
             onOpenChat={(slug) => openNpc(slug, 'chat')}
             onOpenPersona={(slug) => openNpc(slug, 'persona')}
             onDelete={handleDelete}

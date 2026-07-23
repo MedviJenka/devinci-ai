@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { streamTalk } from '../api';
 import { ChatMessage } from '../types';
 
@@ -10,13 +11,16 @@ export default function Chat({ slug }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
+  const [streamingId, setStreamingId] = useState<string | null>(null);
   const closeRef = useRef<(() => void) | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     closeRef.current?.();
     setMessages([]);
     setPending(false);
+    setStreamingId(null);
   }, [slug]);
 
   useEffect(() => {
@@ -29,10 +33,23 @@ export default function Chat({ slug }: Props) {
     const text = input.trim();
     if (!text || pending) return;
     setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setMessages((m) => [...m, { id: crypto.randomUUID(), role: 'player', text }]);
     setPending(true);
 
+    const npcMessageId = crypto.randomUUID();
+    let started = false;
+
     closeRef.current = streamTalk(slug, text, {
+      onChunk: (delta) => {
+        if (!started) {
+          started = true;
+          setStreamingId(npcMessageId);
+          setMessages((m) => [...m, { id: npcMessageId, role: 'npc', text: delta }]);
+        } else {
+          setMessages((m) => m.map((msg) => (msg.id === npcMessageId ? { ...msg, text: msg.text + delta } : msg)));
+        }
+      },
       onDone: (rawText, mood) => {
         let responseText = rawText;
         try {
@@ -40,14 +57,34 @@ export default function Chat({ slug }: Props) {
         } catch {
           // backend didn't return valid JSON, fall back to raw text
         }
-        setMessages((m) => [...m, { id: crypto.randomUUID(), role: 'npc', text: responseText, mood }]);
+        setMessages((m) =>
+          started
+            ? m.map((msg) => (msg.id === npcMessageId ? { ...msg, text: responseText, mood } : msg))
+            : [...m, { id: npcMessageId, role: 'npc', text: responseText, mood }],
+        );
+        setStreamingId(null);
         setPending(false);
       },
       onError: (message) => {
         setMessages((m) => [...m, { id: crypto.randomUUID(), role: 'npc', text: message }]);
+        setStreamingId(null);
         setPending(false);
       },
     });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
   };
 
   return (
@@ -90,7 +127,7 @@ export default function Chat({ slug }: Props) {
             </div>
           ),
         )}
-        {pending && (
+        {pending && !streamingId && (
           <div className="flex max-w-[85%] gap-4">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20">
               <span className="material-symbols-outlined text-lg text-primary">smart_toy</span>
@@ -107,17 +144,19 @@ export default function Chat({ slug }: Props) {
 
       <div className="border-t border-outline-variant bg-surface-container/30 p-6 backdrop-blur-md">
         <div className="relative">
-          <input
+          <textarea
+            ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && send()}
-            placeholder="Say something..."
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-4 pr-12 font-body-md text-on-surface outline-none transition-colors focus:border-primary"
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Say something... (Shift+Enter for a new line)"
+            rows={1}
+            className="max-h-40 w-full resize-none rounded-lg border border-outline-variant bg-surface-container-lowest p-4 pr-12 font-body-md text-on-surface outline-none transition-colors focus:border-primary"
           />
           <button
             onClick={send}
             disabled={pending || !input.trim()}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary transition-transform hover:scale-110 disabled:opacity-30"
+            className="absolute bottom-3 right-3 text-primary transition-transform hover:scale-110 disabled:opacity-30"
           >
             <span className="material-symbols-outlined">send</span>
           </button>

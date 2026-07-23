@@ -99,7 +99,9 @@ export default function PersonaEditor({ npc, onSave }: Props) {
     <div className="mx-auto max-w-3xl space-y-8 p-gutter">
       <div className="space-y-6 rounded-lg border border-outline-variant bg-surface-container p-6">
         <div className="mb-4 flex items-center gap-3 border-b border-outline-variant pb-4">
-          <span className="material-symbols-outlined text-primary">id_card</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
+            <span className="material-symbols-outlined text-[18px] text-primary">id_card</span>
+          </div>
           <h3 className="font-headline-sm text-headline-sm text-on-surface">Identity</h3>
         </div>
 
@@ -121,7 +123,9 @@ export default function PersonaEditor({ npc, onSave }: Props) {
 
       <div className="space-y-6 rounded-lg border border-outline-variant bg-surface-container p-6">
         <div className="mb-4 flex items-center gap-3 border-b border-outline-variant pb-4">
-          <span className="material-symbols-outlined text-primary">psychology_alt</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
+            <span className="material-symbols-outlined text-[18px] text-primary">psychology_alt</span>
+          </div>
           <h3 className="font-headline-sm text-headline-sm text-on-surface">Persona Notes</h3>
         </div>
 
@@ -170,7 +174,9 @@ export default function PersonaEditor({ npc, onSave }: Props) {
       <div className="space-y-6 rounded-lg border border-outline-variant bg-surface-container p-6">
         <div className="mb-4 flex items-center justify-between border-b border-outline-variant pb-4">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-primary">data_object</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
+              <span className="material-symbols-outlined text-[18px] text-primary">data_object</span>
+            </div>
             <h3 className="font-headline-sm text-headline-sm text-on-surface">Structured Output</h3>
           </div>
           <label className="flex items-center gap-2 font-label-caps text-label-caps uppercase text-outline">
@@ -198,6 +204,9 @@ export default function PersonaEditor({ npc, onSave }: Props) {
                 className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-lowest/50 p-4"
               >
                 <div className="flex items-start gap-3">
+                  <span className="mt-7 font-code-md text-[11px] text-outline-variant">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
                   <div className="flex-1 space-y-2">
                     <label className={labelClass}>Field name</label>
                     <input

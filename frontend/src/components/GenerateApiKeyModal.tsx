@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Modal from './Modal';
 
 interface Props {
   onGenerate: (name: string) => void;
@@ -19,13 +20,15 @@ export default function GenerateApiKeyModal({ onGenerate, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+    <Modal onClose={onClose}>
       <form
         onSubmit={submit}
-        className="w-full max-w-md space-y-5 rounded-lg border border-outline-variant bg-surface-container p-6 shadow-[0_0_40px_-10px_rgba(208,188,255,0.15)]"
+        className="space-y-5 rounded-lg border border-outline-variant bg-surface-container p-6 shadow-[0_0_40px_-10px_rgba(208,188,255,0.15)]"
       >
         <div className="flex items-center gap-3 border-b border-outline-variant pb-4">
-          <span className="material-symbols-outlined text-primary">vpn_key</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
+            <span className="material-symbols-outlined text-[18px] text-primary">vpn_key</span>
+          </div>
           <h2 className="font-headline-sm text-headline-sm text-on-surface">Generate API Key</h2>
         </div>
 
@@ -60,6 +63,6 @@ export default function GenerateApiKeyModal({ onGenerate, onClose }: Props) {
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }

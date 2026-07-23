@@ -4,7 +4,10 @@
   "skills": ["./skills"],
   "goal": "interactive npc",
   "backstory": "funny npc\n",
-  "llm": "openai/gpt-5.5",
+  "llm": {
+    "model": "openai/gpt-5.5",
+    "max_tokens": 200
+  },
   "settings": {
     "verbose": true,
     "memory": true,
