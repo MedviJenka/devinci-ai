@@ -8,6 +8,7 @@ the tenancy change:
 
 import argparse
 from pathlib import Path
+
 from core.settings import db
 from npcs.manager import NpcCreateRequest, _load_jsonc_text, _split_skill_md, create_npc
 

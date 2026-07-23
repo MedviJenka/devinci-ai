@@ -3,6 +3,7 @@ import threading
 import pygame
 from game.npc_client import generate_npc_response
 
+
 WIDTH, HEIGHT = 960, 600
 FPS = 60
 PLAYER_SPEED = 4
@@ -17,7 +18,7 @@ DIM_TEXT_COLOR = (150, 158, 179)
 PANEL_COLOR = (20, 22, 38)
 PANEL_BORDER = (255, 66, 161)
 
-NPC_NAME = 'john'
+NPC_NAME = 'allbert'
 GREETING_PROMPT = 'Greet the player who just walked up to your stall in the Neon District market.'
 
 

@@ -1,0 +1,16 @@
+{
+  "name": "story",
+  "agents": ["npc_character_creator"],
+  "tasks": [
+    {
+      "name": "create_npc_character_task",
+      "description": "Create a game NPC character named {npc_name} based on this prompt: {prompt}. Format the entire output as a SKILL.md file: start with YAML frontmatter exactly in this shape:\n---\nname: <npc_name lowercased, spaces and non-alphanumeric characters replaced with underscores>\ndescription: <one sentence describing the NPC>\n---\nfollowed by the character profile.",
+      "expected_output": "a SKILL.md file starting with '---' YAML frontmatter containing 'name' (an underscore-slug of npc_name) and 'description' fields, followed by the full NPC character profile",
+      "markdown": true,
+      "agent": "npc_character_creator"
+    }
+  ],
+  "verbose": true,
+  "stream": true,
+  "inputs": {}
+}

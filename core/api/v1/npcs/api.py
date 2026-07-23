@@ -1,10 +1,12 @@
 import asyncio
-import importlib.util
 from collections import defaultdict
 from pathlib import Path
-from types import ModuleType
+from crewai import Agent
+from pydantic import BaseModel
+from core.ai.agent_runtime import kickoff_streaming
 from core.useful.log import Logger
 from core.useful.stream import _sse
+from core.useful.json_stream import ResponseFieldStreamer
 from core.settings import Config
 from typing import AsyncGenerator
 from core.useful.auth import get_current_user_id
@@ -18,6 +20,8 @@ from core.useful.npc_manager import (
     NpcNotFoundError,
     NpcSummary,
     NpcUpdateRequest,
+    build_agent,
+    build_response_schema,
     create_npc,
     delete_npc,
     ensure_cached,
@@ -29,32 +33,30 @@ from core.useful.npc_manager import (
 
 log = Logger(name="npc-service")
 
-# Importing npc.py rebuilds the crew from scratch - JSONC parsing, agent/task
-# construction, LLM client init, and opening the LanceDB memory table - which is
-# expensive enough to dominate response latency if repeated on every message.
-# Cached per (user_id, slug) so a given NPC's crew is built once per process.
-_npc_modules: dict[tuple[str, str], ModuleType] = {}
+# Constructing the Agent rebuilds it from scratch - LLM client init and opening the
+# LanceDB memory table - which is expensive enough to dominate response latency if
+# repeated on every message. Cached per (user_id, slug) so a given NPC's agent is
+# built once per process.
+_npc_agents: dict[tuple[str, str], tuple[Agent, type[BaseModel] | None]] = {}
 # Serializes calls to a given NPC so two concurrent /talk requests never kick off
-# the same cached crew instance at once.
+# the same cached agent instance at once.
 _npc_locks: dict[tuple[str, str], asyncio.Lock] = defaultdict(asyncio.Lock)
 
 
-def _load_npc_module(user_id: str, slug: str, cache_dir: Path) -> ModuleType:
+def _load_npc_agent(user_id: str, slug: str, cache_dir: Path, npc: NpcDetail) -> tuple[Agent, type[BaseModel] | None]:
     key = (user_id, slug)
-    module = _npc_modules.get(key)
-    if module is not None:
-        return module
+    cached = _npc_agents.get(key)
+    if cached is not None:
+        return cached
 
-    module_name = f'_npc_{user_id}_{slug}'.replace('-', '_')
-    spec = importlib.util.spec_from_file_location(module_name, cache_dir / 'npc.py')
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    _npc_modules[key] = module
-    return module
+    agent = build_agent(cache_dir, npc)
+    response_format = build_response_schema(npc.pydantic_fields) if npc.pydantic_enabled else None
+    _npc_agents[key] = (agent, response_format)
+    return _npc_agents[key]
 
 
 def _invalidate_npc_cache(user_id: str, slug: str) -> None:
-    _npc_modules.pop((user_id, slug), None)
+    _npc_agents.pop((user_id, slug), None)
     _npc_locks.pop((user_id, slug), None)
 
 
@@ -122,52 +124,63 @@ async def talk_stream(
     user_id: str = Depends(get_current_user_id),
 ) -> StreamingResponse:
     try:
-        get_npc(user_id, slug)
+        npc = get_npc(user_id, slug)
         cache_dir = ensure_cached(user_id, slug)
     except NpcNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
 
-    npc_module = _load_npc_module(user_id, slug, cache_dir)
+    agent, response_format = _load_npc_agent(user_id, slug, cache_dir, npc)
     lock = _npc_locks[(user_id, slug)]
 
     async def generate() -> AsyncGenerator:
-        async with lock:
-            try:
-                streaming = await npc_module.main(prompt=query)
+        try:
+            async with lock:
+                streaming = await kickoff_streaming(agent, query, response_format)
 
-                chunks: list[str] = []
+                # crewAI streams the raw LLM output token-by-token - for structured
+                # (output_pydantic) tasks that's fragments of a JSON object like
+                # `{"mood": "Happy", "response": "..."}`. Extract the "response"
+                # value's text as it arrives instead of waiting for the whole
+                # object, so the client sees dialogue appear as it's generated
+                # rather than all at once after the full response is done.
+                response_streamer = ResponseFieldStreamer()
 
                 async for chunk in streaming:
-                    chunks.append(chunk.content)
+                    delta = response_streamer.feed(chunk.content)
+                    if delta:
+                        yield _sse({'type': 'chunk', 'text': delta})
 
                 final_text = streaming.result.raw
-                full = ''.join(chunks)
-                start = full.find(final_text)
-
-                if start >= 0:
-                    offset = 0
-                    for text in chunks:
-                        end = offset + len(text)
-                        if end > start:
-                            trimmed = text[max(0, start - offset):]
-                            if trimmed:
-                                yield _sse({'type': 'chunk', 'text': trimmed})
-                        offset = end
+                if streaming.result.pydantic is not None:
+                    response_text = getattr(streaming.result.pydantic, 'response', None) or final_text
                 else:
-                    yield _sse({'type': 'chunk', 'text': final_text})
+                    response_text = final_text
+
+                # Catches anything the incremental extraction above didn't emit -
+                # e.g. output_pydantic disabled (plain-text task output, no
+                # "response" key to find), or a trailing fragment that landed
+                # mid-escape-sequence.
+                trailing = response_streamer.remainder(response_text)
+                if trailing:
+                    yield _sse({'type': 'chunk', 'text': trailing})
 
                 done_payload = {'type': 'done', 'text': final_text}
                 if streaming.result.pydantic is not None:
                     done_payload['mood'] = streaming.result.pydantic.model_dump().get('mood')
                 yield _sse(done_payload)
+        except Exception as exc:
+            log.fire.error(f'stream failed: {exc}')
+            yield _sse({'type': 'error', 'message': 'Failed to generate response.'})
+            return
 
-                try:
-                    sync_memory(user_id, slug)
-                except Exception as exc:
-                    log.fire.error(f'memory sync failed: {exc}')
-            except Exception as exc:
-                log.fire.error(f'stream failed: {exc}')
-                yield _sse({'type': 'error', 'message': 'Failed to generate response.'})
+        # Outside the lock: it only needs to protect the shared cached crew instance
+        # during kickoff. Memory sync can be slow (grows with conversation length,
+        # see sync_memory) and has no business blocking the next /talk call for this
+        # NPC from starting its own kickoff while it finishes uploading.
+        try:
+            sync_memory(user_id, slug)
+        except Exception as exc:
+            log.fire.error(f'memory sync failed: {exc}')
 
     return StreamingResponse(
         generate(),

@@ -6,12 +6,21 @@ process's current working directory instead of the project root, unlike
 every other path field (tools, output_pydantic, input_files). That makes the
 same crew definition succeed or fail depending on where the process happens
 to be launched from (e.g. a server started outside the crew's own
-directory), which is exactly what breaks story/npc crews when run through
+directory), which is exactly what breaks skill_agent/npc crews when run through
 the API instead of as a standalone script.
 
 Patches crewai.project.json_loader so relative "skills" entries are resolved
 against project_root at agent-load time, matching tools/output_pydantic.
 Remove once upstream ships a fix (linked PRs: #6587, #6596).
+
+Note: "output_file" looks like it has the same bug (Task also resolves it
+relative to cwd, not project_root), but don't "fix" it the same way - Task's
+own output_file_validation deliberately strips a leading "/" from any
+absolute path that has no {template_vars} in it (a security guardrail
+against arbitrary-file-write), which silently turns a resolved absolute path
+back into a wrong relative one. Read task output from the crew/task result
+instead of output_file when the caller controls both sides (see
+core/ai/skill_agent/main.py).
 """
 
 from pathlib import Path
