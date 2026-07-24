@@ -1,4 +1,4 @@
-from core.database.users.schemas import Subscription, UserSchema
+from core.database.users.schemas import UserSchema
 from core.settings import db
 from dataclasses import dataclass
 
@@ -19,10 +19,6 @@ class Users:
 
     def get_or_create(self, user_id: str) -> UserSchema:
         return self.get(user_id) or self.create(user_id)
-
-    def update_to_paid(self, user_id: str, subscription: Subscription = 'Pro') -> UserSchema:
-        response = self.db.table('users').update({'subscription': subscription}).eq('id', user_id).execute()
-        return UserSchema(**response.data[0])
 
     def increment_api_calls(self, user_id: str) -> UserSchema:
         user = self.get_or_create(user_id)
