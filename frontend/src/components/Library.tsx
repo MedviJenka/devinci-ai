@@ -150,9 +150,7 @@ export default function Library({
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Status</th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Last Called</th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Call Count</th>
-                  <th className="px-6 py-4 text-right font-label-caps uppercase tracking-wider text-on-surface-variant">
-                    Actions
-                  </th>
+                  <th className="px-6 py-4 text-right font-label-caps uppercase tracking-wider text-on-surface-variant">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/30">
@@ -244,12 +242,13 @@ export default function Library({
             </table>
           </div>
         ) : (
-          <div className="relative flex flex-col items-center justify-center overflow-hidden py-32 text-center">
-            <div className="relative z-10">
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
-                <span className="material-symbols-outlined text-4xl leading-none text-primary/60">smart_toy</span>
-              </div>
-              <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">
+
+          <div className="overflow-hidden py-12 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
+              <span className="material-symbols-outlined text-4xl leading-none text-primary/60">smart_toy</span>
+            </div>
+            <div className="relative items-center z-10">
+              <h3 className="items-center mb-2 font-headline-md text-headline-md text-on-surface">
                 {npcs.length === 0 ? 'The Archive is Silent' : 'No matches found'}
               </h3>
               <p className="mx-auto mb-8 max-w-md text-on-surface-variant">
