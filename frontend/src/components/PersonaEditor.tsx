@@ -143,14 +143,16 @@ export default function PersonaEditor({ npc, onSave }: Props) {
           {genError && <p className="text-sm text-error">{genError}</p>}
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={generate}
-              disabled={generating}
-              className="flex items-center gap-2 rounded bg-primary px-4 py-1.5 font-label-caps text-label-caps uppercase text-on-primary transition-all hover:brightness-110 disabled:opacity-50"
-            >
-              <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-              {generating ? 'Generating...' : 'Generate with AI'}
-            </button>
+            <div className="animate-gradient-flow rounded-lg bg-gradient-to-r from-cyan-400 via-purple-500 to-emerald-400 p-[2px]">
+              <button
+                onClick={generate}
+                disabled={generating}
+                className="flex h-8 min-w-[12rem] items-center justify-center gap-1.5 rounded-[calc(theme(borderRadius.lg)-2px)] bg-surface-container-lowest px-6 font-label-caps text-label-caps uppercase text-on-surface shadow-[0_0_16px_-4px_rgba(206,192,236,0.6)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                {generating ? 'Generating...' : 'Generate with AI'}
+              </button>
+            </div>
             <span className="font-code-md text-[11px] text-outline">
               Writes a SKILL.md character sheet into Backstory &amp; the field below — review before saving.
             </span>
