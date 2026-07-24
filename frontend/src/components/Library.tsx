@@ -1,17 +1,4 @@
   import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Search,
-  Plus,
-  Bot,
-  Loader2,
-  Pencil,
-  BarChart3,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Activity,
-  ArrowRight,
-} from 'lucide-react';
 import { NpcSummary } from '../types';
 
 interface Props {
@@ -69,11 +56,9 @@ export default function Library({
           <p className="mt-1 text-on-surface-variant">Manage your narrative intelligence components.</p>
         </div>
         <div className="relative w-[28rem] max-w-full">
-          <Search
-            size={14}
-            strokeWidth={1.75}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
-          />
+          <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">
+            search
+          </span>
           <input
             ref={searchRef}
             value={query}
@@ -95,7 +80,7 @@ export default function Library({
                 title="Create a new NPC"
                 className="flex h-8 items-center gap-1.5 rounded-[calc(theme(borderRadius.lg)-2px)] bg-surface-container-lowest px-4 font-label-caps text-label-caps uppercase text-on-surface shadow-[0_0_16px_-4px_rgba(206,192,236,0.6)] transition-all hover:brightness-110 active:scale-[0.98]"
               >
-                <Plus size={18} strokeWidth={1.75} />
+                <span className="material-symbols-outlined text-[18px]">add</span>
                 Add NPC
               </button>
             </div>
@@ -165,9 +150,7 @@ export default function Library({
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Status</th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Last Called</th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Call Count</th>
-                  <th className="px-6 py-4 text-right font-label-caps uppercase tracking-wider text-on-surface-variant">
-                    Actions
-                  </th>
+                  <th className="px-6 py-4 text-right font-label-caps uppercase tracking-wider text-on-surface-variant">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/30">
@@ -187,7 +170,7 @@ export default function Library({
                       <td className="px-6 py-4">
                         <div className={`flex items-center gap-3 transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                            <Bot size={14} strokeWidth={1.75} className="text-primary" />
+                            <span className="material-symbols-outlined text-sm text-primary">smart_toy</span>
                           </div>
                           <div className="min-w-0">
                             <p className="truncate font-medium text-on-surface">{npc.role}</p>
@@ -215,7 +198,7 @@ export default function Library({
                       <td className="px-6 py-4 text-right">
                         {isDeleting ? (
                           <div className="ml-auto flex h-8 w-24 items-center justify-center gap-2 text-error">
-                            <Loader2 size={18} strokeWidth={1.75} className="animate-spin" />
+                            <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
                             <span className="font-label-caps text-[10px] uppercase">Deleting</span>
                           </div>
                         ) : (
@@ -228,7 +211,7 @@ export default function Library({
                               title="Edit persona"
                               className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-primary"
                             >
-                              <Pencil size={18} strokeWidth={1.75} />
+                              <span className="material-symbols-outlined text-lg">edit</span>
                             </button>
                             <button
                               onClick={(e) => e.stopPropagation()}
@@ -236,7 +219,7 @@ export default function Library({
                               title="Analytics — coming soon"
                               className="cursor-not-allowed rounded-md p-2 text-on-surface-variant/40"
                             >
-                              <BarChart3 size={18} strokeWidth={1.75} />
+                              <span className="material-symbols-outlined text-lg">analytics</span>
                             </button>
                             <button
                               onClick={(e) => {
@@ -247,7 +230,7 @@ export default function Library({
                               title="Delete NPC"
                               className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-error disabled:pointer-events-none disabled:opacity-40"
                             >
-                              <Trash2 size={18} strokeWidth={1.75} />
+                              <span className="material-symbols-outlined text-lg">delete</span>
                             </button>
                           </div>
                         )}
@@ -259,12 +242,13 @@ export default function Library({
             </table>
           </div>
         ) : (
-          <div className="relative flex flex-col items-center justify-center overflow-hidden py-32 text-center">
-            <div className="relative z-10">
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
-                <Bot size={36} strokeWidth={1.5} className="text-primary/60" />
-              </div>
-              <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">
+
+          <div className="overflow-hidden py-12 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
+              <span className="material-symbols-outlined text-4xl leading-none text-primary/60">smart_toy</span>
+            </div>
+            <div className="relative items-center z-10">
+              <h3 className="items-center mb-2 font-headline-md text-headline-md text-on-surface">
                 {npcs.length === 0 ? 'The Archive is Silent' : 'No matches found'}
               </h3>
               <p className="mx-auto mb-8 max-w-md text-on-surface-variant">
@@ -279,7 +263,7 @@ export default function Library({
                     title="Create a new NPC"
                     className="flex items-center gap-1.5 rounded-[calc(theme(borderRadius.lg)-2px)] bg-surface-container-lowest px-8 py-3 font-label-caps text-label-caps uppercase text-on-surface shadow-[0_0_16px_-4px_rgba(206,192,236,0.6)] transition-all hover:brightness-110 active:scale-[0.98]"
                   >
-                    <Plus size={18} strokeWidth={1.75} />
+                    <span className="material-symbols-outlined text-[18px]">add</span>
                     Create New NPC
                   </button>
                 </div>
@@ -298,14 +282,14 @@ export default function Library({
                 title="Pagination coming soon"
                 className="cursor-not-allowed rounded border border-outline-variant p-1.5 text-on-surface-variant opacity-30"
               >
-                <ChevronLeft size={14} strokeWidth={1.75} />
+                <span className="material-symbols-outlined text-sm">chevron_left</span>
               </button>
               <button
                 disabled
                 title="Pagination coming soon"
                 className="cursor-not-allowed rounded border border-outline-variant p-1.5 text-on-surface-variant opacity-30"
               >
-                <ChevronRight size={14} strokeWidth={1.75} />
+                <span className="material-symbols-outlined text-sm">chevron_right</span>
               </button>
             </div>
           </div>
@@ -324,7 +308,7 @@ export default function Library({
             </span>
           </div>
           <div className="flex h-48 w-full flex-col items-center justify-center gap-2 text-center">
-            <Activity size={30} strokeWidth={1.5} className="text-primary/40" />
+            <span className="material-symbols-outlined text-3xl text-primary/40">monitoring</span>
             <p className="max-w-xs text-sm text-on-surface-variant">
               Live call volume will appear here once usage tracking ships.
             </p>
@@ -341,7 +325,7 @@ export default function Library({
             onClick={onNavigateStorylines}
             className="mt-6 flex items-center gap-2 font-label-caps text-xs uppercase text-primary transition-all hover:gap-3"
           >
-            Go to Storylines <ArrowRight size={14} strokeWidth={1.75} />
+            Go to Storylines <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </button>
         </div>
       </div>
