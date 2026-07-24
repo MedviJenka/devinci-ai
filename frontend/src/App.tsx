@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
 import { createNpc, deleteNpc, getNpc, listNpcs, updateNpc } from './api';
 import { supabase } from './supabaseClient';
@@ -165,7 +166,7 @@ function App() {
                   title="Back to library"
                   className="rounded p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
                 >
-                  <span className="material-symbols-outlined">arrow_back</span>
+                  <ArrowLeft size={18} strokeWidth={1.75} />
                 </button>
                 <h2 className="font-headline-sm text-headline-sm text-on-surface">{selected.role}</h2>
                 <span className="rounded bg-surface-container-highest px-2 py-1 font-code-md text-code-md text-outline">

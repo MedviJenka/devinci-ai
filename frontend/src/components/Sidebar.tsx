@@ -1,20 +1,22 @@
-import LogoIcon from './icons/LogoIcon';
+import type { LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Bot, BookOpen, KeyRound, CreditCard, LogOut } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 export type Screen = 'dashboard' | 'npcs' | 'storylines' | 'api-keys';
 
 interface NavItem {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   screen?: Screen;
   disabled?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: 'dashboard', label: 'Dashboard', screen: 'dashboard' },
-  { icon: 'smart_toy', label: 'NPCs', screen: 'npcs' },
-  { icon: 'auto_stories', label: 'Storylines', screen: 'storylines' },
-  { icon: 'vpn_key', label: 'API Keys', screen: 'api-keys' },
-  { icon: 'payments', label: 'Usage & Billing', disabled: true },
+  { icon: LayoutDashboard, label: 'Dashboard', screen: 'dashboard' },
+  { icon: Bot, label: 'NPCs', screen: 'npcs' },
+  { icon: BookOpen, label: 'Storylines', screen: 'storylines' },
+  { icon: KeyRound, label: 'API Keys', screen: 'api-keys' },
+  { icon: CreditCard, label: 'Usage & Billing', disabled: true },
 ];
 
 interface Props {
@@ -29,9 +31,11 @@ export default function Sidebar({ activeScreen, onNavigate, userEmail, onSignOut
     <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-outline-variant bg-surface-container py-6">
       <div className="mb-8 px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary shadow-[0_0_24px_-4px_rgba(206,192,236,0.6)]">
-            <LogoIcon className="h-5 w-5 text-on-primary" />
-          </div>
+          <img
+            src={logo}
+            alt="Devinci logo"
+            className="h-10 w-10 rounded-lg object-cover shadow-[0_0_24px_-4px_rgba(206,192,236,0.6)]"
+          />
           <div>
             <h1 className="font-headline-md text-headline-md font-bold leading-none tracking-tight text-on-surface">
               Devinci
@@ -62,7 +66,7 @@ export default function Sidebar({ activeScreen, onNavigate, userEmail, onSignOut
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                <item.icon size={20} strokeWidth={1.75} />
                 <span className="font-label-caps text-label-caps uppercase">{item.label}</span>
               </div>
               {item.disabled && (
@@ -86,7 +90,7 @@ export default function Sidebar({ activeScreen, onNavigate, userEmail, onSignOut
               title="Sign out"
               className="shrink-0 rounded p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
             >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
+              <LogOut size={18} strokeWidth={1.75} />
             </button>
           </div>
         )}

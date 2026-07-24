@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Plus, BookOpen, Trash2 } from 'lucide-react';
 import { NpcSummary, Storyline } from '../types';
 import CreateStorylineModal from './CreateStorylineModal';
 
@@ -37,7 +38,7 @@ export default function Storylines({ npcs }: Props) {
           title={npcs.length === 0 ? 'Create an NPC first' : undefined}
           className="flex items-center gap-2 rounded bg-primary px-4 py-2 font-label-caps text-label-caps uppercase text-on-primary transition-all hover:brightness-110 disabled:opacity-50"
         >
-          <span className="material-symbols-outlined text-[18px]">add</span>
+          <Plus size={18} strokeWidth={1.75} />
           New Storyline
         </button>
       </div>
@@ -45,7 +46,7 @@ export default function Storylines({ npcs }: Props) {
       {storylines.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-outline-variant bg-surface-container py-32 text-center">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
-            <span className="material-symbols-outlined text-4xl leading-none text-primary/60">auto_stories</span>
+            <BookOpen size={36} strokeWidth={1.5} className="text-primary/60" />
           </div>
           <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">No storylines yet</h3>
           <p className="mx-auto mb-8 max-w-md text-on-surface-variant">
@@ -75,7 +76,7 @@ export default function Storylines({ npcs }: Props) {
                   title="Delete draft"
                   className="rounded p-1 text-on-surface-variant transition-colors hover:bg-surface-container-highest hover:text-error"
                 >
-                  <span className="material-symbols-outlined text-[16px]">delete</span>
+                  <Trash2 size={16} strokeWidth={1.75} />
                 </button>
               </div>
               <h3 className="mb-1 font-headline-sm text-headline-sm text-on-surface">{s.title}</h3>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Plus, KeyRound, Check, Copy } from 'lucide-react';
 import { ApiKeyCreateResponse, ApiKeySummary } from '../types';
 import { createApiKey, listApiKeys, revokeApiKey } from '../api';
 import GenerateApiKeyModal from './GenerateApiKeyModal';
@@ -150,7 +151,7 @@ export default function ApiKeys() {
           onClick={() => setShowGenerate(true)}
           className="flex items-center gap-2 rounded-lg border border-outline-variant px-4 py-2 font-label-caps text-label-caps uppercase transition-all hover:bg-surface-container-highest"
         >
-          <span className="material-symbols-outlined text-[18px]">add</span>
+          <Plus size={18} strokeWidth={1.75} />
           Generate Key
         </button>
       </div>
@@ -187,7 +188,7 @@ export default function ApiKeys() {
       {!loading && keys.length === 0 ? (
         <div className="mb-10 flex flex-col items-center justify-center rounded-lg border border-outline-variant bg-surface-container py-24 text-center">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
-            <span className="material-symbols-outlined text-4xl text-primary/60">vpn_key</span>
+            <KeyRound size={36} strokeWidth={1.5} className="text-primary/60" />
           </div>
           <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">No API keys yet</h3>
           <p className="mx-auto mb-8 max-w-md text-on-surface-variant">
@@ -289,9 +290,11 @@ export default function ApiKeys() {
               title="Copy"
               className="absolute right-4 top-4 rounded-lg bg-surface-container-highest/50 p-2 text-outline transition-colors hover:bg-surface-container-highest"
             >
-              <span className={`material-symbols-outlined text-[18px] ${snippetCopied ? 'text-primary' : ''}`}>
-                {snippetCopied ? 'check' : 'content_copy'}
-              </span>
+              {snippetCopied ? (
+                <Check size={18} strokeWidth={1.75} className="text-primary" />
+              ) : (
+                <Copy size={18} strokeWidth={1.75} />
+              )}
             </button>
             <pre className="overflow-x-auto leading-relaxed text-on-surface-variant">{SNIPPETS[activeLang].code}</pre>
           </div>

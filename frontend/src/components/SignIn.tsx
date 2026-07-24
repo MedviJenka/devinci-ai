@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import LogoIcon from './icons/LogoIcon';
+import logo from '../assets/logo.png';
 
 type Step = 'email' | 'otp';
 
@@ -104,9 +104,7 @@ export default function SignIn({ onSignedIn }: Props) {
     <div className="flex h-screen items-center justify-center bg-background">
       <div className="w-full max-w-sm space-y-6 rounded-lg border border-outline-variant bg-surface-container p-8 shadow-[0_0_40px_-10px_rgba(208,188,255,0.15)]">
         <div className="flex flex-col items-center gap-3 border-b border-outline-variant pb-6 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded bg-primary">
-            <LogoIcon className="h-6 w-6 text-on-primary" />
-          </div>
+          <img src={logo} alt="Devinci logo" className="h-10 w-10 rounded object-cover" />
           <h1 className="font-headline-md text-headline-md font-bold leading-none tracking-tight text-on-surface">
             Devinci
           </h1>

@@ -1,3 +1,4 @@
+import { TriangleAlert, CircleHelp } from 'lucide-react';
 import Modal from './Modal';
 
 interface Props {
@@ -28,9 +29,11 @@ export default function ConfirmDialog({
               danger ? 'bg-error/15 text-error' : 'bg-primary/15 text-primary'
             }`}
           >
-            <span className="material-symbols-outlined leading-none">
-              {danger ? 'warning' : 'help'}
-            </span>
+            {danger ? (
+              <TriangleAlert size={20} strokeWidth={1.75} />
+            ) : (
+              <CircleHelp size={20} strokeWidth={1.75} />
+            )}
           </div>
           <div className="min-w-0 pt-1">
             <h3 className="font-headline-sm text-headline-sm text-on-surface">{title}</h3>

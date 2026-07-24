@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Bot, Cpu, Zap } from 'lucide-react';
 import { NpcSummary } from '../types';
 
 interface Props {
@@ -46,7 +47,7 @@ export default function Dashboard({ npcs, loading, onOpenChat, onCreate }: Props
             <div className="mb-4 flex items-start justify-between">
               <p className="font-label-caps text-label-caps uppercase text-on-surface-variant">Total NPCs</p>
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_16px_-4px_rgba(206,192,236,0.5)]">
-                <span className="material-symbols-outlined text-[18px] text-primary">smart_toy</span>
+                <Bot size={18} strokeWidth={1.75} className="text-primary" />
               </div>
             </div>
             <p className="font-headline-lg text-headline-lg text-on-surface">{npcs.length}</p>
@@ -55,7 +56,7 @@ export default function Dashboard({ npcs, loading, onOpenChat, onCreate }: Props
             <div className="mb-4 flex items-start justify-between">
               <p className="font-label-caps text-label-caps uppercase text-on-surface-variant">LLMs in use</p>
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_16px_-4px_rgba(206,192,236,0.5)]">
-                <span className="material-symbols-outlined text-[18px] text-primary">memory</span>
+                <Cpu size={18} strokeWidth={1.75} className="text-primary" />
               </div>
             </div>
             <p className="font-headline-lg text-headline-lg text-on-surface">{llmBreakdown.length}</p>
@@ -64,7 +65,7 @@ export default function Dashboard({ npcs, loading, onOpenChat, onCreate }: Props
             <div className="mb-4 flex items-start justify-between">
               <p className="font-label-caps text-label-caps uppercase text-on-surface-variant">Most used LLM</p>
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_16px_-4px_rgba(206,192,236,0.5)]">
-                <span className="material-symbols-outlined text-[18px] text-primary">bolt</span>
+                <Zap size={18} strokeWidth={1.75} className="text-primary" />
               </div>
             </div>
             <p className="truncate font-code-md text-code-md text-on-surface">{llmBreakdown[0]?.[0] ?? '—'}</p>
@@ -80,7 +81,7 @@ export default function Dashboard({ npcs, loading, onOpenChat, onCreate }: Props
       ) : npcs.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-outline-variant bg-surface-container py-24 text-center">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
-            <span className="material-symbols-outlined text-4xl leading-none text-primary/60">smart_toy</span>
+            <Bot size={36} strokeWidth={1.5} className="text-primary/60" />
           </div>
           <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">The Archive is Silent</h3>
           <p className="mx-auto mb-8 max-w-md text-on-surface-variant">
@@ -131,7 +132,7 @@ export default function Dashboard({ npcs, loading, onOpenChat, onCreate }: Props
                   className="flex w-full items-center gap-3 px-6 py-3 text-left transition-colors hover:bg-primary/5"
                 >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                    <span className="material-symbols-outlined text-sm text-primary">smart_toy</span>
+                    <Bot size={14} strokeWidth={1.75} className="text-primary" />
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-medium text-on-surface">{npc.role}</p>

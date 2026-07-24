@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from core.api.v1.npcs.api import router as npc_router
 from core.api.v1.story_creation.api import router as story_router
 from core.api.v1.api_keys.api import router as api_keys_router
+from core.api.v1.voice.api import router as voice_router
 
 log = Logger(name="api-service")
 
@@ -30,6 +31,7 @@ app.add_middleware(
 app.include_router(npc_router)
 app.include_router(story_router)
 app.include_router(api_keys_router)
+app.include_router(voice_router)
 
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=5555)
