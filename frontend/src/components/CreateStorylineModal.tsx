@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BookOpen } from 'lucide-react';
 import { NpcSummary } from '../types';
 import Modal from './Modal';
 
@@ -31,7 +32,7 @@ export default function CreateStorylineModal({ npcs, onCreate, onClose }: Props)
       >
         <div className="flex items-center gap-3 border-b border-outline-variant pb-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
-            <span className="material-symbols-outlined text-[18px] text-primary">auto_stories</span>
+            <BookOpen size={18} strokeWidth={1.75} className="text-primary" />
           </div>
           <h2 className="font-headline-sm text-headline-sm text-on-surface">New Storyline</h2>
         </div>

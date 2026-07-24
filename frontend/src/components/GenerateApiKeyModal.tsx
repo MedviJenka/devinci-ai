@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { KeyRound } from 'lucide-react';
 import Modal from './Modal';
 
 interface Props {
@@ -27,7 +28,7 @@ export default function GenerateApiKeyModal({ onGenerate, onClose }: Props) {
       >
         <div className="flex items-center gap-3 border-b border-outline-variant pb-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
-            <span className="material-symbols-outlined text-[18px] text-primary">vpn_key</span>
+            <KeyRound size={18} strokeWidth={1.75} className="text-primary" />
           </div>
           <h2 className="font-headline-sm text-headline-sm text-on-surface">Generate API Key</h2>
         </div>

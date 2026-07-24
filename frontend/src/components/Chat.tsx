@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import { User, Bot, Send } from 'lucide-react';
 import { streamTalk } from '../api';
 import { ChatMessage } from '../types';
 
@@ -101,7 +102,7 @@ export default function Chat({ slug }: Props) {
           m.role === 'player' ? (
             <div key={m.id} className="ml-auto flex max-w-[85%] flex-row-reverse gap-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-secondary/30 bg-secondary/20">
-                <span className="material-symbols-outlined text-lg text-secondary">person</span>
+                <User size={18} strokeWidth={1.75} className="text-secondary" />
               </div>
               <div className="space-y-2 text-right">
                 <div className="rounded-xl rounded-tr-none bg-primary p-4 text-on-primary">
@@ -112,7 +113,7 @@ export default function Chat({ slug }: Props) {
           ) : (
             <div key={m.id} className="flex max-w-[85%] gap-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20">
-                <span className="material-symbols-outlined text-lg text-primary">smart_toy</span>
+                <Bot size={18} strokeWidth={1.75} className="text-primary" />
               </div>
               <div className="space-y-2">
                 <div className="rounded-xl rounded-tl-none border border-outline-variant/30 bg-surface-container-high p-4 shadow-[0_0_40px_-10px_rgba(208,188,255,0.1)]">
@@ -130,7 +131,7 @@ export default function Chat({ slug }: Props) {
         {pending && !streamingId && (
           <div className="flex max-w-[85%] gap-4">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20">
-              <span className="material-symbols-outlined text-lg text-primary">smart_toy</span>
+              <Bot size={18} strokeWidth={1.75} className="text-primary" />
             </div>
             <div className="flex items-center gap-1 rounded-xl rounded-tl-none border border-outline-variant/30 bg-surface-container-high p-4">
               <div className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary/40" />
@@ -158,7 +159,7 @@ export default function Chat({ slug }: Props) {
             disabled={pending || !input.trim()}
             className="absolute bottom-3 right-3 text-primary transition-transform hover:scale-110 disabled:opacity-30"
           >
-            <span className="material-symbols-outlined">send</span>
+            <Send size={18} strokeWidth={1.75} />
           </button>
         </div>
       </div>

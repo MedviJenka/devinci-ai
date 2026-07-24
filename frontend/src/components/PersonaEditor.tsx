@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { IdCard, Brain, Sparkles, Braces, Trash2, Plus } from 'lucide-react';
 import { NpcDetail, NpcUpdateRequest, PydanticFieldDef, PydanticFieldType } from '../types';
 import { generateCharacter } from '../api';
 
@@ -100,7 +101,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
       <div className="space-y-6 rounded-lg border border-outline-variant bg-surface-container p-6">
         <div className="mb-4 flex items-center gap-3 border-b border-outline-variant pb-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
-            <span className="material-symbols-outlined text-[18px] text-primary">id_card</span>
+            <IdCard size={18} strokeWidth={1.75} className="text-primary" />
           </div>
           <h3 className="font-headline-sm text-headline-sm text-on-surface">Identity</h3>
         </div>
@@ -124,7 +125,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
       <div className="space-y-6 rounded-lg border border-outline-variant bg-surface-container p-6">
         <div className="mb-4 flex items-center gap-3 border-b border-outline-variant pb-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
-            <span className="material-symbols-outlined text-[18px] text-primary">psychology_alt</span>
+            <Brain size={18} strokeWidth={1.75} className="text-primary" />
           </div>
           <h3 className="font-headline-sm text-headline-sm text-on-surface">Persona Notes</h3>
         </div>
@@ -149,7 +150,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
                 disabled={generating}
                 className="flex h-8 min-w-[12rem] items-center justify-center gap-1.5 rounded-[calc(theme(borderRadius.lg)-2px)] bg-surface-container-lowest px-6 font-label-caps text-label-caps uppercase text-on-surface shadow-[0_0_16px_-4px_rgba(206,192,236,0.6)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
               >
-                <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                <Sparkles size={18} strokeWidth={1.75} />
                 {generating ? 'Generating...' : 'Generate with AI'}
               </button>
             </div>
@@ -177,7 +178,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
         <div className="mb-4 flex items-center justify-between border-b border-outline-variant pb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
-              <span className="material-symbols-outlined text-[18px] text-primary">data_object</span>
+              <Braces size={18} strokeWidth={1.75} className="text-primary" />
             </div>
             <h3 className="font-headline-sm text-headline-sm text-on-surface">Structured Output</h3>
           </div>
@@ -237,7 +238,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
                     title="Remove field"
                     className="mt-7 rounded p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-error"
                   >
-                    <span className="material-symbols-outlined">delete</span>
+                    <Trash2 size={18} strokeWidth={1.75} />
                   </button>
                 </div>
 
@@ -286,7 +287,7 @@ export default function PersonaEditor({ npc, onSave }: Props) {
               onClick={addField}
               className="flex items-center gap-2 rounded border border-outline-variant px-4 py-1.5 font-label-caps text-label-caps uppercase text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
             >
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Plus size={18} strokeWidth={1.75} />
               Add field
             </button>
           </div>
