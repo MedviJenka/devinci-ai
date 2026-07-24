@@ -25,11 +25,6 @@ class Settings(BaseSettings):
     SUPABASE_STORAGE_ACCESS_SECRET: str           = Field(default='')
     NPC_STORAGE_BUCKET:             str           = Field(default='npcs')
     NPC_CACHE_DIR:                  str           = Field(default='./.npc_cache')
-    FRONTEND_URL:                   str           = Field(default='http://localhost:3000')
-    STRIPE_API_KEY:                 str           = Field(default='')
-    STRIPE_WEBHOOK_SECRET:          str           = Field(default='')
-    STRIPE_PRICE_ID_PRO:            str           = Field(default='')
-    STRIPE_PRICE_ID_PREMIUM:        str           = Field(default='')
     GOOGLE_STITCH_API_KEY:          str           = Field(default='')
     TEST_API_KEY:                   str           = Field(default='')
 

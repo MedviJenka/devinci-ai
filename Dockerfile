@@ -9,6 +9,3 @@ COPY . .
 
 FROM build AS npc_service
 CMD ["uv", "run", "python", "-m", "services.npc_service"]
-
-FROM build AS payment_service
-CMD ["uv", "run", "python", "-m", "services.payment_service"]
