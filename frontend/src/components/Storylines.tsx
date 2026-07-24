@@ -45,7 +45,7 @@ export default function Storylines({ npcs }: Props) {
       {storylines.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-outline-variant bg-surface-container py-32 text-center">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
-            <span className="material-symbols-outlined text-4xl text-primary/60">auto_stories</span>
+            <span className="material-symbols-outlined text-4xl leading-none text-primary/60">auto_stories</span>
           </div>
           <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">No storylines yet</h3>
           <p className="mx-auto mb-8 max-w-md text-on-surface-variant">
