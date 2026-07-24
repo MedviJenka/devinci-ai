@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 from core.voice.schemas import VoiceOptions
 
+
 log = Logger(name='voice-service')
 
 
