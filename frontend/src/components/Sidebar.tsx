@@ -20,12 +20,11 @@ const NAV_ITEMS: NavItem[] = [
 interface Props {
   activeScreen: Screen;
   onNavigate: (screen: Screen) => void;
-  onCreate: () => void;
   userEmail?: string | null;
   onSignOut?: () => void;
 }
 
-export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail, onSignOut }: Props) {
+export default function Sidebar({ activeScreen, onNavigate, userEmail, onSignOut }: Props) {
   return (
     <aside className="flex h-full w-[280px] shrink-0 flex-col border-r border-outline-variant bg-surface-container py-6">
       <div className="mb-8 px-6">
@@ -77,14 +76,6 @@ export default function Sidebar({ activeScreen, onNavigate, onCreate, userEmail,
       </nav>
 
       <div className="mt-auto space-y-3 px-4">
-        <button
-          onClick={onCreate}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 font-label-caps text-label-caps text-on-primary shadow-[0_0_20px_-6px_rgba(206,192,236,0.7)] transition-all hover:brightness-110 hover:shadow-[0_0_28px_-4px_rgba(206,192,236,0.85)] active:scale-[0.98]"
-        >
-          <span className="material-symbols-outlined text-[18px]">add</span>
-          New NPC
-        </button>
-
         {userEmail && (
           <div className="flex items-center justify-between gap-2 rounded border border-outline-variant px-3 py-2">
             <span className="truncate font-body-md text-sm text-on-surface-variant" title={userEmail}>

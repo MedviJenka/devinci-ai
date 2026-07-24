@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard';
 import Storylines from './components/Storylines';
 import ApiKeys from './components/ApiKeys';
 import CreateNpcModal from './components/CreateNpcModal';
+import ConfirmDialog from './components/ConfirmDialog';
 import PersonaEditor from './components/PersonaEditor';
 import Chat from './components/Chat';
 import SignIn from './components/SignIn';
@@ -26,6 +27,7 @@ function App() {
   const [showCreate, setShowCreate] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
+  const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
 
   const navigate = (next: Screen) => {
     setScreen(next);
@@ -86,8 +88,12 @@ function App() {
     setShowCreate(false);
   };
 
-  const handleDelete = async (slug: string) => {
-    if (!window.confirm(`Delete "${slug}"? This cannot be undone.`)) return;
+  const handleDelete = (slug: string) => setConfirmDeleteSlug(slug);
+
+  const confirmDelete = async () => {
+    const slug = confirmDeleteSlug;
+    if (!slug) return;
+    setConfirmDeleteSlug(null);
     setError(null);
     setDeletingSlug(slug);
     try {
@@ -113,7 +119,6 @@ function App() {
       <Sidebar
         activeScreen={screen}
         onNavigate={navigate}
-        onCreate={() => setShowCreate(true)}
         userEmail={session.user.email}
         onSignOut={() => supabase.auth.signOut()}
       />
@@ -201,6 +206,16 @@ function App() {
       </main>
 
       {showCreate && <CreateNpcModal onCreate={handleCreate} onClose={() => setShowCreate(false)} />}
+
+      {confirmDeleteSlug && (
+        <ConfirmDialog
+          title="Delete this NPC?"
+          message={`"${confirmDeleteSlug}" will be permanently removed. This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmDeleteSlug(null)}
+        />
+      )}
     </div>
   );
 }
