@@ -25,6 +25,7 @@ function App() {
   const [tab, setTab] = useState<Tab>('chat');
   const [showCreate, setShowCreate] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
 
   const navigate = (next: Screen) => {
     setScreen(next);
@@ -88,12 +89,15 @@ function App() {
   const handleDelete = async (slug: string) => {
     if (!window.confirm(`Delete "${slug}"? This cannot be undone.`)) return;
     setError(null);
+    setDeletingSlug(slug);
     try {
       await deleteNpc(slug);
       if (selected?.slug === slug) setSelected(null);
       await refreshList();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete NPC.');
+    } finally {
+      setDeletingSlug(null);
     }
   };
 
@@ -115,22 +119,6 @@ function App() {
       />
 
       <main className="flex min-w-0 flex-1 flex-col">
-        {!(screen === 'npcs' && selected) && (
-          <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-outline-variant bg-surface-container px-gutter">
-            <div className="flex h-7 w-7 items-center justify-center rounded bg-primary">
-              <span
-                className="material-symbols-outlined text-[16px] text-on-primary"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                bolt
-              </span>
-            </div>
-            <span className="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">
-              Devinci
-            </span>
-          </div>
-        )}
-
         {error && (
           <div className="border-b border-error/30 bg-error-container/20 px-6 py-2 text-sm text-on-error-container">
             {error}
@@ -154,6 +142,7 @@ function App() {
           <Library
             npcs={npcs}
             loading={npcsLoading}
+            deletingSlug={deletingSlug}
             onOpenChat={(slug) => openNpc(slug, 'chat')}
             onOpenPersona={(slug) => openNpc(slug, 'persona')}
             onDelete={handleDelete}

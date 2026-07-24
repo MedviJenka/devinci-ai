@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+  import { useEffect, useMemo, useRef, useState } from 'react';
 import { NpcSummary } from '../types';
 
 interface Props {
   npcs: NpcSummary[];
   loading?: boolean;
+  deletingSlug?: string | null;
   onOpenChat: (slug: string) => void;
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
@@ -11,9 +12,14 @@ interface Props {
   onNavigateStorylines?: () => void;
 }
 
+function SkeletonBar({ className }: { className: string }) {
+  return <div className={`shimmer rounded bg-surface-container-highest ${className}`} />;
+}
+
 export default function Library({
   npcs,
   loading,
+  deletingSlug,
   onOpenChat,
   onOpenPersona,
   onDelete,
@@ -44,52 +50,95 @@ export default function Library({
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar bg-surface-container-lowest p-gutter">
-      <div className="mb-8 flex items-end justify-between gap-4">
-        <div>
+      <div className="mb-8 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div className="min-w-0">
           <h2 className="font-headline-lg text-headline-lg text-on-surface">Entity Library</h2>
           <p className="mt-1 text-on-surface-variant">Manage your narrative intelligence components.</p>
         </div>
-        <div className="flex items-end gap-3">
-          <div className="relative w-72">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">
-              search
-            </span>
-            <input
-              ref={searchRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search NPC library..."
-              className="w-full rounded-lg border border-outline-variant bg-surface-container py-1.5 pl-10 pr-10 text-body-md text-on-surface outline-none transition-all focus:ring-1 focus:ring-primary"
-            />
-            {!query && (
-              <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-code-md text-[10px] text-on-surface-variant">
-                /
-              </kbd>
-            )}
-          </div>
-          <button
-            onClick={onCreate}
-            title="Create a new NPC"
-            className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 font-label-caps text-label-caps uppercase text-on-primary transition-all hover:brightness-110 active:scale-[0.98]"
-          >
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            New NPC
-          </button>
+        <div className="relative w-[28rem] max-w-full">
+          <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant">
+            search
+          </span>
+          <input
+            ref={searchRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by role, goal, or persona traits..."
+            className="h-9 w-full rounded-lg border border-outline-variant bg-surface-container pl-10 pr-10 text-body-md text-on-surface outline-none transition-shadow focus:ring-1 focus:ring-primary"
+          />
+          {!query && (
+            <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 font-code-md text-[10px] text-on-surface-variant">
+              /
+            </kbd>
+          )}
+        </div>
+        <div className="flex justify-end">
+          {npcs.length > 0 && (
+            <div className="animate-gradient-flow rounded-lg bg-gradient-to-r from-cyan-400 via-purple-500 to-emerald-400 p-[2px]">
+              <button
+                onClick={onCreate}
+                title="Create a new NPC"
+                className="flex h-8 items-center gap-1.5 rounded-[calc(theme(borderRadius.lg)-2px)] bg-surface-container-lowest px-4 font-label-caps text-label-caps uppercase text-on-surface shadow-[0_0_16px_-4px_rgba(206,192,236,0.6)] transition-all hover:brightness-110 active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Add NPC
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container shadow-2xl">
         {loading ? (
-          <div className="animate-pulse divide-y divide-outline-variant/30">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-6 py-4">
-                <div className="h-8 w-8 shrink-0 rounded border border-outline-variant bg-surface-container-highest" />
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div className="h-3 w-32 rounded bg-surface-container-highest" />
-                  <div className="h-2.5 w-48 rounded bg-surface-container-highest" />
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-outline-variant bg-surface-container-high/50">
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Name</th>
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">ID</th>
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Status</th>
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Last Called</th>
+                  <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Call Count</th>
+                  <th className="px-6 py-4 text-right font-label-caps uppercase tracking-wider text-on-surface-variant">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant/30">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <SkeletonBar className="h-8 w-8 shrink-0" />
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <SkeletonBar className="h-3 w-32" />
+                          <SkeletonBar className="h-2.5 w-48" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <SkeletonBar className="h-5 w-24" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <SkeletonBar className="h-3 w-20" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <SkeletonBar className="h-3 w-16" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <SkeletonBar className="h-3 w-12" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="ml-auto flex w-fit gap-1.5">
+                        <SkeletonBar className="h-7 w-7" />
+                        <SkeletonBar className="h-7 w-7" />
+                        <SkeletonBar className="h-7 w-7" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : filtered.length > 0 ? (
           <div className="overflow-x-auto">
@@ -107,70 +156,90 @@ export default function Library({
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/30">
-                {filtered.map((npc) => (
-                  <tr
-                    key={npc.slug}
-                    onClick={() => onOpenChat(npc.slug)}
-                    className="group cursor-pointer transition-colors hover:bg-primary/5"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                          <span className="material-symbols-outlined text-sm text-primary">smart_toy</span>
+                {filtered.map((npc) => {
+                  const isDeleting = npc.slug === deletingSlug;
+                  return (
+                    <tr
+                      key={npc.slug}
+                      onClick={() => !isDeleting && onOpenChat(npc.slug)}
+                      aria-busy={isDeleting}
+                      className={`group border-l-2 transition-colors ${
+                        isDeleting
+                          ? 'cursor-default border-l-error/60 bg-error-container/5'
+                          : 'cursor-pointer border-l-transparent hover:bg-primary/5'
+                      }`}
+                    >
+                      <td className="px-6 py-4">
+                        <div className={`flex items-center gap-3 transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                            <span className="material-symbols-outlined text-sm text-primary">smart_toy</span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-on-surface">{npc.role}</p>
+                            <p className="truncate text-xs text-outline">{npc.goal}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-on-surface">{npc.role}</p>
-                          <p className="truncate text-xs text-outline">{npc.goal}</p>
+                      </td>
+                      <td className={`px-6 py-4 transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
+                        <span className="rounded bg-surface-container-lowest px-2 py-1 font-code-md text-code-md text-on-surface-variant">
+                          {npc.slug}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
+                        <div className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_1px_rgba(52,211,153,0.5)]" />
+                          <span className="font-label-caps text-xs uppercase text-emerald-400">Published</span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="rounded bg-surface-container-lowest px-2 py-1 font-code-md text-code-md text-on-surface-variant">
-                        {npc.slug}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_1px_rgba(52,211,153,0.5)]" />
-                        <span className="font-label-caps text-xs uppercase text-emerald-400">Published</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-on-surface-variant">—</td>
-                    <td className="px-6 py-4 font-code-md text-on-surface-variant">—</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="ml-auto inline-flex gap-0.5 rounded-lg p-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenPersona(npc.slug);
-                          }}
-                          title="Edit persona"
-                          className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-primary"
-                        >
-                          <span className="material-symbols-outlined text-lg">edit</span>
-                        </button>
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          disabled
-                          title="Analytics — coming soon"
-                          className="cursor-not-allowed rounded-md p-2 text-on-surface-variant/40"
-                        >
-                          <span className="material-symbols-outlined text-lg">analytics</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(npc.slug);
-                          }}
-                          title="Delete NPC"
-                          className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-error"
-                        >
-                          <span className="material-symbols-outlined text-lg">delete</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className={`px-6 py-4 text-sm text-on-surface-variant transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
+                        —
+                      </td>
+                      <td className={`px-6 py-4 font-code-md text-on-surface-variant transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
+                        —
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {isDeleting ? (
+                          <div className="ml-auto flex h-8 w-24 items-center justify-center gap-2 text-error">
+                            <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                            <span className="font-label-caps text-[10px] uppercase">Deleting</span>
+                          </div>
+                        ) : (
+                          <div className="ml-auto inline-flex gap-0.5 rounded-lg p-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenPersona(npc.slug);
+                              }}
+                              title="Edit persona"
+                              className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-primary"
+                            >
+                              <span className="material-symbols-outlined text-lg">edit</span>
+                            </button>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              disabled
+                              title="Analytics — coming soon"
+                              className="cursor-not-allowed rounded-md p-2 text-on-surface-variant/40"
+                            >
+                              <span className="material-symbols-outlined text-lg">analytics</span>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(npc.slug);
+                              }}
+                              disabled={!!deletingSlug}
+                              title="Delete NPC"
+                              className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-error disabled:pointer-events-none disabled:opacity-40"
+                            >
+                              <span className="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -178,7 +247,7 @@ export default function Library({
           <div className="relative flex flex-col items-center justify-center overflow-hidden py-32 text-center">
             <div className="relative z-10">
               <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-primary/20 bg-surface-container-high shadow-[0_0_40px_-10px_rgba(208,188,255,0.2)]">
-                <span className="material-symbols-outlined text-4xl text-primary/60">smart_toy</span>
+                <span className="material-symbols-outlined text-4xl leading-none text-primary/60">smart_toy</span>
               </div>
               <h3 className="mb-2 font-headline-md text-headline-md text-on-surface">
                 {npcs.length === 0 ? 'The Archive is Silent' : 'No matches found'}
@@ -189,12 +258,16 @@ export default function Library({
                   : 'No NPCs match your current search.'}
               </p>
               {npcs.length === 0 && (
-                <button
-                  onClick={onCreate}
-                  className="rounded-lg bg-primary px-8 py-3 font-label-caps text-label-caps uppercase text-on-primary shadow-lg shadow-primary/10 transition-all hover:brightness-110"
-                >
-                  Create First NPC
-                </button>
+                <div className="inline-block animate-gradient-flow rounded-lg bg-gradient-to-r from-cyan-400 via-purple-500 to-emerald-400 p-[2px]">
+                  <button
+                    onClick={onCreate}
+                    title="Create a new NPC"
+                    className="flex items-center gap-1.5 rounded-[calc(theme(borderRadius.lg)-2px)] bg-surface-container-lowest px-8 py-3 font-label-caps text-label-caps uppercase text-on-surface shadow-[0_0_16px_-4px_rgba(206,192,236,0.6)] transition-all hover:brightness-110 active:scale-[0.98]"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">add</span>
+                    Create New NPC
+                  </button>
+                </div>
               )}
             </div>
           </div>
