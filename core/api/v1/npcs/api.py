@@ -13,7 +13,7 @@ from core.useful.auth import get_current_user_id
 from fastapi.responses import StreamingResponse
 from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, HTTPException, Query, FastAPI
-from core.useful.npc_manager import (
+from core.npc_manager import (
     NpcAlreadyExistsError,
     NpcCreateRequest,
     NpcDetail,
