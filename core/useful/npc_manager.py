@@ -14,18 +14,6 @@ from core.storage import client as storage
 
 DEFAULT_LLM = 'openai/gpt-5.5'
 
-# Filenames written by code paths that no longer exist: 'schema.py' predates
-# 'schemas.py'; 'voice.json' was per-NPC TTS settings for a feature not present on
-# this branch; 'agent.jsonc'/'output_schema.jsonc'/'schemas.py'/'README.md' predate
-# the switch to a self-contained npc.py, which in turn was replaced by npc.json (see
-# _render_npc_config) once nothing needed the config as importable code anymore -
-# build_agent/build_response_schema construct the Agent and structured-output schema
-# directly from the parsed config instead. Nothing reads these; update_npc prunes them
-# from storage/cache on touch.
-_LEGACY_FILES = (
-    'npc.py', 'schema.py', 'voice.json', 'agent.jsonc', 'output_schema.jsonc', 'schemas.py', 'README.md',
-)
-
 _FIELD_TYPES: dict[str, type] = {'string': str, 'integer': int, 'float': float, 'boolean': bool}
 
 _DEFAULT_PERSONA_NOTES = '''# {display_name}
@@ -323,8 +311,6 @@ def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
     _write_npc_config(user_id, slug, goal, backstory, llm, enabled, fields)
     _write_skill_md(user_id, slug, skill_dir_name, goal, persona_notes)
 
-    _prune_legacy_files(user_id, slug)
-
     # The execution cache (see ensure_cached) only ever syncs missing files, so without
     # clearing it here an already-cached NPC would keep serving whatever config it had
     # at first talk, silently ignoring every edit made after that.
@@ -333,18 +319,6 @@ def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
         shutil.rmtree(cache_dir)
 
     return get_npc(user_id, slug)
-
-
-def _prune_legacy_files(user_id: str, slug: str) -> None:
-    prefix = _npc_prefix(user_id, slug)
-    cache_dir = _cache_dir(user_id, slug)
-    for name in _LEGACY_FILES:
-        key = prefix + name
-        if storage.exists(_bucket(), key):
-            storage.delete(_bucket(), key)
-        local_path = cache_dir / name
-        if local_path.exists():
-            local_path.unlink()
 
 
 def delete_npc(user_id: str, slug: str) -> None:
@@ -378,7 +352,7 @@ def ensure_cached(user_id: str, slug: str) -> Path:
     already_synced = _synced_memory_paths[(user_id, slug)]
     for key in keys:
         rel = key[len(prefix):]
-        if not rel or rel in _LEGACY_FILES:
+        if not rel:
             continue
         dest = cache_dir / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
