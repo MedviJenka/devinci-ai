@@ -79,9 +79,7 @@ export default function Chat({ slug, structuredOutput }: Props) {
     stopSpeech();
     setLoadingSpeechId(message.id);
     try {
-      // An explicit Voice Settings choice always wins; otherwise fall back to the
-      // tone the NPC itself picked live for this line (see DynamicMoodSchema).
-      const blob = await synthesizeSpeech(message.speechText ?? message.text, voice, tone ?? message.tone);
+      const blob = await synthesizeSpeech(message.text, voice, tone);
       const url = URL.createObjectURL(blob);
       audioUrlRef.current = url;
       const audio = new Audio(url);
