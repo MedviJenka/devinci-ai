@@ -29,10 +29,6 @@ function loadVoicePrefs(): { voice?: SupportedVoice; tone?: SupportedTone } {
   }
 }
 
-function saveVoicePrefs(prefs: { voice?: SupportedVoice; tone?: SupportedTone }) {
-  localStorage.setItem(VOICE_PREF_KEY, JSON.stringify(prefs));
-}
-
 export default function Chat({ slug }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
