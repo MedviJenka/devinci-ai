@@ -46,7 +46,6 @@ class VoiceOptions(BaseModel):
 
 
 class SpeakRequest(BaseModel):
-    text:     str                = Field(min_length=1, max_length=4000)
-    voice:    SupportedVoice     = Field(default=SupportedVoice.CORAL)
-    tone:     SupportedTone      = Field(default=SupportedTone.NEUTRAL)
+    text:     str               = Field(min_length=1, max_length=4000)
+    voice:    SupportedVoice    = Field(default=SupportedVoice.CORAL)
     language: SupportedLanguages = Field(default=SupportedLanguages.ENGLISH)
