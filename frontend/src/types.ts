@@ -44,7 +44,11 @@ export interface ChatMessage {
   role: 'player' | 'npc';
   text: string;
   mood?: string;
+  attitude?: string;
+  tone?: SupportedTone;
   pending?: boolean;
+  isJson?: boolean;
+  speechText?: string;
 }
 
 export interface Storyline {
