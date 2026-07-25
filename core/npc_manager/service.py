@@ -187,6 +187,18 @@ def delete_npc(user_id: str, slug: str) -> None:
     _synced_memory_paths.pop((user_id, slug), None)
 
 
+def reset_npc_memory(user_id: str, slug: str) -> None:
+    prefix = _npc_prefix(user_id, slug)
+    if not storage.exists(_bucket(), prefix + 'npc.json'):
+        raise NpcNotFoundError(slug)
+    storage.delete_prefix(_bucket(), prefix + 'memory/')
+
+    memory_dir = _cache_dir(user_id, slug) / 'memory'
+    if memory_dir.exists():
+        shutil.rmtree(memory_dir)
+    _synced_memory_paths.pop((user_id, slug), None)
+
+
 def _write_npc_config(
     user_id: str, slug: str, goal: str, backstory: str, llm: str, enabled: bool, fields: list[PydanticFieldDef],
 ) -> None:

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import type { Session } from '@supabase/supabase-js';
-import { createNpc, deleteNpc, getNpc, listNpcs, updateNpc } from './api';
+import { createNpc, deleteNpc, getNpc, listNpcs, resetNpcMemory, updateNpc } from './api';
 import { supabase } from './supabaseClient';
 import Sidebar, { Screen } from './components/Sidebar';
 import Library from './components/Library';
@@ -33,6 +33,10 @@ function App() {
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
+  const [deletingSlugs, setDeletingSlugs] = useState<Set<string>>(new Set());
+  const [confirmDeleteSlugs, setConfirmDeleteSlugs] = useState<string[] | null>(null);
+  const [resettingMemory, setResettingMemory] = useState(false);
+  const [confirmResetMemory, setConfirmResetMemory] = useState(false);
 
   const navigate = (next: Screen) => {
     setScreen(next);
@@ -126,6 +130,44 @@ function App() {
     }
   };
 
+  const handleBulkDelete = (slugs: string[]) => setConfirmDeleteSlugs(slugs);
+
+  const confirmBulkDelete = async () => {
+    const slugs = confirmDeleteSlugs;
+    if (!slugs || slugs.length === 0) return;
+    setConfirmDeleteSlugs(null);
+    setDeletingSlugs(new Set(slugs));
+    try {
+      const results = await Promise.allSettled(slugs.map((slug) => deleteNpc(slug)));
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      if (selected && slugs.includes(selected.slug)) setSelected(null);
+      await refreshList();
+      if (failed > 0) {
+        notify('error', `Failed to delete ${failed} of ${slugs.length} NPCs.`);
+      } else {
+        notify('success', `Deleted ${slugs.length} NPC${slugs.length === 1 ? '' : 's'}.`);
+      }
+    } finally {
+      setDeletingSlugs(new Set());
+    }
+  };
+
+  const handleResetMemory = () => setConfirmResetMemory(true);
+
+  const confirmResetMemoryAction = async () => {
+    if (!selected) return;
+    setConfirmResetMemory(false);
+    setResettingMemory(true);
+    try {
+      await resetNpcMemory(selected.slug);
+      notify('success', `Cleared memory for "${selected.slug}".`);
+    } catch (err) {
+      notify('error', err instanceof Error ? err.message : 'Failed to clear memory.');
+    } finally {
+      setResettingMemory(false);
+    }
+  };
+
   const handleSave = async (fields: NpcUpdateRequest) => {
     if (!selected) return;
     const updated = await updateNpc(selected.slug, fields);
@@ -169,10 +211,12 @@ function App() {
             npcs={npcs}
             loading={npcsLoading}
             deletingSlug={deletingSlug}
+            deletingSlugs={deletingSlugs}
             audit={audit}
             onOpenChat={(slug) => openNpc(slug, 'chat')}
             onOpenPersona={(slug) => openNpc(slug, 'persona')}
             onDelete={handleDelete}
+            onBulkDelete={handleBulkDelete}
             onCreate={() => setShowCreate(true)}
             onNavigateStorylines={() => navigate('storylines')}
           />
@@ -222,7 +266,12 @@ function App() {
                 <Chat slug={selected.slug} structuredOutput={selected.pydantic_enabled} />
               ) : (
                 <div className="h-full overflow-y-auto custom-scrollbar bg-background">
-                  <PersonaEditor npc={selected} onSave={handleSave} />
+                  <PersonaEditor
+                    npc={selected}
+                    onSave={handleSave}
+                    onResetMemory={handleResetMemory}
+                    resettingMemory={resettingMemory}
+                  />
                 </div>
               )}
             </div>
@@ -239,6 +288,26 @@ function App() {
           confirmLabel="Delete"
           onConfirm={confirmDelete}
           onCancel={() => setConfirmDeleteSlug(null)}
+        />
+      )}
+
+      {confirmDeleteSlugs && (
+        <ConfirmDialog
+          title={`Delete ${confirmDeleteSlugs.length} NPC${confirmDeleteSlugs.length === 1 ? '' : 's'}?`}
+          message={`${confirmDeleteSlugs.length} NPC${confirmDeleteSlugs.length === 1 ? '' : 's'} will be permanently removed. This cannot be undone.`}
+          confirmLabel="Delete"
+          onConfirm={confirmBulkDelete}
+          onCancel={() => setConfirmDeleteSlugs(null)}
+        />
+      )}
+
+      {confirmResetMemory && selected && (
+        <ConfirmDialog
+          title="Clear this NPC's memory?"
+          message={`All conversation memory for "${selected.slug}" will be permanently erased. This cannot be undone.`}
+          confirmLabel="Clear memory"
+          onConfirm={confirmResetMemoryAction}
+          onCancel={() => setConfirmResetMemory(false)}
         />
       )}
     </div>

@@ -55,6 +55,8 @@ export const updateNpc = (slug: string, req: NpcUpdateRequest) =>
 
 export const deleteNpc = (slug: string) => request<void>(`/${slug}`, { method: 'DELETE' });
 
+export const resetNpcMemory = (slug: string) => request<void>(`/${slug}/memory`, { method: 'DELETE' });
+
 export const listApiKeys = () => request<ApiKeySummary[]>('/', {}, API_KEYS_BASE);
 
 export const createApiKey = (name: string) =>

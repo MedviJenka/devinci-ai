@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { IdCard, Brain, Sparkles, Braces, Trash2, Plus } from 'lucide-react';
+import { IdCard, Brain, Sparkles, Braces, Trash2, Plus, BrainCog } from 'lucide-react';
 import { NpcDetail, NpcUpdateRequest, PydanticFieldDef, PydanticFieldType } from '../types';
 import { generateCharacter } from '../api';
 
 interface Props {
   npc: NpcDetail;
   onSave: (fields: NpcUpdateRequest) => Promise<void>;
+  onResetMemory: () => void;
+  resettingMemory?: boolean;
 }
 
 const inputClass =
@@ -22,7 +24,7 @@ const emptyField = (): PydanticFieldDef => ({
   required: true,
 });
 
-export default function PersonaEditor({ npc, onSave }: Props) {
+export default function PersonaEditor({ npc, onSave, onResetMemory, resettingMemory }: Props) {
   const [goal, setGoal] = useState(npc.goal);
   const [backstory, setBackstory] = useState(npc.backstory);
   const [llm, setLlm] = useState(npc.llm);
@@ -99,11 +101,22 @@ export default function PersonaEditor({ npc, onSave }: Props) {
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-gutter">
       <div className="space-y-6 rounded-lg border border-outline-variant bg-surface-container p-6">
-        <div className="mb-4 flex items-center gap-3 border-b border-outline-variant pb-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
-            <IdCard size={18} strokeWidth={1.75} className="text-primary" />
+        <div className="mb-4 flex items-center justify-between border-b border-outline-variant pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 shadow-[0_0_14px_-4px_rgba(206,192,236,0.5)]">
+              <IdCard size={18} strokeWidth={1.75} className="text-primary" />
+            </div>
+            <h3 className="font-headline-sm text-headline-sm text-on-surface">Identity</h3>
           </div>
-          <h3 className="font-headline-sm text-headline-sm text-on-surface">Identity</h3>
+          <button
+            onClick={onResetMemory}
+            disabled={resettingMemory}
+            title="Clear this NPC's conversation memory"
+            className="flex items-center gap-1.5 rounded border border-outline-variant px-3 py-1.5 font-label-caps text-label-caps uppercase text-on-surface-variant transition-colors hover:bg-error-container/20 hover:text-error disabled:opacity-50"
+          >
+            <BrainCog size={16} strokeWidth={1.75} />
+            {resettingMemory ? 'Clearing memory...' : 'Clear memory'}
+          </button>
         </div>
 
         <div className="space-y-2">
