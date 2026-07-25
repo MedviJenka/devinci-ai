@@ -8,6 +8,27 @@ interface Props {
   slug: string;
 }
 
+const VOICE_PREF_KEY = 'npc-voice-prefs';
+
+const TONE_LABELS: Record<SupportedTone, string> = {
+  neutral: 'Neutral',
+  cheerful: 'Cheerful',
+  dramatic: 'Dramatic',
+  calm: 'Calm',
+  mysterious: 'Mysterious',
+  stern: 'Stern',
+  sarcastic: 'Sarcastic',
+  whisper: 'Whisper',
+};
+
+function loadVoicePrefs(): { voice?: SupportedVoice; tone?: SupportedTone } {
+  try {
+    return JSON.parse(localStorage.getItem(VOICE_PREF_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
 export default function Chat({ slug }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -131,6 +152,51 @@ export default function Chat({ slug }: Props) {
 
   return (
     <div className="flex h-full flex-col bg-surface-container-lowest">
+      <div className="relative flex items-center justify-end border-b border-outline-variant px-6 py-2">
+        <button
+          onClick={() => setShowVoiceSettings((v) => !v)}
+          aria-label="Voice settings"
+          aria-expanded={showVoiceSettings}
+          className="flex items-center gap-1.5 rounded px-2 py-1 font-label-caps text-[11px] uppercase tracking-wide text-outline-variant transition-colors hover:text-primary"
+        >
+          <Settings2 size={14} strokeWidth={1.75} />
+          Voice
+        </button>
+        {showVoiceSettings && (
+          <div className="absolute right-6 top-full z-10 mt-1 w-64 space-y-3 rounded-lg border border-outline-variant bg-surface-container p-4 shadow-lg">
+            <div className="space-y-1.5">
+              <label className="font-label-caps text-[10px] uppercase text-outline">Voice</label>
+              <select
+                value={voice ?? ''}
+                onChange={(e) => setVoice((e.target.value || undefined) as SupportedVoice | undefined)}
+                className="w-full rounded border border-outline-variant bg-surface-container-lowest p-2 font-body-md text-sm text-on-surface outline-none focus:border-primary"
+              >
+                <option value="">Default</option>
+                {(voiceOptions?.voices ?? []).map((v) => (
+                  <option key={v} value={v}>
+                    {v.charAt(0).toUpperCase() + v.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="font-label-caps text-[10px] uppercase text-outline">Tone</label>
+              <select
+                value={tone ?? ''}
+                onChange={(e) => setTone((e.target.value || undefined) as SupportedTone | undefined)}
+                className="w-full rounded border border-outline-variant bg-surface-container-lowest p-2 font-body-md text-sm text-on-surface outline-none focus:border-primary"
+              >
+                <option value="">Default</option>
+                {(voiceOptions?.tones ?? []).map((t) => (
+                  <option key={t} value={t}>
+                    {TONE_LABELS[t] ?? t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+      </div>
       <div className="flex-1 space-y-6 overflow-y-auto custom-scrollbar p-6">
         {messages.length === 0 && !pending && (
           <div className="flex justify-center">
@@ -212,6 +278,7 @@ export default function Chat({ slug }: Props) {
           <button
             onClick={send}
             disabled={pending || !input.trim()}
+            aria-label="Send"
             className="absolute bottom-3 right-3 text-primary transition-transform hover:scale-110 disabled:opacity-30"
           >
             <Send size={18} strokeWidth={1.75} />

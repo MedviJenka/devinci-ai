@@ -1,4 +1,15 @@
-import { ApiKeyCreateResponse, ApiKeySummary, NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
+import {
+  ApiKeyCreateResponse,
+  ApiKeySummary,
+  NpcCreateRequest,
+  NpcDetail,
+  NpcSummary,
+  NpcUpdateRequest,
+  SupportedLanguage,
+  SupportedTone,
+  SupportedVoice,
+  VoiceOptions,
+} from './types';
 import { supabase } from './supabaseClient';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5555/api/v1/npcs';

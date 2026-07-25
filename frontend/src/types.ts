@@ -55,6 +55,18 @@ export interface Storyline {
   createdAt: string;
 }
 
+export type SupportedVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'nova' | 'onyx' | 'sage' | 'shimmer' | 'verse';
+
+export type SupportedTone = 'neutral' | 'cheerful' | 'dramatic' | 'calm' | 'mysterious' | 'stern' | 'sarcastic' | 'whisper';
+
+export type SupportedLanguage = 'en';
+
+export interface VoiceOptions {
+  voices: SupportedVoice[];
+  tones: SupportedTone[];
+  languages: SupportedLanguage[];
+}
+
 export interface ApiKeySummary {
   id: string;
   name: string;

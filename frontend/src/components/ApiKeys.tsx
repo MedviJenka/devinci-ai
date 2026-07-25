@@ -288,6 +288,7 @@ export default function ApiKeys() {
             <button
               onClick={handleCopySnippet}
               title="Copy"
+              aria-label="Copy code snippet"
               className="absolute right-4 top-4 rounded-lg bg-surface-container-highest/50 p-2 text-outline transition-colors hover:bg-surface-container-highest"
             >
               {snippetCopied ? (

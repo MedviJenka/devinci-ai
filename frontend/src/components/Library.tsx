@@ -2,10 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Plus, Bot, Loader2, Pencil, BarChart3, Trash2, ChevronLeft, ChevronRight, Activity, ArrowRight } from 'lucide-react';
 import { NpcSummary } from '../types';
 
+import NotificationsBell, { AuditEntry } from './NotificationsBell';
+
 interface Props {
   npcs: NpcSummary[];
   loading?: boolean;
   deletingSlug?: string | null;
+  audit: AuditEntry[];
   onOpenChat: (slug: string) => void;
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
@@ -21,6 +24,7 @@ export default function Library({
   npcs,
   loading,
   deletingSlug,
+  audit,
   onOpenChat,
   onOpenPersona,
   onDelete,
@@ -75,7 +79,8 @@ export default function Library({
             </kbd>
           )}
         </div>
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-2">
+
           {npcs.length > 0 && (
             <div className="animate-gradient-flow rounded-lg bg-gradient-to-r from-cyan-400 via-purple-500 to-emerald-400 p-[2px]">
               <button
@@ -86,8 +91,11 @@ export default function Library({
                 <Plus size={18} strokeWidth={1.75} />
                 Add NPC
               </button>
+
             </div>
+
           )}
+          <NotificationsBell entries={audit} />
         </div>
       </div>
 

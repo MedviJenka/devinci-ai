@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 
 class SupportedLanguages(StrEnum):
     ENGLISH = 'en'
-    HEBREW = 'he'
 
 
 class SupportedVoice(StrEnum):
@@ -22,14 +21,27 @@ class SupportedVoice(StrEnum):
     VERSE = 'verse'
 
 
+class SupportedTone(StrEnum):
+    NEUTRAL = 'neutral'
+    CHEERFUL = 'cheerful'
+    DRAMATIC = 'dramatic'
+    CALM = 'calm'
+    MYSTERIOUS = 'mysterious'
+    STERN = 'stern'
+    SARCASTIC = 'sarcastic'
+    WHISPER = 'whisper'
+
+
 class VoiceSettings(BaseModel):
     enabled:  bool               = Field(default=False)
     voice:    SupportedVoice     = Field(default=SupportedVoice.CORAL)
+    tone:     SupportedTone      = Field(default=SupportedTone.NEUTRAL)
     language: SupportedLanguages = Field(default=SupportedLanguages.ENGLISH)
 
 
 class VoiceOptions(BaseModel):
     voices:    list[SupportedVoice]     = Field(default_factory=lambda: list(SupportedVoice))
+    tones:     list[SupportedTone]      = Field(default_factory=lambda: list(SupportedTone))
     languages: list[SupportedLanguages] = Field(default_factory=lambda: list(SupportedLanguages))
 
 
