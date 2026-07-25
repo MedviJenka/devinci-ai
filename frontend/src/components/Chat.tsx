@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { User, Bot, Send, Volume2, Loader2 } from 'lucide-react';
-import { streamTalk, synthesizeSpeech } from '../api';
-import { ChatMessage } from '../types';
+import { User, Bot, Send, Volume2, Loader2, Settings2 } from 'lucide-react';
+import { streamTalk, synthesizeSpeech, getVoiceOptions } from '../api';
+import { ChatMessage, SupportedVoice, SupportedTone, VoiceOptions } from '../types';
 
 interface Props {
   slug: string;
@@ -41,6 +41,20 @@ export default function Chat({ slug }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [voiceOptions, setVoiceOptions] = useState<VoiceOptions | null>(null);
+  const [voice, setVoice] = useState<SupportedVoice | undefined>(() => loadVoicePrefs().voice);
+  const [tone, setTone] = useState<SupportedTone | undefined>(() => loadVoicePrefs().tone);
+
+  useEffect(() => {
+    getVoiceOptions()
+      .then(setVoiceOptions)
+      .catch(() => setVoiceOptions(null));
+  }, []);
+
+  useEffect(() => {
+    saveVoicePrefs({ voice, tone });
+  }, [voice, tone]);
 
   const stopSpeech = () => {
     audioRef.current?.pause();
@@ -60,7 +74,7 @@ export default function Chat({ slug }: Props) {
     stopSpeech();
     setLoadingSpeechId(message.id);
     try {
-      const blob = await synthesizeSpeech(message.text);
+      const blob = await synthesizeSpeech(message.text, voice, tone);
       const url = URL.createObjectURL(blob);
       audioUrlRef.current = url;
       const audio = new Audio(url);

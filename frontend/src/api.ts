@@ -116,7 +116,9 @@ export function streamTalk(slug: string, query: string, handlers: TalkHandlers):
   };
 }
 
-export async function synthesizeSpeech(text: string): Promise<Blob> {
+export const getVoiceOptions = () => request<VoiceOptions>('/options', {}, VOICE_API_BASE);
+
+export async function synthesizeSpeech(text: string, voice?: SupportedVoice, tone?: SupportedTone): Promise<Blob> {
   const token = await authToken();
   const res = await fetch(`${VOICE_API_BASE}/speak`, {
     method: 'POST',
@@ -124,7 +126,7 @@ export async function synthesizeSpeech(text: string): Promise<Blob> {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, ...(voice ? { voice } : {}), ...(tone ? { tone } : {}) }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
