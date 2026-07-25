@@ -2,9 +2,7 @@ import json
 import re
 import shutil
 from typing import Any
-
 from core.storage import client as storage
-
 from .exceptions import NpcAlreadyExistsError, NpcNotFoundError
 from .paths import _bucket, _cache_dir, _npc_prefix, _user_prefix, slugify
 from .schemas import (
@@ -47,8 +45,20 @@ def _skill_md_key(user_id: str, slug: str) -> str | None:
     return None
 
 
+_STRICT_RULES_BLOCK_RE = re.compile(
+    rf'^{re.escape(_STRICT_RULES.splitlines()[0])}\n(?:-.*\n?)*\n*',
+)
+
+
 def _split_skill_md(text: str) -> tuple[str, str]:
-    match = re.match(r'^---\n(.*?)\n---\n(.*)$', text, flags=re.DOTALL)
+    # _SKILL_MD's template literally starts with a blank line before the opening
+    # "---", so anchoring this match at the exact start of the string always failed
+    # to find the frontmatter - _split_skill_md silently returned the whole file
+    # (frontmatter, STRICT_RULES, and all) as "persona_notes" on every read, which then
+    # got wrapped in a brand new frontmatter+STRICT_RULES shell on every single save,
+    # compounding indefinitely. Tolerating leading whitespace here is what actually
+    # lets stripping happen at all.
+    match = re.match(r'^\s*---\n(.*?)\n---\n(.*)$', text, flags=re.DOTALL)
     if not match:
         return '', text
     frontmatter, body = match.groups()
@@ -58,8 +68,18 @@ def _split_skill_md(text: str) -> tuple[str, str]:
             description = line.split(':', 1)[1].strip()
 
     body = body.strip('\n')
-    if body.startswith(_STRICT_RULES):
-        body = body[len(_STRICT_RULES):].strip('\n')
+    # _write_skill_md always prepends a fresh _STRICT_RULES block on save. A single
+    # exact-match strip here means any drift from that literal string (e.g. an edit
+    # landing near/inside the block) leaves stale copies embedded as ordinary body
+    # text, which then get ANOTHER fresh block prepended on the next save - silently
+    # compounding duplicates. Strip every leading occurrence of the block shape (its
+    # header line followed by "-" bullet lines), not just one literal match, so
+    # accumulated duplicates self-heal instead of growing.
+    while True:
+        block_match = _STRICT_RULES_BLOCK_RE.match(body)
+        if not block_match:
+            break
+        body = body[block_match.end():].lstrip('\n')
     return description, body
 
 

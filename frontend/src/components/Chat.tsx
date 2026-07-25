@@ -6,6 +6,7 @@ import { ChatMessage, SupportedVoice, SupportedTone, VoiceOptions } from '../typ
 
 interface Props {
   slug: string;
+  structuredOutput: boolean;
 }
 
 const VOICE_PREF_KEY = 'npc-voice-prefs';
@@ -29,7 +30,11 @@ function loadVoicePrefs(): { voice?: SupportedVoice; tone?: SupportedTone } {
   }
 }
 
-export default function Chat({ slug }: Props) {
+function saveVoicePrefs(prefs: { voice?: SupportedVoice; tone?: SupportedTone }) {
+  localStorage.setItem(VOICE_PREF_KEY, JSON.stringify(prefs));
+}
+
+export default function Chat({ slug, structuredOutput }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
@@ -74,7 +79,9 @@ export default function Chat({ slug }: Props) {
     stopSpeech();
     setLoadingSpeechId(message.id);
     try {
-      const blob = await synthesizeSpeech(message.text, voice, tone);
+      // An explicit Voice Settings choice always wins; otherwise fall back to the
+      // tone the NPC itself picked live for this line (see DynamicMoodSchema).
+      const blob = await synthesizeSpeech(message.speechText ?? message.text, voice, tone ?? message.tone);
       const url = URL.createObjectURL(blob);
       audioUrlRef.current = url;
       const audio = new Audio(url);
@@ -127,17 +134,33 @@ export default function Chat({ slug }: Props) {
           setMessages((m) => m.map((msg) => (msg.id === npcMessageId ? { ...msg, text: msg.text + delta } : msg)));
         }
       },
-      onDone: (rawText, mood) => {
+      onDone: (rawText, mood, attitude, dynamicTone) => {
         let responseText = rawText;
+        let speechText = rawText;
+        let isJson = false;
         try {
-          responseText = JSON.parse(rawText).response ?? rawText;
+          const parsed = JSON.parse(rawText);
+          speechText = parsed.response ?? rawText;
+          if (structuredOutput) {
+            responseText = JSON.stringify(parsed, null, 2);
+            isJson = true;
+          } else {
+            responseText = speechText;
+          }
         } catch {
           // backend didn't return valid JSON, fall back to raw text
         }
         setMessages((m) =>
           started
-            ? m.map((msg) => (msg.id === npcMessageId ? { ...msg, text: responseText, mood } : msg))
-            : [...m, { id: npcMessageId, role: 'npc', text: responseText, mood }],
+            ? m.map((msg) =>
+                msg.id === npcMessageId
+                  ? { ...msg, text: responseText, mood, attitude, tone: dynamicTone, isJson, speechText }
+                  : msg,
+              )
+            : [
+                ...m,
+                { id: npcMessageId, role: 'npc', text: responseText, mood, attitude, tone: dynamicTone, isJson, speechText },
+              ],
         );
         setStreamingId(null);
         setPending(false);
@@ -238,12 +261,18 @@ export default function Chat({ slug }: Props) {
               </div>
               <div className="space-y-2">
                 <div className="rounded-xl rounded-tl-none border border-outline-variant/30 bg-surface-container-high p-4 shadow-[0_0_40px_-10px_rgba(208,188,255,0.1)]">
-                  {m.mood && (
+                  {(m.mood || m.attitude) && (
                     <span className="mb-1 block font-label-caps text-[10px] uppercase tracking-wide text-primary">
-                      {m.mood}
+                      {[m.mood, m.attitude].filter(Boolean).join(' · ')}
                     </span>
                   )}
-                  <p className="font-body-md italic leading-relaxed text-on-surface">{m.text}</p>
+                  {m.isJson ? (
+                    <pre className="overflow-x-auto whitespace-pre-wrap break-words font-code-md text-code-md text-on-surface">
+                      {m.text}
+                    </pre>
+                  ) : (
+                    <p className="font-body-md italic leading-relaxed text-on-surface">{m.text}</p>
+                  )}
                 </div>
                 {m.id !== streamingId && m.text && (
                   <button

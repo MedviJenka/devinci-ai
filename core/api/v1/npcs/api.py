@@ -164,9 +164,18 @@ async def talk_stream(
                 if trailing:
                     yield _sse({'type': 'chunk', 'text': trailing})
 
-                done_payload = {'type': 'done', 'text': final_text}
+                # crewAI's TaskOutput.raw isn't guaranteed to be the structured JSON -
+                # when the pydantic fields are derived from a plain-text completion via
+                # crewAI's converter pass, .raw stays plain narrative text. Send the
+                # actual model dump as "text" so structured-output NPCs give clients
+                # real JSON to parse/display, not prose that happens to look like it.
+                done_text = streaming.result.pydantic.model_dump_json() if streaming.result.pydantic is not None else final_text
+                done_payload = {'type': 'done', 'text': done_text}
                 if streaming.result.pydantic is not None:
-                    done_payload['mood'] = streaming.result.pydantic.model_dump().get('mood')
+                    # Surfaces every structured field the NPC produced (mood, attitude,
+                    # tone, or any custom field added in PersonaEditor) - not just mood -
+                    # so the client can react to whatever the NPC's schema defines.
+                    done_payload.update(streaming.result.pydantic.model_dump(exclude={'response'}))
                 yield _sse(done_payload)
         except Exception as exc:
             log.fire.error(f'stream failed: {exc}')

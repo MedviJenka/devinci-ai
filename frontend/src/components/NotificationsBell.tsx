@@ -31,9 +31,9 @@ export default function NotificationsBell({ entries }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-label="System audit"
         aria-expanded={open}
-        className="relative rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+        className="relative flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
       >
-        <Bell size={18} strokeWidth={1.75} />
+        <Bell size={20} strokeWidth={1.75} />
         {entries.length > 0 && (
           <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_1px_rgba(208,188,255,0.7)]" />
         )}

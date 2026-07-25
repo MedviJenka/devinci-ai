@@ -77,7 +77,7 @@ export const generateCharacter = (npcName: string, prompt: string) => {
 
 export interface TalkHandlers {
   onChunk?: (text: string) => void;
-  onDone: (text: string, mood?: string) => void;
+  onDone: (text: string, mood?: string, attitude?: string, tone?: SupportedTone) => void;
   onError: (message: string) => void;
 }
 
@@ -96,7 +96,7 @@ export function streamTalk(slug: string, query: string, handlers: TalkHandlers):
       if (data.type === 'chunk') {
         handlers.onChunk?.(data.text);
       } else if (data.type === 'done') {
-        handlers.onDone(data.text, data.mood);
+        handlers.onDone(data.text, data.mood, data.attitude, data.tone);
         source?.close();
       } else if (data.type === 'error') {
         handlers.onError(data.message);

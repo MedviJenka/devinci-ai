@@ -1,9 +1,7 @@
 from pathlib import Path
 from typing import Any, Literal
-
 from crewai import Agent, Memory
 from pydantic import BaseModel, Field, create_model
-
 from .schemas import NpcDetail, PydanticFieldDef, _FIELD_TYPES
 
 
