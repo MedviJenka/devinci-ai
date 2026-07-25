@@ -27,6 +27,7 @@ from core.npc_manager import (
     ensure_cached,
     get_npc,
     list_npcs,
+    reset_npc_memory,
     sync_memory,
     update_npc,
 )
@@ -112,6 +113,18 @@ async def update_npc_route(
 async def delete_npc_route(slug: str, user_id: str = Depends(get_current_user_id)) -> None:
     try:
         delete_npc(user_id, slug)
+        _invalidate_npc_cache(user_id, slug)
+    except NpcNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc
+
+
+@router.delete('/{slug}/memory', status_code=204)
+async def reset_npc_memory_route(slug: str, user_id: str = Depends(get_current_user_id)) -> None:
+    try:
+        reset_npc_memory(user_id, slug)
+        # The cached Agent holds a live handle to the LanceDB memory table that was
+        # just deleted out from under it - evict it so the next /talk rebuilds the
+        # agent against a fresh (empty) memory store instead of a stale handle.
         _invalidate_npc_cache(user_id, slug)
     except NpcNotFoundError as exc:
         raise HTTPException(status_code=404, detail=f'npc "{exc}" not found') from exc

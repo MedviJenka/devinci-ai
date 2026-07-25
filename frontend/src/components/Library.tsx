@@ -8,10 +8,12 @@ interface Props {
   npcs: NpcSummary[];
   loading?: boolean;
   deletingSlug?: string | null;
+  deletingSlugs?: Set<string>;
   audit: AuditEntry[];
   onOpenChat: (slug: string) => void;
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
+  onBulkDelete?: (slugs: string[]) => void;
   onCreate: () => void;
   onNavigateStorylines?: () => void;
 }
@@ -24,14 +26,17 @@ export default function Library({
   npcs,
   loading,
   deletingSlug,
+  deletingSlugs,
   audit,
   onOpenChat,
   onOpenPersona,
   onDelete,
+  onBulkDelete,
   onCreate,
   onNavigateStorylines,
 }: Props) {
   const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -52,6 +57,40 @@ export default function Library({
     if (!q) return npcs;
     return npcs.filter((n) => n.role.toLowerCase().includes(q) || n.slug.toLowerCase().includes(q) || n.goal.toLowerCase().includes(q));
   }, [npcs, query]);
+
+  useEffect(() => {
+    const known = new Set(npcs.map((n) => n.slug));
+    setSelected((prev) => {
+      const next = new Set(Array.from(prev).filter((slug) => known.has(slug)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [npcs]);
+
+  const toggleOne = (slug: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
+  };
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((n) => selected.has(n.slug));
+
+  const toggleAll = () => {
+    setSelected((prev) => {
+      if (allFilteredSelected) {
+        const next = new Set(prev);
+        filtered.forEach((n) => next.delete(n.slug));
+        return next;
+      }
+      const next = new Set(prev);
+      filtered.forEach((n) => next.add(n.slug));
+      return next;
+    });
+  };
+
+  const isBulkBusy = !!deletingSlug || (deletingSlugs?.size ?? 0) > 0;
 
   return (
     <div className="h-full overflow-y-auto custom-scrollbar bg-surface-container-lowest p-gutter">
@@ -99,12 +138,37 @@ export default function Library({
         </div>
       </div>
 
+      {selected.size > 0 && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-error/30 bg-error-container/10 px-4 py-3">
+          <span className="font-label-caps text-xs uppercase text-on-surface">
+            {selected.size} NPC{selected.size === 1 ? '' : 's'} selected
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelected(new Set())}
+              className="rounded px-3 py-1.5 font-label-caps text-xs uppercase text-on-surface-variant transition-colors hover:text-on-surface"
+            >
+              Clear selection
+            </button>
+            <button
+              onClick={() => onBulkDelete?.(Array.from(selected))}
+              disabled={isBulkBusy}
+              className="flex items-center gap-1.5 rounded-lg bg-error px-4 py-1.5 font-label-caps text-xs uppercase text-on-error shadow-lg shadow-error/20 transition-all hover:brightness-110 disabled:opacity-50"
+            >
+              <Trash2 size={14} strokeWidth={1.75} />
+              Delete selected
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container shadow-2xl">
         {loading ? (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-high/50">
+                  <th className="w-10 px-6 py-4" />
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Name</th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">ID</th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Status</th>
@@ -118,6 +182,9 @@ export default function Library({
               <tbody className="divide-y divide-outline-variant/30">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i}>
+                    <td className="px-6 py-4">
+                      <SkeletonBar className="h-4 w-4" />
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <SkeletonBar className="h-8 w-8 shrink-0" />
@@ -156,6 +223,15 @@ export default function Library({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-high/50">
+                  <th className="w-10 px-6 py-4">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      onChange={toggleAll}
+                      aria-label="Select all NPCs"
+                      className="h-4 w-4 accent-error"
+                    />
+                  </th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Name</th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">ID</th>
                   <th className="px-6 py-4 font-label-caps uppercase tracking-wider text-on-surface-variant">Status</th>
@@ -166,7 +242,7 @@ export default function Library({
               </thead>
               <tbody className="divide-y divide-outline-variant/30">
                 {filtered.map((npc) => {
-                  const isDeleting = npc.slug === deletingSlug;
+                  const isDeleting = npc.slug === deletingSlug || !!deletingSlugs?.has(npc.slug);
                   return (
                     <tr
                       key={npc.slug}
@@ -178,6 +254,16 @@ export default function Library({
                           : 'cursor-pointer border-l-transparent hover:bg-primary/5'
                       }`}
                     >
+                      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(npc.slug)}
+                          onChange={() => toggleOne(npc.slug)}
+                          disabled={isDeleting}
+                          aria-label={`Select ${npc.slug}`}
+                          className="h-4 w-4 accent-error disabled:opacity-40"
+                        />
+                      </td>
                       <td className="px-4 py-4">
                         <div className={`flex items-center gap-3 transition-opacity ${isDeleting ? 'opacity-40' : ''}`}>
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
@@ -237,7 +323,7 @@ export default function Library({
                                 e.stopPropagation();
                                 onDelete(npc.slug);
                               }}
-                              disabled={!!deletingSlug}
+                              disabled={isBulkBusy}
                               title="Delete NPC"
                               className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-error disabled:pointer-events-none disabled:opacity-40"
                             >
