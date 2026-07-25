@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient';
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5555/api/v1/npcs';
 const CHARACTER_API_BASE = process.env.REACT_APP_CHARACTER_API_BASE || 'http://localhost:5555/api/v1/character';
 const API_KEYS_BASE = process.env.REACT_APP_API_KEYS_BASE || 'http://localhost:5555/api/v1/api-keys';
+const VOICE_API_BASE = process.env.REACT_APP_VOICE_API_BASE || 'http://localhost:5555/api/v1/voice';
 
 async function authToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
@@ -102,4 +103,21 @@ export function streamTalk(slug: string, query: string, handlers: TalkHandlers):
     closed = true;
     source?.close();
   };
+}
+
+export async function synthesizeSpeech(text: string): Promise<Blob> {
+  const token = await authToken();
+  const res = await fetch(`${VOICE_API_BASE}/speak`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `speech request failed (${res.status})`);
+  }
+  return res.blob();
 }
