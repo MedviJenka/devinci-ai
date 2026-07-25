@@ -371,13 +371,12 @@ class AppDriver:
             digit_inputs.nth(i).fill(digit)
 
         page.get_by_role("button", name=re.compile("verify", re.I)).click()
-        # "New NPC" only renders once the authenticated app shell (Sidebar) mounts.
-        # Scoped to the sidebar landmark because the Library header also has its
-        # own persistent "New NPC" button (see 3bb0485), which would otherwise
-        # make this locator match two elements.
-        page.get_by_role("complementary").get_by_role(
-            "button", name=re.compile("new npc", re.I)
-        ).wait_for(state="visible")
+        # Sidebar (role=complementary) only renders once App has a session, so
+        # its presence is the authenticated-shell signal. Previously this
+        # waited on a "New NPC" button inside the sidebar, but that button now
+        # only exists in the Library page header (src/components/Library.tsx),
+        # not the sidebar itself -- the sidebar never had one to begin with.
+        page.get_by_role("complementary").wait_for(state="visible")
 
     def nav(self, label: str) -> None:
         """Sidebar items are plain <div onClick> elements, not buttons, so

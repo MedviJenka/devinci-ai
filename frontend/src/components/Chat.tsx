@@ -212,6 +212,7 @@ export default function Chat({ slug }: Props) {
           <button
             onClick={send}
             disabled={pending || !input.trim()}
+            aria-label="Send"
             className="absolute bottom-3 right-3 text-primary transition-transform hover:scale-110 disabled:opacity-30"
           >
             <Send size={18} strokeWidth={1.75} />

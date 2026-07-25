@@ -37,7 +37,7 @@ def test_send_button_disabled_for_blank_input(app):
     _open_chat(app, "aldric", "Aldric the Smith")
     page = app.page
 
-    send_button = page.get_by_role("button", name="send", exact=True)
+    send_button = page.get_by_role("button", name=re.compile("^send$", re.I))
     assert send_button.is_disabled()
 
     page.get_by_placeholder(re.compile("say something", re.I)).fill("   ")
@@ -57,7 +57,7 @@ def test_streaming_error_renders_as_npc_message(app):
 
     page.get_by_text("Connection lost.").wait_for(state="visible")
     # Input re-enables after the error resolves `pending`.
-    send_button = page.get_by_role("button", name="send", exact=True)
+    send_button = page.get_by_role("button", name=re.compile("^send$", re.I))
     page.get_by_placeholder(re.compile("say something", re.I)).fill("again")
     assert not send_button.is_disabled()
 

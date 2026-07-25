@@ -13,6 +13,8 @@ import ConfirmDialog from './components/ConfirmDialog';
 import PersonaEditor from './components/PersonaEditor';
 import Chat from './components/Chat';
 import SignIn from './components/SignIn';
+import Toast, { ToastData } from './components/Toast';
+import { AuditEntry } from './components/NotificationsBell';
 import { NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
 
 type Tab = 'persona' | 'chat';
@@ -26,13 +28,20 @@ function App() {
   const [selected, setSelected] = useState<NpcDetail | null>(null);
   const [tab, setTab] = useState<Tab>('chat');
   const [showCreate, setShowCreate] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastData | null>(null);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
 
   const navigate = (next: Screen) => {
     setScreen(next);
     setSelected(null);
+  };
+
+  const notify = (type: 'success' | 'error', message: string) => {
+    const entry = { id: crypto.randomUUID(), type, message, timestamp: Date.now() };
+    setAudit((prev) => [entry, ...prev].slice(0, 50));
+    setToast(entry);
   };
 
   const refreshList = async () => {
@@ -57,9 +66,16 @@ function App() {
   useEffect(() => {
     if (!session) return;
     refreshList()
-      .catch((err) => setError(err.message))
+      .then(() => notify('success', 'Backend connected successfully.'))
+      .catch((err) => notify('error', err.message))
       .finally(() => setNpcsLoading(false));
   }, [session]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), toast.type === 'success' ? 3000 : 5000);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   if (authLoading) {
     return <div className="flex h-screen items-center justify-center bg-background" />;
@@ -70,13 +86,12 @@ function App() {
   }
 
   const openNpc = async (slug: string, initialTab: Tab) => {
-    setError(null);
     try {
       setSelected(await getNpc(slug));
       setTab(initialTab);
       setScreen('npcs');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load NPC.');
+      notify('error', err instanceof Error ? err.message : 'Failed to load NPC.');
     }
   };
 
@@ -95,14 +110,13 @@ function App() {
     const slug = confirmDeleteSlug;
     if (!slug) return;
     setConfirmDeleteSlug(null);
-    setError(null);
     setDeletingSlug(slug);
     try {
       await deleteNpc(slug);
       if (selected?.slug === slug) setSelected(null);
       await refreshList();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete NPC.');
+      notify('error', err instanceof Error ? err.message : 'Failed to delete NPC.');
     } finally {
       setDeletingSlug(null);
     }
@@ -110,13 +124,15 @@ function App() {
 
   const handleSave = async (fields: NpcUpdateRequest) => {
     if (!selected) return;
-    await updateNpc(selected.slug, fields);
+    const updated = await updateNpc(selected.slug, fields);
+    setSelected(updated);
     await refreshList();
-    setSelected(null);
   };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background font-body-md text-on-surface">
+      <Toast toast={toast} />
+
       <Sidebar
         activeScreen={screen}
         onNavigate={navigate}
@@ -125,11 +141,6 @@ function App() {
       />
 
       <main className="flex min-w-0 flex-1 flex-col">
-        {error && (
-          <div className="border-b border-error/30 bg-error-container/20 px-6 py-2 text-sm text-on-error-container">
-            {error}
-          </div>
-        )}
 
         {screen === 'dashboard' && (
           <Dashboard
@@ -149,6 +160,7 @@ function App() {
             npcs={npcs}
             loading={npcsLoading}
             deletingSlug={deletingSlug}
+            audit={audit}
             onOpenChat={(slug) => openNpc(slug, 'chat')}
             onOpenPersona={(slug) => openNpc(slug, 'persona')}
             onDelete={handleDelete}

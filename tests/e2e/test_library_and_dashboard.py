@@ -11,7 +11,7 @@ def test_library_empty_state_creates_first_npc(app):
     app.nav("NPCs")
 
     page.get_by_text("The Archive is Silent").wait_for(state="visible")
-    page.get_by_role("button", name=re.compile("create first npc", re.I)).click()
+    page.get_by_role("button", name=re.compile("create new npc", re.I)).click()
 
     page.get_by_placeholder(re.compile("aldric", re.I)).fill("Aldric the Smith")
     page.get_by_role("button", name=re.compile("^create$", re.I)).click()
@@ -28,11 +28,11 @@ def test_library_search_filters_by_role_slug_or_goal(app):
     page = app.page
     app.nav("NPCs")
 
-    page.get_by_placeholder(re.compile("search npc library", re.I)).fill("scout")
+    page.get_by_placeholder(re.compile("search by role", re.I)).fill("scout")
     page.get_by_text("Mira the Scout").wait_for(state="visible")
     assert page.get_by_text("Aldric the Smith").count() == 0
 
-    page.get_by_placeholder(re.compile("search npc library", re.I)).fill("")
+    page.get_by_placeholder(re.compile("search by role", re.I)).fill("")
     page.get_by_text("Aldric the Smith").wait_for(state="visible")
 
 
@@ -43,7 +43,7 @@ def test_library_search_no_matches(app):
     page = app.page
     app.nav("NPCs")
 
-    page.get_by_placeholder(re.compile("search npc library", re.I)).fill("nonexistent-xyz")
+    page.get_by_placeholder(re.compile("search by role", re.I)).fill("nonexistent-xyz")
     page.get_by_text("No matches found").wait_for(state="visible")
 
 
@@ -87,12 +87,14 @@ def test_delete_npc_requires_confirmation(app):
     page = app.page
     app.nav("NPCs")
 
-    page.once("dialog", lambda dialog: dialog.dismiss())
+    # Deletion is confirmed via an in-app modal (ConfirmDialog), not a native
+    # browser dialog.
     page.get_by_title("Delete NPC").click()
+    page.get_by_role("button", name=re.compile("^cancel$", re.I)).click()
     page.get_by_text("Aldric the Smith").wait_for(state="visible")  # still there, dismissed
 
-    page.once("dialog", lambda dialog: dialog.accept())
     page.get_by_title("Delete NPC").click()
+    page.get_by_role("button", name=re.compile("^delete$", re.I)).click()
     page.get_by_text("The Archive is Silent").wait_for(state="visible")
     assert "aldric" not in app.npc_api.npcs
 

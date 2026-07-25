@@ -107,7 +107,9 @@ def test_copy_snippet_is_independent_of_key_copy_state(app):
 
     snippet_copy_button = page.get_by_title("Copy", exact=True)
     snippet_copy_button.click()
-    snippet_copy_button.get_by_text("check", exact=True).wait_for(state="visible")
+    # The snippet button swaps its lucide Copy icon for a Check icon rather
+    # than rendering any text -- select by the icon's class instead.
+    snippet_copy_button.locator("svg.lucide-check").wait_for(state="visible")
     # No fake time has elapsed yet -- the banner's own copy confirmation must
     # still be showing, independent of the snippet's copy state.
     assert page.get_by_role("button", name="Copied", exact=True).is_visible()
@@ -115,4 +117,4 @@ def test_copy_snippet_is_independent_of_key_copy_state(app):
     # Advancing past the 2s window proves the reset actually fires too.
     page.clock.run_for(2100)
     page.get_by_role("button", name="Copy", exact=True).wait_for(state="visible")
-    snippet_copy_button.get_by_text("content_copy", exact=True).wait_for(state="visible")
+    snippet_copy_button.locator("svg.lucide-copy").wait_for(state="visible")
