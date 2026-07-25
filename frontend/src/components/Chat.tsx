@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { User, Bot, Send } from 'lucide-react';
-import { streamTalk } from '../api';
+import { User, Bot, Send, Volume2, Loader2 } from 'lucide-react';
+import { streamTalk, synthesizeSpeech } from '../api';
 import { ChatMessage } from '../types';
 
 interface Props {
@@ -13,12 +13,50 @@ export default function Chat({ slug }: Props) {
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
   const [streamingId, setStreamingId] = useState<string | null>(null);
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+  const [loadingSpeechId, setLoadingSpeechId] = useState<string | null>(null);
   const closeRef = useRef<(() => void) | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
+
+  const stopSpeech = () => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+    setSpeakingId(null);
+  };
+
+  const toggleSpeak = async (message: ChatMessage) => {
+    if (speakingId === message.id) {
+      stopSpeech();
+      return;
+    }
+    stopSpeech();
+    setLoadingSpeechId(message.id);
+    try {
+      const blob = await synthesizeSpeech(message.text);
+      const url = URL.createObjectURL(blob);
+      audioUrlRef.current = url;
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setSpeakingId((id) => (id === message.id ? null : id));
+      audio.onerror = () => setSpeakingId((id) => (id === message.id ? null : id));
+      setLoadingSpeechId(null);
+      setSpeakingId(message.id);
+      await audio.play();
+    } catch {
+      setLoadingSpeechId(null);
+    }
+  };
 
   useEffect(() => {
     closeRef.current?.();
+    stopSpeech();
     setMessages([]);
     setPending(false);
     setStreamingId(null);
@@ -28,7 +66,10 @@ export default function Chat({ slug }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, pending]);
 
-  useEffect(() => () => closeRef.current?.(), []);
+  useEffect(() => () => {
+    closeRef.current?.();
+    stopSpeech();
+  }, []);
 
   const send = () => {
     const text = input.trim();
@@ -124,6 +165,20 @@ export default function Chat({ slug }: Props) {
                   )}
                   <p className="font-body-md italic leading-relaxed text-on-surface">{m.text}</p>
                 </div>
+                {m.id !== streamingId && m.text && (
+                  <button
+                    onClick={() => toggleSpeak(m)}
+                    disabled={loadingSpeechId === m.id}
+                    aria-label={speakingId === m.id ? 'Stop speech' : 'Play speech'}
+                    className="flex items-center gap-1 text-outline-variant transition-colors hover:text-primary disabled:opacity-30"
+                  >
+                    {loadingSpeechId === m.id ? (
+                      <Loader2 size={14} strokeWidth={1.75} className="animate-spin" />
+                    ) : (
+                      <Volume2 size={14} strokeWidth={1.75} className={speakingId === m.id ? 'animate-pulse text-primary' : ''} />
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           ),

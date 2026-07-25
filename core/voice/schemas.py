@@ -31,3 +31,9 @@ class VoiceSettings(BaseModel):
 class VoiceOptions(BaseModel):
     voices:    list[SupportedVoice]     = Field(default_factory=lambda: list(SupportedVoice))
     languages: list[SupportedLanguages] = Field(default_factory=lambda: list(SupportedLanguages))
+
+
+class SpeakRequest(BaseModel):
+    text:     str               = Field(min_length=1, max_length=4000)
+    voice:    SupportedVoice    = Field(default=SupportedVoice.CORAL)
+    language: SupportedLanguages = Field(default=SupportedLanguages.ENGLISH)

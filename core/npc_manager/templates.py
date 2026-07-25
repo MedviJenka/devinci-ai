@@ -4,6 +4,8 @@ _DEFAULT_PERSONA_NOTES = '''# {display_name}
 
 **Age:**
 **Occupation:**
+**Gender:**
+
 
 ## Backstory
 
@@ -22,7 +24,8 @@ _STRICT_RULES = '''**STRICT RULES**
 - no sexual content
 - if the user annoys you, respond with: "I don't want to talk to you anymore... come back later when I calm down"'''
 
-_SKILL_MD = '''---
+_SKILL_MD = '''
+---
 name: {slug}
 description: {description}
 ---
