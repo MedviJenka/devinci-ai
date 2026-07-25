@@ -14,8 +14,6 @@ const labelClass = 'font-label-caps text-label-caps uppercase text-outline';
 
 export default function CreateNpcModal({ onCreate, onClose }: Props) {
   const [name, setName] = useState('');
-  const [goal, setGoal] = useState('');
-  const [backstory, setBackstory] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +23,7 @@ export default function CreateNpcModal({ onCreate, onClose }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      await onCreate({ name, goal: goal || undefined, backstory: backstory || undefined });
+      await onCreate({ name });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create NPC.');
       setSubmitting(false);
@@ -51,27 +49,6 @@ export default function CreateNpcModal({ onCreate, onClose }: Props) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Aldric the Smith"
-            className={inputClass}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className={labelClass}>Goal (optional)</label>
-          <input
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-            placeholder="interactive npc"
-            className={inputClass}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className={labelClass}>Backstory (optional)</label>
-          <textarea
-            value={backstory}
-            onChange={(e) => setBackstory(e.target.value)}
-            rows={3}
-            placeholder="Short teaser backstory..."
             className={inputClass}
           />
         </div>

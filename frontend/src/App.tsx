@@ -26,6 +26,7 @@ function App() {
   const [npcs, setNpcs] = useState<NpcSummary[]>([]);
   const [npcsLoading, setNpcsLoading] = useState(true);
   const [selected, setSelected] = useState<NpcDetail | null>(null);
+  const [isNewNpc, setIsNewNpc] = useState(false);
   const [tab, setTab] = useState<Tab>('chat');
   const [showCreate, setShowCreate] = useState(false);
   const [toast, setToast] = useState<ToastData | null>(null);
@@ -36,6 +37,7 @@ function App() {
   const navigate = (next: Screen) => {
     setScreen(next);
     setSelected(null);
+    setIsNewNpc(false);
   };
 
   const notify = (type: 'success' | 'error', message: string) => {
@@ -88,6 +90,7 @@ function App() {
   const openNpc = async (slug: string, initialTab: Tab) => {
     try {
       setSelected(await getNpc(slug));
+      setIsNewNpc(false);
       setTab(initialTab);
       setScreen('npcs');
     } catch (err) {
@@ -99,6 +102,7 @@ function App() {
     const created = await createNpc(req);
     await refreshList();
     setSelected(created);
+    setIsNewNpc(true);
     setTab('persona');
     setScreen('npcs');
     setShowCreate(false);
@@ -125,8 +129,13 @@ function App() {
   const handleSave = async (fields: NpcUpdateRequest) => {
     if (!selected) return;
     const updated = await updateNpc(selected.slug, fields);
-    setSelected(updated);
     await refreshList();
+    if (isNewNpc) {
+      setIsNewNpc(false);
+      setSelected(null);
+    } else {
+      setSelected(updated);
+    }
   };
 
   return (
@@ -174,7 +183,10 @@ function App() {
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-outline-variant bg-surface-container px-gutter">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setSelected(null)}
+                  onClick={() => {
+                    setSelected(null);
+                    setIsNewNpc(false);
+                  }}
                   title="Back to library"
                   className="rounded p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
                 >

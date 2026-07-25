@@ -1,4 +1,15 @@
-import { ApiKeyCreateResponse, ApiKeySummary, NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest } from './types';
+import {
+  ApiKeyCreateResponse,
+  ApiKeySummary,
+  NpcCreateRequest,
+  NpcDetail,
+  NpcSummary,
+  NpcUpdateRequest,
+  SupportedLanguage,
+  SupportedTone,
+  SupportedVoice,
+  VoiceOptions,
+} from './types';
 import { supabase } from './supabaseClient';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5555/api/v1/npcs';
@@ -105,7 +116,14 @@ export function streamTalk(slug: string, query: string, handlers: TalkHandlers):
   };
 }
 
-export async function synthesizeSpeech(text: string): Promise<Blob> {
+export const getVoiceOptions = () => request<VoiceOptions>('/options', {}, VOICE_API_BASE);
+
+export async function synthesizeSpeech(
+  text: string,
+  voice?: SupportedVoice,
+  tone?: SupportedTone,
+  language?: SupportedLanguage,
+): Promise<Blob> {
   const token = await authToken();
   const res = await fetch(`${VOICE_API_BASE}/speak`, {
     method: 'POST',
@@ -113,7 +131,7 @@ export async function synthesizeSpeech(text: string): Promise<Blob> {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, voice, tone, language }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
