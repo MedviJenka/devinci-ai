@@ -32,8 +32,8 @@ async def voice_options_route() -> VoiceOptions:
 
 @router.post('/speak')
 async def speak_route(req: SpeakRequest, user_id: str = Depends(get_current_user_id)) -> StreamingResponse:
-    engine = VoiceEngine(voice=req.voice.value)
+    engine = VoiceEngine(voice=req.voice.value, tone=req.tone)
     return StreamingResponse(
-        engine.stream_bytes(req.text, req.language, _openai_client),
+        engine.stream_bytes(req.text, _openai_client, req.language.value),
         media_type='audio/mpeg',
     )
