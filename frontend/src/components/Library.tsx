@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Plus, Bot, Loader2, Pencil, BarChart3, Trash2, ChevronLeft, ChevronRight, Activity, ArrowRight } from 'lucide-react';
+import { Search, Plus, Bot, Loader2, Pencil, BarChart3, Trash2, BrainCog, ChevronLeft, ChevronRight, Activity, ArrowRight } from 'lucide-react';
 import { NpcSummary } from '../types';
 
 import NotificationsBell, { AuditEntry } from './NotificationsBell';
@@ -9,11 +9,13 @@ interface Props {
   loading?: boolean;
   deletingSlug?: string | null;
   deletingSlugs?: Set<string>;
+  resettingMemorySlug?: string | null;
   audit: AuditEntry[];
   onOpenChat: (slug: string) => void;
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
   onBulkDelete?: (slugs: string[]) => void;
+  onClearMemory: (slug: string) => void;
   onCreate: () => void;
   onNavigateStorylines?: () => void;
 }
@@ -27,11 +29,13 @@ export default function Library({
   loading,
   deletingSlug,
   deletingSlugs,
+  resettingMemorySlug,
   audit,
   onOpenChat,
   onOpenPersona,
   onDelete,
   onBulkDelete,
+  onClearMemory,
   onCreate,
   onNavigateStorylines,
 }: Props) {
@@ -317,6 +321,21 @@ export default function Library({
                               className="cursor-not-allowed rounded-md p-2 text-on-surface-variant/40"
                             >
                               <BarChart3 size={18} strokeWidth={1.75} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onClearMemory(npc.slug);
+                              }}
+                              disabled={isBulkBusy || resettingMemorySlug === npc.slug}
+                              title="Clear this NPC's conversation memory"
+                              className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-error disabled:pointer-events-none disabled:opacity-40"
+                            >
+                              {resettingMemorySlug === npc.slug ? (
+                                <Loader2 size={18} strokeWidth={1.75} className="animate-spin" />
+                              ) : (
+                                <BrainCog size={18} strokeWidth={1.75} />
+                              )}
                             </button>
                             <button
                               onClick={(e) => {
