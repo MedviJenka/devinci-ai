@@ -37,6 +37,8 @@ function App() {
   const [confirmDeleteSlugs, setConfirmDeleteSlugs] = useState<string[] | null>(null);
   const [resettingMemory, setResettingMemory] = useState(false);
   const [confirmResetMemory, setConfirmResetMemory] = useState(false);
+  const [resettingMemorySlug, setResettingMemorySlug] = useState<string | null>(null);
+  const [confirmClearMemorySlug, setConfirmClearMemorySlug] = useState<string | null>(null);
 
   const navigate = (next: Screen) => {
     setScreen(next);
@@ -154,6 +156,23 @@ function App() {
 
   const handleResetMemory = () => setConfirmResetMemory(true);
 
+  const handleClearMemory = (slug: string) => setConfirmClearMemorySlug(slug);
+
+  const confirmClearMemoryAction = async () => {
+    const slug = confirmClearMemorySlug;
+    if (!slug) return;
+    setConfirmClearMemorySlug(null);
+    setResettingMemorySlug(slug);
+    try {
+      await resetNpcMemory(slug);
+      notify('success', `Cleared memory for "${slug}".`);
+    } catch (err) {
+      notify('error', err instanceof Error ? err.message : 'Failed to clear memory.');
+    } finally {
+      setResettingMemorySlug(null);
+    }
+  };
+
   const confirmResetMemoryAction = async () => {
     if (!selected) return;
     setConfirmResetMemory(false);
@@ -217,6 +236,8 @@ function App() {
             onOpenPersona={(slug) => openNpc(slug, 'persona')}
             onDelete={handleDelete}
             onBulkDelete={handleBulkDelete}
+            onClearMemory={handleClearMemory}
+            resettingMemorySlug={resettingMemorySlug}
             onCreate={() => setShowCreate(true)}
             onNavigateStorylines={() => navigate('storylines')}
           />
@@ -308,6 +329,16 @@ function App() {
           confirmLabel="Clear memory"
           onConfirm={confirmResetMemoryAction}
           onCancel={() => setConfirmResetMemory(false)}
+        />
+      )}
+
+      {confirmClearMemorySlug && (
+        <ConfirmDialog
+          title="Clear this NPC's memory?"
+          message={`All conversation memory for "${confirmClearMemorySlug}" will be permanently erased. This cannot be undone.`}
+          confirmLabel="Clear memory"
+          onConfirm={confirmClearMemoryAction}
+          onCancel={() => setConfirmClearMemorySlug(null)}
         />
       )}
     </div>
