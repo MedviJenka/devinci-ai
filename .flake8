@@ -1,0 +1,2 @@
+[flake8]
+exclude = .venv,frontend/node_modules,frontend/build,.git,__pycache__
