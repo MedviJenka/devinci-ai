@@ -9,13 +9,11 @@ interface Props {
   loading?: boolean;
   deletingSlug?: string | null;
   deletingSlugs?: Set<string>;
-  resettingMemorySlug?: string | null;
   audit: AuditEntry[];
   onOpenChat: (slug: string) => void;
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
   onBulkDelete?: (slugs: string[]) => void;
-  onClearMemory: (slug: string) => void;
   onCreate: () => void;
   onNavigateStorylines?: () => void;
 }
@@ -29,13 +27,11 @@ export default function Library({
   loading,
   deletingSlug,
   deletingSlugs,
-  resettingMemorySlug,
   audit,
   onOpenChat,
   onOpenPersona,
   onDelete,
   onBulkDelete,
-  onClearMemory,
   onCreate,
   onNavigateStorylines,
 }: Props) {

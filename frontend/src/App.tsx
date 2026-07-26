@@ -35,8 +35,8 @@ function App() {
   const [confirmDeleteSlug, setConfirmDeleteSlug] = useState<string | null>(null);
   const [deletingSlugs, setDeletingSlugs] = useState<Set<string>>(new Set());
   const [confirmDeleteSlugs, setConfirmDeleteSlugs] = useState<string[] | null>(null);
-  const [resettingMemorySlug, setResettingMemorySlug] = useState<string | null>(null);
-  const [confirmResetMemorySlug, setConfirmResetMemorySlug] = useState<string | null>(null);
+  const [resettingMemory, setResettingMemory] = useState(false);
+  const [confirmResetMemory, setConfirmResetMemory] = useState(false);
 
   const navigate = (next: Screen) => {
     setScreen(next);
@@ -152,20 +152,19 @@ function App() {
     }
   };
 
-  const handleResetMemory = (slug: string) => setConfirmResetMemorySlug(slug);
+  const handleResetMemory = () => setConfirmResetMemory(true);
 
   const confirmResetMemoryAction = async () => {
-    const slug = confirmResetMemorySlug;
-    if (!slug) return;
-    setConfirmResetMemorySlug(null);
-    setResettingMemorySlug(slug);
+    if (!selected) return;
+    setConfirmResetMemory(false);
+    setResettingMemory(true);
     try {
-      await resetNpcMemory(slug);
-      notify('success', `Cleared memory for "${slug}".`);
+      await resetNpcMemory(selected.slug);
+      notify('success', `Cleared memory for "${selected.slug}".`);
     } catch (err) {
       notify('error', err instanceof Error ? err.message : 'Failed to clear memory.');
     } finally {
-      setResettingMemorySlug(null);
+      setResettingMemory(false);
     }
   };
 
@@ -213,13 +212,11 @@ function App() {
             loading={npcsLoading}
             deletingSlug={deletingSlug}
             deletingSlugs={deletingSlugs}
-            resettingMemorySlug={resettingMemorySlug}
             audit={audit}
             onOpenChat={(slug) => openNpc(slug, 'chat')}
             onOpenPersona={(slug) => openNpc(slug, 'persona')}
             onDelete={handleDelete}
             onBulkDelete={handleBulkDelete}
-            onClearMemory={handleResetMemory}
             onCreate={() => setShowCreate(true)}
             onNavigateStorylines={() => navigate('storylines')}
           />
@@ -272,8 +269,8 @@ function App() {
                   <PersonaEditor
                     npc={selected}
                     onSave={handleSave}
-                    onResetMemory={() => handleResetMemory(selected.slug)}
-                    resettingMemory={resettingMemorySlug === selected.slug}
+                    onResetMemory={handleResetMemory}
+                    resettingMemory={resettingMemory}
                   />
                 </div>
               )}
@@ -304,13 +301,13 @@ function App() {
         />
       )}
 
-      {confirmResetMemorySlug && (
+      {confirmResetMemory && selected && (
         <ConfirmDialog
           title="Clear this NPC's memory?"
-          message={`All conversation memory for "${confirmResetMemorySlug}" will be permanently erased. This cannot be undone.`}
+          message={`All conversation memory for "${selected.slug}" will be permanently erased. This cannot be undone.`}
           confirmLabel="Clear memory"
           onConfirm={confirmResetMemoryAction}
-          onCancel={() => setConfirmResetMemorySlug(null)}
+          onCancel={() => setConfirmResetMemory(false)}
         />
       )}
     </div>
