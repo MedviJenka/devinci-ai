@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Plus, Bot, Loader2, Pencil, BarChart3, Trash2, ChevronLeft, ChevronRight, Activity, ArrowRight } from 'lucide-react';
+import { Search, Plus, Bot, Loader2, Pencil, BarChart3, Trash2, BrainCog, ChevronLeft, ChevronRight, Activity, ArrowRight } from 'lucide-react';
 import { NpcSummary } from '../types';
 
 import NotificationsBell, { AuditEntry } from './NotificationsBell';
@@ -317,6 +317,21 @@ export default function Library({
                               className="cursor-not-allowed rounded-md p-2 text-on-surface-variant/40"
                             >
                               <BarChart3 size={18} strokeWidth={1.75} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onClearMemory(npc.slug);
+                              }}
+                              disabled={isBulkBusy || resettingMemorySlug === npc.slug}
+                              title="Clear this NPC's conversation memory"
+                              className="rounded-md p-2 text-on-surface-variant transition-all hover:bg-surface-container-highest hover:text-error disabled:pointer-events-none disabled:opacity-40"
+                            >
+                              {resettingMemorySlug === npc.slug ? (
+                                <Loader2 size={18} strokeWidth={1.75} className="animate-spin" />
+                              ) : (
+                                <BrainCog size={18} strokeWidth={1.75} />
+                              )}
                             </button>
                             <button
                               onClick={(e) => {
