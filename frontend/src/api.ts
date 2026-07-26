@@ -5,7 +5,6 @@ import {
   NpcDetail,
   NpcSummary,
   NpcUpdateRequest,
-  SupportedLanguage,
   SupportedTone,
   SupportedVoice,
   VoiceOptions,

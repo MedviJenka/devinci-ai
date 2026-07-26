@@ -14,6 +14,8 @@ interface Props {
   onOpenPersona: (slug: string) => void;
   onDelete: (slug: string) => void;
   onBulkDelete?: (slugs: string[]) => void;
+  onClearMemory: (slug: string) => void;
+  resettingMemorySlug?: string | null;
   onCreate: () => void;
   onNavigateStorylines?: () => void;
 }
@@ -32,6 +34,8 @@ export default function Library({
   onOpenPersona,
   onDelete,
   onBulkDelete,
+  onClearMemory,
+  resettingMemorySlug,
   onCreate,
   onNavigateStorylines,
 }: Props) {
