@@ -1,5 +1,7 @@
+import json
 import posixpath
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 from core.storage import client as storage
@@ -81,6 +83,36 @@ def sync_memory(user_id: str, slug: str) -> None:
             continue
         storage.upload(_bucket(), prefix + rel, str(path))
         already_synced.add(rel)
+
+
+def append_turn(user_id: str, slug: str, fields: dict) -> None:
+    """Append one conversation turn to today's session transcript and push it to storage.
+
+    This is a different kind of persistence than sync_memory: crewAI's Memory is a
+    heuristic summary an NPC recalls, this is the raw record of what was actually
+    said - kept for debugging/moderation review, and left alone by
+    reset_npc_memory (forgetting what the NPC "knows" shouldn't erase what
+    happened). Rotated by UTC date so one NPC's transcript never grows into a
+    single unbounded file over its lifetime.
+
+    Unlike sync_memory's fragment-level dedup (LanceDB writes many small immutable
+    files, so only-upload-what's-new actually matters), there's exactly one file
+    in play here and it's small - one NPC's turns for one day - so it's simplest
+    to just re-read and re-upload the whole thing after every turn, the same plain
+    overwrite `_write_file` already uses for npc.json/SKILL.md. Supabase Storage's
+    S3-compatible API has no append/patch operation to exploit anyway.
+    """
+    now = datetime.now(timezone.utc)
+    rel_path = f"sessions/{now.strftime('%Y-%m-%d')}.jsonl"
+    local_path = _cache_dir(user_id, slug) / rel_path
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+
+    record = {'ts': now.isoformat(), **fields}
+    with local_path.open('a', encoding='utf-8') as f:
+        f.write(json.dumps(record) + '\n')
+
+    storage_key = posixpath.normpath(_npc_prefix(user_id, slug) + rel_path)
+    storage.put_text(_bucket(), storage_key, local_path.read_text(encoding='utf-8'))
 
 
 def _write_file(user_id: str, slug: str, rel_path: str, content: str) -> None:

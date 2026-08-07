@@ -20,6 +20,7 @@ from core.npc_manager import (
     NpcNotFoundError,
     NpcSummary,
     NpcUpdateRequest,
+    append_turn,
     build_agent,
     build_response_schema,
     create_npc,
@@ -203,6 +204,18 @@ async def talk_stream(
             sync_memory(user_id, slug)
         except Exception as exc:
             log.fire.error(f'memory sync failed: {exc}')
+
+        # A separate, best-effort record from memory sync above: memory is crewAI's
+        # heuristic recall of the player, this is the raw transcript of what was
+        # actually said this turn (see append_turn). One failing independently of
+        # the other shouldn't take down either.
+        try:
+            turn_fields = {'query': query, 'response': response_text}
+            if streaming.result.pydantic is not None:
+                turn_fields.update(streaming.result.pydantic.model_dump(exclude={'response'}))
+            append_turn(user_id, slug, turn_fields)
+        except Exception as exc:
+            log.fire.error(f'transcript append failed: {exc}')
 
     return StreamingResponse(
         generate(),
