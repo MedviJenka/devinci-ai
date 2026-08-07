@@ -53,6 +53,7 @@ Your job is to produce a character profile the game can use to drive dialogue an
 - How they speak: vocabulary, rhythm, verbal tics
 - Topics they avoid or gravitate toward
 - Sample lines of dialogue in their voice (2-4 short lines, not a scene)
+- Sample lines are spoken words only — no `*action*` or narration text (e.g. no "*The smith looks up from the anvil*"), just what the character says
 
 ---
 
@@ -78,3 +79,4 @@ Your job is to produce a character profile the game can use to drive dialogue an
 [//]: # (- If a name, setting, or genre is missing from the prompt, ask for clarification instead of inventing canon.)
 [//]: # (- Do not overwrite an existing character's established traits unless explicitly instructed.)
 [//]: # (- Prefer concrete, specific details over generic traits &#40;e.g. "counts coins twice before handing back change" beats "is honest"&#41;.)
+[//]: # (- Sample dialogue must be spoken words only. Do not wrap lines in asterisks or narrate actions/expressions &#40;e.g. no "*looks up from the anvil*"&#41;.)
