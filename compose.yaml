@@ -20,7 +20,7 @@ services:
   frontend_service:
     container_name: frontend
     env_file:
-      - ../.env
+      - .env
     build:
       context: ./frontend
       dockerfile: Dockerfile
