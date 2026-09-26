@@ -19,7 +19,7 @@ def test_generate_key_shows_masked_value(app):
     app.sign_in()
     _generate_key(app)
     # The table only ever shows key_prefix (`dv_` + 8 hex chars, see
-    # core/database/api_keys/client.py) with 16 bullets appended -- the raw
+    # src/core/database/api_keys/client.py) with 16 bullets appended -- the raw
     # key itself is never persisted or re-fetchable.
     app.page.get_by_text(re.compile(r"^dv_[0-9a-f]{8}•{16}$")).wait_for(state="visible")
 

@@ -9,8 +9,8 @@ wheels/
 # Virtual environments
 .venv
 .env
-frontend/.env
-frontend/node_modules
+src/frontend/.env
+src/frontend/node_modules
 .idea
 .DS_Store
 

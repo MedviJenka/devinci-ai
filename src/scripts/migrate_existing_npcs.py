@@ -7,12 +7,21 @@ the tenancy change:
 """
 
 import argparse
+import json
 from pathlib import Path
 
-from core.settings import db
-from npcs.manager import NpcCreateRequest, _load_jsonc_text, _split_skill_md, create_npc
+from crewai.project import strip_jsonc_comments
 
-OLD_NPCS_DIR = Path(__file__).resolve().parent.parent / 'npcs'
+from core.npc_manager import NpcCreateRequest, create_npc
+from core.npc_manager.service import _split_skill_md
+from core.settings import db
+
+
+def _load_jsonc_text(text: str) -> dict:
+    return json.loads(strip_jsonc_comments(text))
+
+
+OLD_NPCS_DIR = Path(__file__).resolve().parents[2] / 'npcs'
 SLUGS = ['smith', 'marcus_holt']
 
 

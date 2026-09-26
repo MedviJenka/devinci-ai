@@ -22,7 +22,7 @@ services:
     env_file:
       - .env
     build:
-      context: ./frontend
+      context: ./src/frontend
       dockerfile: Dockerfile
       target: frontend
       args:

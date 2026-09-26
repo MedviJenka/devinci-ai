@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "boto3>=1.43.51",
     "botocore>=1.43.51",
-    # Exact-pinned: core/ai/agent_runtime.py's kickoff_streaming() reaches into
+    # Exact-pinned: src/core/ai/agent_runtime.py's kickoff_streaming() reaches into
     # crewai internals (enable_agent_streaming, LiteAgentOutput, StreamingOutputBase,
     # crewai.utilities.streaming) that aren't part of crewai's public API and can
     # change shape in a patch release. Bump deliberately, re-reading agent_runtime.py
@@ -29,3 +29,10 @@ test = [
     "pytest-xdist>=3.6",
     "filelock>=3.16",
 ]
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

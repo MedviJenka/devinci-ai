@@ -29,7 +29,7 @@ from pathlib import Path
 from tests.e2e.mock_constants import STATE_FILE
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-FRONTEND_DIR = REPO_ROOT / "frontend"
+FRONTEND_DIR = REPO_ROOT / "src" / "frontend"
 BUILD_DIR = FRONTEND_DIR / "build"
 
 
@@ -58,7 +58,7 @@ def _build_frontend() -> None:
     if (BUILD_DIR / "index.html").exists() and os.environ.get("E2E_FORCE_REBUILD") != "1":
         return
     # Invoke react-scripts directly via node rather than `npm run build`:
-    # this repo's frontend/node_modules/.bin shims are POSIX symlinks with
+    # this repo's src/frontend/node_modules/.bin shims are POSIX symlinks with
     # no .cmd/.ps1 wrapper, so npm (a Windows-native launcher here) can't
     # resolve `react-scripts` through the normal PATH shim lookup.
     subprocess.run(
