@@ -20,9 +20,9 @@ services:
   frontend_service:
     container_name: frontend
     env_file:
-      - ../.env
+      - .env
     build:
-      context: ./frontend
+      context: ./src/frontend
       dockerfile: Dockerfile
       target: frontend
       args:

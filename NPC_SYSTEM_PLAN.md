@@ -11,32 +11,32 @@
 
 A multi-tenant NPC-creation SaaS, not a fixed two-NPC demo:
 
-- **Frontend** (`frontend/`): React/TS app — NPC library, persona editor,
+- **Frontend** (`src/frontend/`): React/TS app — NPC library, persona editor,
   dashboard, chat UI.
-- **Backend** (`core/`): FastAPI, versioned under `/api/v1/...`
-  (`core/api/v1/npcs`, `.../voice`, `.../story_creation`, `.../api_keys`).
+- **Backend** (`src/core/`): FastAPI, versioned under `/api/v1/...`
+  (`src/core/api/v1/npcs`, `.../voice`, `.../story_creation`, `.../api_keys`).
 - **NPCs are per-user data**, not files checked into the repo. Each NPC is a
   small bundle of config + a `SKILL.md` persona pack + a memory store, keyed
   by `(user_id, slug)` and persisted in **Supabase Storage**.
 - **The dialogue harness is crewAI's own `Agent`**, used directly — no Crew,
   no Task, no custom RPC layer, no per-NPC subprocess.
-- `game/` is a standalone pygame demo client that hits the real `/talk` SSE
+- `src/game/` is a standalone pygame demo client that hits the real `/talk` SSE
   endpoint over HTTP; it's an example consumer, not part of the runtime.
 
 ## 1. Confirmed architecture (as it exists today)
 
 | Concern | Implementation | Where |
 |---|---|---|
-| Per-NPC identity | `npc.json` (role/goal/backstory/llm/pydantic schema) | `core/npc_manager/service.py` |
-| Knowledge pack | One `SKILL.md` per NPC (frontmatter `name`/`description` + STRICT_RULES + persona notes) | `core/npc_manager/templates.py`, `service.py::_write_skill_md` |
-| Persistence | Supabase Storage, bucket `Config.NPC_STORAGE_BUCKET`, key prefix `{user_id}/{slug}/` | `core/npc_manager/paths.py`, `core/storage/client.py` |
-| Execution harness | **crewAI `Agent`** built with `skills=[cache_dir/skills]`, `memory=Memory(storage=cache_dir/memory)` | `core/npc_manager/engine.py::build_agent` |
-| Local working copy | Storage synced on demand into `Config.NPC_CACHE_DIR` (`./.npc_cache/{user_id}/{slug}/`); crewAI needs real files on disk for skills + LanceDB | `core/npc_manager/storage_io.py::ensure_cached` |
-| Agent reuse | One crewAI `Agent` object cached in-process per `(user_id, slug)`, an `asyncio.Lock` per NPC serializes concurrent `/talk` calls against it | `core/api/v1/npcs/api.py` |
-| Dialogue turn | `GET /api/v1/npcs/{slug}/talk?query=...`, SSE stream of token chunks via `kickoff_streaming` | `core/api/v1/npcs/api.py`, `core/ai/agent_runtime.py` |
-| Structured output | Runtime-built Pydantic schema (`mood`, `attitude`, `tone`, `response`, + custom fields) | `core/npc_manager/schemas.py`, `engine.py::build_response_schema` |
-| Memory | crewAI's LanceDB-backed `Memory`, written locally then pushed to Supabase Storage after each turn (`sync_memory`); pulled back down by `ensure_cached` | `core/npc_manager/storage_io.py` |
-| Voice | OpenAI `gpt-4o-mini-tts`, streamed as mp3 chunks, tone-aware instructions | `core/voice/engine.py`, `core/api/v1/voice/api.py` |
+| Per-NPC identity | `npc.json` (role/goal/backstory/llm/pydantic schema) | `src/core/npc_manager/service.py` |
+| Knowledge pack | One `SKILL.md` per NPC (frontmatter `name`/`description` + STRICT_RULES + persona notes) | `src/core/npc_manager/templates.py`, `service.py::_write_skill_md` |
+| Persistence | Supabase Storage, bucket `Config.NPC_STORAGE_BUCKET`, key prefix `{user_id}/{slug}/` | `src/core/npc_manager/paths.py`, `src/core/storage/client.py` |
+| Execution harness | **crewAI `Agent`** built with `skills=[cache_dir/skills]`, `memory=Memory(storage=cache_dir/memory)` | `src/core/npc_manager/engine.py::build_agent` |
+| Local working copy | Storage synced on demand into `Config.NPC_CACHE_DIR` (`./.npc_cache/{user_id}/{slug}/`); crewAI needs real files on disk for skills + LanceDB | `src/core/npc_manager/storage_io.py::ensure_cached` |
+| Agent reuse | One crewAI `Agent` object cached in-process per `(user_id, slug)`, an `asyncio.Lock` per NPC serializes concurrent `/talk` calls against it | `src/core/api/v1/npcs/api.py` |
+| Dialogue turn | `GET /api/v1/npcs/{slug}/talk?query=...`, SSE stream of token chunks via `kickoff_streaming` | `src/core/api/v1/npcs/api.py`, `src/core/ai/agent_runtime.py` |
+| Structured output | Runtime-built Pydantic schema (`mood`, `attitude`, `tone`, `response`, + custom fields) | `src/core/npc_manager/schemas.py`, `engine.py::build_response_schema` |
+| Memory | crewAI's LanceDB-backed `Memory`, written locally then pushed to Supabase Storage after each turn (`sync_memory`); pulled back down by `ensure_cached` | `src/core/npc_manager/storage_io.py` |
+| Voice | OpenAI `gpt-4o-mini-tts`, streamed as mp3 chunks, tone-aware instructions | `src/core/voice/engine.py`, `src/core/api/v1/voice/api.py` |
 
 ```mermaid
 graph LR
@@ -198,7 +198,7 @@ real  0m7.432s    # warm, no download
 `omp say` is a one-shot CLI invocation — Node process start + ONNX model
 init on every call, not a warm daemon — and it writes a complete WAV file
 before returning (no progressive/streaming output). **7–10 seconds
-wall-clock for one short line**, versus the current `core/voice/engine.py`
+wall-clock for one short line**, versus the current `src/core/voice/engine.py`
 path (OpenAI `gpt-4o-mini-tts`, `stream_bytes`, sub-second time-to-first-byte
 today) which is already what's live in `POST /api/v1/voice/speak`. Swapping
 to `omp say` would make voice responses roughly an order of magnitude
@@ -216,7 +216,7 @@ already covers at better latency.
 ## 8. Open extension points (not required for v1, unchanged in spirit from before)
 
 - Per-conversation transcript log (§6) — cheapest, most concrete win.
-- `core/npc_manager/dynamics.py` (`DynamicMoodSchema`, `trust_level`) exists
+- `src/core/npc_manager/dynamics.py` (`DynamicMoodSchema`, `trust_level`) exists
   as a stub, not wired into `engine.py`/`api.py` — a real "quest impact"/
   relationship-state feature could build on it plus the `metadata:`
   frontmatter convention in §3, if this product ever wants that.

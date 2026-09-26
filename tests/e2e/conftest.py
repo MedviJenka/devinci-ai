@@ -9,8 +9,8 @@ conftest.py's `pytest_configure`.
 
 Two boundaries are mocked at the Playwright network layer, never touching a
 real backend or the real Supabase project:
-  - the NPC REST API (frontend/src/api.ts, http://localhost:5555/api/v1/npcs)
-  - Supabase auth (frontend/src/supabaseClient.ts)
+  - the NPC REST API (src/frontend/src/api.ts, http://localhost:5555/api/v1/npcs)
+  - Supabase auth (src/frontend/src/supabaseClient.ts)
 
 Both origins are cross-origin from the static server's own origin, and the
 app always sends a `Content-Type: application/json` header, which forces a
@@ -197,8 +197,8 @@ def npc_api(page) -> NpcApiMock:
 
 @dataclass
 class ApiKeyMock:
-    """In-memory fake of the FastAPI api-keys endpoints (core/api/v1/api_keys),
-    mirroring core/database/api_keys/client.py's key shape: a `dv_`-prefixed
+    """In-memory fake of the FastAPI api-keys endpoints (src/core/api/v1/api_keys),
+    mirroring src/core/database/api_keys/client.py's key shape: a `dv_`-prefixed
     raw key, only ever returned once at creation, plus an 11-char key_prefix
     (`dv_` + 8 hex chars) persisted for display."""
 
