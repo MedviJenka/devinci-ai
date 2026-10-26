@@ -1,11 +1,12 @@
-from .engine import build_agent, build_response_schema
+from .engine import NpcContext, build_npc_context, build_response_schema, resolve_model
 from .exceptions import NpcAlreadyExistsError, NpcNotFoundError
 from .schemas import NpcCreateRequest, NpcDetail, NpcSummary, NpcUpdateRequest, PydanticFieldDef
 from .service import create_npc, delete_npc, get_npc, list_npcs, reset_npc_memory, update_npc
-from .storage_io import append_turn, ensure_cached, sync_memory
+from .storage_io import append_turn, ensure_cached, load_recent_turns
 
 __all__ = [
     'NpcAlreadyExistsError',
+    'NpcContext',
     'NpcCreateRequest',
     'NpcDetail',
     'NpcNotFoundError',
@@ -13,14 +14,15 @@ __all__ = [
     'NpcUpdateRequest',
     'PydanticFieldDef',
     'append_turn',
-    'build_agent',
+    'build_npc_context',
     'build_response_schema',
     'create_npc',
     'delete_npc',
     'ensure_cached',
     'get_npc',
     'list_npcs',
+    'load_recent_turns',
     'reset_npc_memory',
-    'sync_memory',
+    'resolve_model',
     'update_npc',
 ]

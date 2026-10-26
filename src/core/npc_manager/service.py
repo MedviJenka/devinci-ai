@@ -3,6 +3,7 @@ import re
 import shutil
 from typing import Any
 from core.storage import client as storage
+from .engine import resolve_model
 from .exceptions import NpcAlreadyExistsError, NpcNotFoundError
 from .paths import _bucket, _cache_dir, _npc_prefix, _user_prefix, slugify
 from .schemas import (
@@ -13,7 +14,7 @@ from .schemas import (
     PydanticFieldDef,
     _default_pydantic_fields,
 )
-from .storage_io import _synced_memory_paths, _write_file
+from .storage_io import _write_file
 from .templates import _DEFAULT_PERSONA_NOTES, _SKILL_MD, _STRICT_RULES
 from .validation import _validate_pydantic_fields
 
@@ -125,11 +126,13 @@ def get_npc(user_id: str, slug: str) -> NpcDetail:
 
 def create_npc(user_id: str, req: NpcCreateRequest) -> NpcDetail:
     slug = slugify(req.name)
+    # Before anything is written, so an unusable model never leaves a half-created NPC.
+    resolve_model(req.llm)
     if storage.exists(_bucket(), _npc_prefix(user_id, slug) + 'npc.json'):
         raise NpcAlreadyExistsError(slug)
 
     # A stale local cache dir (e.g. left behind by a crash between create and delete)
-    # would otherwise let a new NPC inherit an old memory/ LanceDB store from a
+    # would otherwise let a new NPC inherit an old memory/ turn history from a
     # previous NPC that happened to reuse this slug.
     cache_dir = _cache_dir(user_id, slug)
     if cache_dir.exists():
@@ -155,6 +158,7 @@ def update_npc(user_id: str, slug: str, req: NpcUpdateRequest) -> NpcDetail:
     persona_notes = req.persona_notes if req.persona_notes is not None else current.persona_notes
     enabled = req.pydantic_enabled if req.pydantic_enabled is not None else current.pydantic_enabled
     fields = req.pydantic_fields if req.pydantic_fields is not None else current.pydantic_fields
+    resolve_model(llm)
 
     existing_skill_key = _skill_md_key(user_id, slug)
     skill_dir_name = existing_skill_key.rsplit('/', 2)[-2] if existing_skill_key else slug
@@ -184,7 +188,6 @@ def delete_npc(user_id: str, slug: str) -> None:
     cache_dir = _cache_dir(user_id, slug)
     if cache_dir.exists():
         shutil.rmtree(cache_dir)
-    _synced_memory_paths.pop((user_id, slug), None)
 
 
 def reset_npc_memory(user_id: str, slug: str) -> None:
@@ -196,7 +199,6 @@ def reset_npc_memory(user_id: str, slug: str) -> None:
     memory_dir = _cache_dir(user_id, slug) / 'memory'
     if memory_dir.exists():
         shutil.rmtree(memory_dir)
-    _synced_memory_paths.pop((user_id, slug), None)
 
 
 def _write_npc_config(

@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { User, Bot, Send, Volume2, Loader2, Settings2 } from 'lucide-react';
-import { streamTalk, synthesizeSpeech, getVoiceOptions } from '../api';
-import { ChatMessage, SupportedVoice, SupportedTone, VoiceOptions } from '../types';
+import { getNpcHistory, streamTalk, synthesizeSpeech, getVoiceOptions } from '../api';
+import { ChatMessage, HistoryTurn, SupportedVoice, SupportedTone, VoiceOptions } from '../types';
 
 interface Props {
   slug: string;
   structuredOutput: boolean;
+  // Bumped by the parent after this NPC's memory is cleared, so the chat reloads
+  // (now empty) history instead of showing a conversation the NPC has forgotten.
+  memoryVersion?: number;
 }
 
 const VOICE_PREF_KEY = 'npc-voice-prefs';
@@ -30,12 +33,32 @@ function loadVoicePrefs(): { voice?: SupportedVoice; tone?: SupportedTone } {
   }
 }
 
+// Renders a remembered turn exactly like a live reply would have rendered on `done`.
+function historyToMessages(turn: HistoryTurn, structuredOutput: boolean): ChatMessage[] {
+  const { ts, query, ...fields } = turn;
+  const tone = typeof fields.tone === 'string' ? (fields.tone as SupportedTone) : undefined;
+  return [
+    { id: `history-${ts}-player`, role: 'player', text: query },
+    {
+      id: `history-${ts}-npc`,
+      role: 'npc',
+      text: structuredOutput ? JSON.stringify(fields, null, 2) : turn.response,
+      isJson: structuredOutput,
+      speechText: turn.response,
+      mood: typeof fields.mood === 'string' ? fields.mood : undefined,
+      attitude: typeof fields.attitude === 'string' ? fields.attitude : undefined,
+      tone,
+    },
+  ];
+}
+
 function saveVoicePrefs(prefs: { voice?: SupportedVoice; tone?: SupportedTone }) {
   localStorage.setItem(VOICE_PREF_KEY, JSON.stringify(prefs));
 }
 
-export default function Chat({ slug, structuredOutput }: Props) {
+export default function Chat({ slug, structuredOutput, memoryVersion = 0 }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [historyCount, setHistoryCount] = useState(0);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
   const [streamingId, setStreamingId] = useState<string | null>(null);
@@ -79,7 +102,7 @@ export default function Chat({ slug, structuredOutput }: Props) {
     stopSpeech();
     setLoadingSpeechId(message.id);
     try {
-      const blob = await synthesizeSpeech(message.text, voice, tone);
+      const blob = await synthesizeSpeech(message.speechText ?? message.text, voice, tone);
       const url = URL.createObjectURL(blob);
       audioUrlRef.current = url;
       const audio = new Audio(url);
@@ -98,9 +121,29 @@ export default function Chat({ slug, structuredOutput }: Props) {
     closeRef.current?.();
     stopSpeech();
     setMessages([]);
+    setHistoryCount(0);
     setPending(false);
     setStreamingId(null);
-  }, [slug]);
+
+    // The NPC replays its recent turns as memory on every message - show that same
+    // conversation so the player can see what it's continuing from.
+    let cancelled = false;
+    getNpcHistory(slug)
+      .then((turns) => {
+        if (cancelled || turns.length === 0) return;
+        const remembered = turns.flatMap((turn) => historyToMessages(turn, structuredOutput));
+        setMessages((m) => [...remembered, ...m]);
+        setHistoryCount(remembered.length);
+      })
+      .catch(() => {
+        // History is a convenience - chatting still works without it.
+      });
+    return () => {
+      cancelled = true;
+    };
+    // structuredOutput only affects how history renders, not which history to load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, memoryVersion]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -136,17 +179,17 @@ export default function Chat({ slug, structuredOutput }: Props) {
         let responseText = rawText;
         let speechText = rawText;
         let isJson = false;
-        try {
-          const parsed = JSON.parse(rawText);
-          speechText = parsed.response ?? rawText;
-          if (structuredOutput) {
+        // Only structured NPCs send JSON in `done` - a plain-text reply is the dialogue
+        // itself, even when it happens to parse as JSON (e.g. a bare number).
+        if (structuredOutput) {
+          try {
+            const parsed = JSON.parse(rawText);
+            speechText = parsed.response ?? rawText;
             responseText = JSON.stringify(parsed, null, 2);
             isJson = true;
-          } else {
-            responseText = speechText;
+          } catch {
+            // backend didn't return valid JSON, fall back to raw text
           }
-        } catch {
-          // backend didn't return valid JSON, fall back to raw text
         }
         setMessages((m) =>
           started
@@ -240,56 +283,67 @@ export default function Chat({ slug, structuredOutput }: Props) {
             </span>
           </div>
         )}
-        {messages.map((m) =>
-          m.role === 'player' ? (
-            <div key={m.id} className="ml-auto flex max-w-[85%] flex-row-reverse gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-secondary/30 bg-secondary/20">
-                <User size={18} strokeWidth={1.75} className="text-secondary" />
-              </div>
-              <div className="space-y-2 text-right">
-                <div className="rounded-xl rounded-tr-none bg-primary p-4 text-on-primary">
-                  <p className="font-body-md leading-relaxed">{m.text}</p>
+        {messages.map((m, index) => (
+          <Fragment key={m.id}>
+            {m.role === 'player' ? (
+              <div className="ml-auto flex max-w-[85%] flex-row-reverse gap-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-secondary/30 bg-secondary/20">
+                  <User size={18} strokeWidth={1.75} className="text-secondary" />
+                </div>
+                <div className="space-y-2 text-right">
+                  <div className="rounded-xl rounded-tr-none bg-primary p-4 text-on-primary">
+                    <p className="font-body-md leading-relaxed">{m.text}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div key={m.id} className="flex max-w-[85%] gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20">
-                <Bot size={18} strokeWidth={1.75} className="text-primary" />
-              </div>
-              <div className="space-y-2">
-                <div className="rounded-xl rounded-tl-none border border-outline-variant/30 bg-surface-container-high p-4 shadow-[0_0_40px_-10px_rgba(208,188,255,0.1)]">
-                  {(m.mood || m.attitude) && (
-                    <span className="mb-1 block font-label-caps text-[10px] uppercase tracking-wide text-primary">
-                      {[m.mood, m.attitude].filter(Boolean).join(' · ')}
-                    </span>
-                  )}
-                  {m.isJson ? (
-                    <pre className="overflow-x-auto whitespace-pre-wrap break-words font-code-md text-code-md text-on-surface">
-                      {m.text}
-                    </pre>
-                  ) : (
-                    <p className="font-body-md italic leading-relaxed text-on-surface">{m.text}</p>
-                  )}
+            ) : (
+              <div className="flex max-w-[85%] gap-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20">
+                  <Bot size={18} strokeWidth={1.75} className="text-primary" />
                 </div>
-                {m.id !== streamingId && m.text && (
-                  <button
-                    onClick={() => toggleSpeak(m)}
-                    disabled={loadingSpeechId === m.id}
-                    aria-label={speakingId === m.id ? 'Stop speech' : 'Play speech'}
-                    className="flex items-center gap-1 text-outline-variant transition-colors hover:text-primary disabled:opacity-30"
-                  >
-                    {loadingSpeechId === m.id ? (
-                      <Loader2 size={14} strokeWidth={1.75} className="animate-spin" />
-                    ) : (
-                      <Volume2 size={14} strokeWidth={1.75} className={speakingId === m.id ? 'animate-pulse text-primary' : ''} />
+                <div className="space-y-2">
+                  <div className="rounded-xl rounded-tl-none border border-outline-variant/30 bg-surface-container-high p-4 shadow-[0_0_40px_-10px_rgba(208,188,255,0.1)]">
+                    {(m.mood || m.attitude) && (
+                      <span className="mb-1 block font-label-caps text-[10px] uppercase tracking-wide text-primary">
+                        {[m.mood, m.attitude].filter(Boolean).join(' · ')}
+                      </span>
                     )}
-                  </button>
-                )}
+                    {m.isJson ? (
+                      <pre className="overflow-x-auto whitespace-pre-wrap break-words font-code-md text-code-md text-on-surface">
+                        {m.text}
+                      </pre>
+                    ) : (
+                      <p className="font-body-md italic leading-relaxed text-on-surface">{m.text}</p>
+                    )}
+                  </div>
+                  {m.id !== streamingId && m.text && (
+                    <button
+                      onClick={() => toggleSpeak(m)}
+                      disabled={loadingSpeechId === m.id}
+                      aria-label={speakingId === m.id ? 'Stop speech' : 'Play speech'}
+                      className="flex items-center gap-1 text-outline-variant transition-colors hover:text-primary disabled:opacity-30"
+                    >
+                      {loadingSpeechId === m.id ? (
+                        <Loader2 size={14} strokeWidth={1.75} className="animate-spin" />
+                      ) : (
+                        <Volume2 size={14} strokeWidth={1.75} className={speakingId === m.id ? 'animate-pulse text-primary' : ''} />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ),
-        )}
+            )}
+            {historyCount > 0 && index === historyCount - 1 && (
+              <div className="flex items-center gap-3" role="separator">
+                <div className="h-px flex-1 bg-outline-variant/30" />
+                <span className="font-code-md text-[11px] uppercase tracking-widest text-outline-variant">
+                  Remembered conversation
+                </span>
+                <div className="h-px flex-1 bg-outline-variant/30" />
+              </div>
+            )}
+          </Fragment>
+        ))}
         {pending && !streamingId && (
           <div className="flex max-w-[85%] gap-4">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20">

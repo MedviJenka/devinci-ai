@@ -82,8 +82,11 @@ class NpcApiMock:
     npcs: dict = field(default_factory=dict)  # slug -> detail dict
     stream_events: list | None = None  # override the /talk SSE script
     talk_requests: list = field(default_factory=list)  # recorded (slug, query) pairs
+    history: dict = field(default_factory=dict)  # slug -> remembered turns, as GET /{slug}/history returns them
+    memory_resets: list = field(default_factory=list)  # slugs passed to DELETE /{slug}/memory
 
-    def seed(self, *, slug: str, role: str, goal="", backstory="", llm="gpt-4o", persona_notes=""):
+    def seed(self, *, slug: str, role: str, goal="", backstory="", llm="gpt-4o", persona_notes="",
+             pydantic_enabled=False, pydantic_fields=None):
         detail = {
             "slug": slug,
             "role": role,
@@ -91,6 +94,8 @@ class NpcApiMock:
             "backstory": backstory,
             "llm": llm,
             "persona_notes": persona_notes,
+            "pydantic_enabled": pydantic_enabled,
+            "pydantic_fields": pydantic_fields or [],
         }
         self.npcs[slug] = detail
         return detail
@@ -142,20 +147,31 @@ def _install_npc_api_routes(page, mock: NpcApiMock) -> None:
 
             events = mock.stream_events
             if events is None:
-                events = [
-                    {"type": "chunk", "text": "..."},
-                    {
-                        "type": "done",
-                        "text": json.dumps({"response": f"Echo: {query_text}"}),
-                        "mood": "neutral",
-                    },
-                ]
+                reply = f"Echo: {query_text}"
+                # Like the real /talk: structured NPCs finish with the full JSON object plus
+                # each non-response field, plain-text NPCs with just the dialogue.
+                if mock.npcs.get(slug, {}).get("pydantic_enabled"):
+                    done = {"type": "done", "text": json.dumps({"mood": "neutral", "response": reply}), "mood": "neutral"}
+                else:
+                    done = {"type": "done", "text": reply}
+                events = [{"type": "chunk", "text": reply}, done]
             body = "".join(f"data: {json.dumps(e)}\n\n" for e in events)
             route.fulfill(
                 status=200,
                 headers={**_cors_headers(request), "Content-Type": "text/event-stream"},
                 body=body,
             )
+            return
+
+        if path.endswith("/history") and request.method == "GET":
+            _json(route, request, 200, mock.history.get(path[1:-len("/history")], []))
+            return
+
+        if path.endswith("/memory") and request.method == "DELETE":
+            slug = path[1:-len("/memory")]
+            mock.memory_resets.append(slug)
+            mock.history.pop(slug, None)
+            route.fulfill(status=204, headers=_cors_headers(request), body="")
             return
 
         slug = path[1:]

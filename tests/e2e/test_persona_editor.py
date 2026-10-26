@@ -70,3 +70,20 @@ def test_switching_to_a_different_npc_resets_fields(app):
     page.get_by_title("Back to library").click()
     _open_persona(app, row=1)
     assert _goal_input(page).input_value() == "mira goal"
+
+
+@pytest.mark.edge_case
+def test_non_openai_llm_is_flagged_and_blocks_save(app):
+    app.npc_api.seed(slug="aldric", role="Aldric the Smith", llm="openai/gpt-5-mini")
+    app.sign_in()
+    page = app.page
+    _open_persona(app)
+
+    save = page.get_by_role("button", name=re.compile("save changes", re.I))
+    page.get_by_label("LLM").fill("anthropic/claude-3")
+
+    page.get_by_text(re.compile("only openai models are supported", re.I)).wait_for(state="visible")
+    assert save.is_disabled()
+
+    page.get_by_label("LLM").fill("openai/gpt-4.1-mini")
+    assert not save.is_disabled()

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { IdCard, Brain, Sparkles, Braces, Trash2, Plus, BrainCog } from 'lucide-react';
-import { NpcDetail, NpcUpdateRequest, PydanticFieldDef, PydanticFieldType } from '../types';
+import { NpcDetail, NpcUpdateRequest, PydanticFieldDef, PydanticFieldType, SUGGESTED_LLMS } from '../types';
 import { generateCharacter } from '../api';
 
 interface Props {
@@ -13,6 +13,14 @@ interface Props {
 const inputClass =
   'w-full rounded border border-outline-variant bg-surface-container-lowest p-3 font-body-md text-on-surface outline-none transition-colors focus:border-primary';
 const labelClass = 'font-label-caps text-label-caps uppercase text-outline';
+
+// Mirrors the backend's resolve_model: a bare model name or `openai/<model>`.
+const isSupportedLlm = (value: string) => {
+  const llm = value.trim();
+  const slash = llm.lastIndexOf('/');
+  const provider = slash === -1 ? 'openai' : llm.slice(0, slash);
+  return provider === 'openai' && llm.slice(slash + 1) !== '';
+};
 
 const FIELD_TYPES: PydanticFieldType[] = ['string', 'integer', 'float', 'boolean', 'enum'];
 
@@ -45,9 +53,14 @@ export default function PersonaEditor({ npc, onSave, onResetMemory, resettingMem
     setPersonaNotes(npc.persona_notes);
     setPydanticEnabled(npc.pydantic_enabled);
     setPydanticFields(npc.pydantic_fields);
+  }, [npc]);
+
+  // Keyed on the slug, not the object: a successful save hands back a fresh `npc`
+  // for the same NPC, and resetting here would hide the "Saved" confirmation at once.
+  useEffect(() => {
     setSaved(false);
     setSaveError(null);
-  }, [npc]);
+  }, [npc.slug]);
 
   const updateField = (index: number, patch: Partial<PydanticFieldDef>) => {
     setPydanticFields((prev) => prev.map((f, i) => (i === index ? { ...f, ...patch } : f)));
@@ -130,8 +143,27 @@ export default function PersonaEditor({ npc, onSave, onResetMemory, resettingMem
         </div>
 
         <div className="space-y-2">
-          <label className={labelClass}>LLM</label>
-          <input value={llm} onChange={(e) => setLlm(e.target.value)} className={inputClass} />
+          <label className={labelClass} htmlFor="npc-llm">LLM</label>
+          <input
+            id="npc-llm"
+            list="npc-llm-options"
+            value={llm}
+            onChange={(e) => setLlm(e.target.value)}
+            aria-invalid={!isSupportedLlm(llm)}
+            className={inputClass}
+          />
+          <datalist id="npc-llm-options">
+            {SUGGESTED_LLMS.map((model) => (
+              <option key={model} value={model} />
+            ))}
+          </datalist>
+          {isSupportedLlm(llm) ? (
+            <p className="font-body-md text-xs text-outline">OpenAI models only. Mini models reply fastest.</p>
+          ) : (
+            <p className="font-body-md text-xs text-error">
+              Only OpenAI models are supported - use a name like &quot;openai/gpt-5-mini&quot;.
+            </p>
+          )}
         </div>
       </div>
 
@@ -310,7 +342,7 @@ export default function PersonaEditor({ npc, onSave, onResetMemory, resettingMem
       <div className="flex items-center gap-3 pb-12">
         <button
           onClick={save}
-          disabled={saving}
+          disabled={saving || !isSupportedLlm(llm)}
           className="rounded bg-primary px-5 py-2.5 font-label-caps text-label-caps uppercase text-on-primary transition-all hover:brightness-110 disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save changes'}

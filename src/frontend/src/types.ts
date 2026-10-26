@@ -39,6 +39,19 @@ export interface NpcUpdateRequest {
   pydantic_fields?: PydanticFieldDef[];
 }
 
+// One remembered exchange from GET /npcs/{slug}/history: the player's line, the NPC's
+// reply, and whatever structured fields (mood, attitude, tone, custom) came with it.
+export interface HistoryTurn {
+  ts: string;
+  query: string;
+  response: string;
+  [field: string]: unknown;
+}
+
+// OpenAI models suggested in the persona editor - /talk calls OpenAI directly, so other
+// providers are rejected on save. The mini models give the fastest replies.
+export const SUGGESTED_LLMS = ['openai/gpt-5-mini', 'openai/gpt-4.1-mini', 'openai/gpt-5.4-mini', 'openai/gpt-5.5'];
+
 export interface ChatMessage {
   id: string;
   role: 'player' | 'npc';

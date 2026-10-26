@@ -7,14 +7,14 @@ requires-python = ">=3.12"
 dependencies = [
     "boto3>=1.43.51",
     "botocore>=1.43.51",
-    # Exact-pinned: src/core/ai/agent_runtime.py's kickoff_streaming() reaches into
-    # crewai internals (enable_agent_streaming, LiteAgentOutput, StreamingOutputBase,
-    # crewai.utilities.streaming) that aren't part of crewai's public API and can
-    # change shape in a patch release. Bump deliberately, re-reading agent_runtime.py
-    # against the new source, not via a version range.
+    # Exact-pinned: src/core/ai/crewai_compat.py monkeypatches crewai.project.json_loader,
+    # which isn't part of crewai's public API and can change shape in a patch release.
+    # Bump deliberately, re-reading crewai_compat.py against the new source. crewAI only
+    # backs the offline creator crews (skill_agent) - NPC /talk calls openai directly.
     "crewai==1.15.4",
     "fastapi",
     "logfire",
+    "openai>=2.46",
     "pydantic-settings",
     "pygame>=2.6.1",
     "python-dotenv",

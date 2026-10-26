@@ -39,6 +39,8 @@ function App() {
   const [confirmResetMemory, setConfirmResetMemory] = useState(false);
   const [resettingMemorySlug, setResettingMemorySlug] = useState<string | null>(null);
   const [confirmClearMemorySlug, setConfirmClearMemorySlug] = useState<string | null>(null);
+  // Bumped whenever the open NPC's memory is cleared, so Chat drops the forgotten history.
+  const [memoryVersion, setMemoryVersion] = useState(0);
 
   const navigate = (next: Screen) => {
     setScreen(next);
@@ -165,6 +167,7 @@ function App() {
     setResettingMemorySlug(slug);
     try {
       await resetNpcMemory(slug);
+      if (slug === selected?.slug) setMemoryVersion((v) => v + 1);
       notify('success', `Cleared memory for "${slug}".`);
     } catch (err) {
       notify('error', err instanceof Error ? err.message : 'Failed to clear memory.');
@@ -179,6 +182,7 @@ function App() {
     setResettingMemory(true);
     try {
       await resetNpcMemory(selected.slug);
+      setMemoryVersion((v) => v + 1);
       notify('success', `Cleared memory for "${selected.slug}".`);
     } catch (err) {
       notify('error', err instanceof Error ? err.message : 'Failed to clear memory.');
@@ -284,7 +288,7 @@ function App() {
 
             <div className="min-h-0 flex-1">
               {tab === 'chat' ? (
-                <Chat slug={selected.slug} structuredOutput={selected.pydantic_enabled} />
+                <Chat slug={selected.slug} structuredOutput={selected.pydantic_enabled} memoryVersion={memoryVersion} />
               ) : (
                 <div className="h-full overflow-y-auto custom-scrollbar bg-background">
                   <PersonaEditor
@@ -325,7 +329,7 @@ function App() {
       {confirmResetMemory && selected && (
         <ConfirmDialog
           title="Clear this NPC's memory?"
-          message={`All conversation memory for "${selected.slug}" will be permanently erased. This cannot be undone.`}
+          message={`"${selected.slug}" will forget its conversation so far and start fresh. Session transcripts are kept for review. This cannot be undone.`}
           confirmLabel="Clear memory"
           onConfirm={confirmResetMemoryAction}
           onCancel={() => setConfirmResetMemory(false)}
@@ -335,7 +339,7 @@ function App() {
       {confirmClearMemorySlug && (
         <ConfirmDialog
           title="Clear this NPC's memory?"
-          message={`All conversation memory for "${confirmClearMemorySlug}" will be permanently erased. This cannot be undone.`}
+          message={`"${confirmClearMemorySlug}" will forget its conversation so far and start fresh. Session transcripts are kept for review. This cannot be undone.`}
           confirmLabel="Clear memory"
           onConfirm={confirmClearMemoryAction}
           onCancel={() => setConfirmClearMemorySlug(null)}

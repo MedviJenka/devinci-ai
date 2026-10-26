@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     SUPABASE_STORAGE_ACCESS_SECRET: str           = Field(default='')
     NPC_STORAGE_BUCKET:             str           = Field(default='npcs')
     NPC_CACHE_DIR:                  str           = Field(default='./.npc_cache')
+    # Reasoning effort for gpt-5 / o-series NPC models. NPC dialogue doesn't need deep
+    # reasoning, and every reasoning token delays the first spoken word. Empty = model default.
+    NPC_REASONING_EFFORT:           str           = Field(default='none')
+    # How many recent turns of conversation are replayed to the NPC as memory.
+    NPC_HISTORY_TURNS:              int           = Field(default=12)
     GOOGLE_STITCH_API_KEY:          str           = Field(default='')
     TEST_API_KEY:                   str           = Field(default='')
 

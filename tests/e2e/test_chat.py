@@ -13,7 +13,7 @@ def _open_chat(app, slug: str, role: str):
 
 @pytest.mark.smoke
 def test_send_message_shows_player_bubble_and_streamed_reply(app):
-    app.npc_api.seed(slug="aldric", role="Aldric the Smith")
+    app.npc_api.seed(slug="aldric", role="Aldric the Smith", pydantic_enabled=True)
     app.sign_in()
     _open_chat(app, "aldric", "Aldric the Smith")
     page = app.page
@@ -25,7 +25,7 @@ def test_send_message_shows_player_bubble_and_streamed_reply(app):
     # substring match on "hello there" ambiguously matches both bubbles.
     page.get_by_text("hello there", exact=True).wait_for(state="visible")
     page.get_by_text(re.compile("echo: hello there", re.I)).wait_for(state="visible")
-    page.get_by_text("neutral").wait_for(state="visible")
+    page.get_by_text("neutral", exact=True).wait_for(state="visible")
 
     assert app.npc_api.talk_requests == [("aldric", "hello there")]
 
@@ -79,3 +79,58 @@ def test_switching_npc_clears_chat_history(app):
 
     assert page.get_by_text("hello aldric").count() == 0
     page.get_by_text("NPC Sequence Initiated").wait_for(state="visible")
+
+
+@pytest.mark.regression
+def test_plain_text_npc_reply_is_shown_as_dialogue(app):
+    app.npc_api.seed(slug="aldric", role="Aldric the Smith")
+    app.sign_in()
+    _open_chat(app, "aldric", "Aldric the Smith")
+    page = app.page
+
+    page.get_by_placeholder(re.compile("say something", re.I)).fill("hello there")
+    page.keyboard.press("Enter")
+
+    page.get_by_text("Echo: hello there", exact=True).wait_for(state="visible")
+
+
+@pytest.mark.regression
+def test_remembered_conversation_is_shown_when_chat_opens(app):
+    app.npc_api.seed(slug="aldric", role="Aldric the Smith")
+    app.npc_api.history["aldric"] = [
+        {"ts": "2026-10-27T10:00:00+00:00", "query": "my name is Mira", "response": "Hmph. Mira, is it."},
+    ]
+    app.sign_in()
+    _open_chat(app, "aldric", "Aldric the Smith")
+    page = app.page
+
+    page.get_by_text("my name is Mira", exact=True).wait_for(state="visible")
+    page.get_by_text("Hmph. Mira, is it.", exact=True).wait_for(state="visible")
+    page.get_by_text("Remembered conversation").wait_for(state="visible")
+
+    # New turns continue below the remembered ones.
+    page.get_by_placeholder(re.compile("say something", re.I)).fill("remember me?")
+    page.keyboard.press("Enter")
+    page.get_by_text("Echo: remember me?", exact=True).wait_for(state="visible")
+
+
+@pytest.mark.regression
+def test_clearing_memory_removes_remembered_conversation(app):
+    app.npc_api.seed(slug="aldric", role="Aldric the Smith")
+    app.npc_api.history["aldric"] = [
+        {"ts": "2026-10-27T10:00:00+00:00", "query": "my name is Mira", "response": "Hmph. Mira, is it."},
+    ]
+    app.sign_in()
+    _open_chat(app, "aldric", "Aldric the Smith")
+    page = app.page
+    page.get_by_text("my name is Mira", exact=True).wait_for(state="visible")
+
+    page.get_by_role("button", name=re.compile("^persona$", re.I)).click()
+    page.get_by_role("button", name=re.compile("^clear memory$", re.I)).click()
+    page.get_by_role("dialog").get_by_role("button", name=re.compile("clear memory", re.I)).click()
+    page.get_by_text('Cleared memory for "aldric".').wait_for(state="visible")
+    page.get_by_role("button", name=re.compile("^chat$", re.I)).click()
+
+    page.get_by_text("NPC Sequence Initiated").wait_for(state="visible")
+    assert page.get_by_text("my name is Mira").count() == 0
+    assert app.npc_api.memory_resets == ["aldric"]
